@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace WLO{
+﻿namespace WLO{
     /// <summary>
     /// Информация об проекте
     /// </summary>
@@ -13,19 +11,42 @@ namespace WLO{
             string? URL,
             string? License
         ){
-            this.Name        = Name        ?? "Unknown project";
+            this.Name        = Name        ?? "Неизвестный проект";
             this.Version     = Version     ?? 0;
-            this.Author      = Author      ?? "Anonymous";
-            this.Description = Description ?? "This project does not have a description.";
+            this.Author      = Author      ?? "Аноним";
+            this.Description = Description ?? "У этого проекта нету описания.";
             this.URL         = URL         ?? "";
             this.License     = License     ?? "MIT";
         }
 
+        /// <summary>
+        /// Название проекта
+        /// </summary>
         public readonly string Name;
+        
+        /// <summary>
+        /// Версия проекта
+        /// </summary>
         public readonly ushort Version;
+        
+        /// <summary>
+        /// Автор проекта
+        /// </summary>
         public readonly string Author;
+        
+        /// <summary>
+        /// Описание проекта
+        /// </summary>
         public readonly string Description;
+        
+        /// <summary>
+        /// Главная ссылка проекта (Можно ссылку на репозиторий или сайт)
+        /// </summary>
         public readonly string URL;
+        
+        /// <summary>
+        /// Лицензия проекта
+        /// </summary>
         public readonly string License;
 
         /*private readonly List<Project> __Dependencies;
@@ -63,11 +84,34 @@ namespace WLO{
             private string? __URL;
             private string? __License;
 
+            /// <summary>
+            /// Название проекта
+            /// </summary>
             public Builder Name       (string? Name       ){ __Name        = Name       ; return this; }
+            
+            /// <summary>
+            /// Версия проекта
+            /// </summary>
             public Builder Version    (ushort? Version    ){ __Version     = Version    ; return this; }
+            
+            /// <summary>
+            /// Автор проекта
+            /// </summary>
             public Builder Author     (string? Author     ){ __Author      = Author     ; return this; }
+            
+            /// <summary>
+            /// Описание проекта
+            /// </summary>
             public Builder Description(string? Description){ __Description = Description; return this; }
+            
+            /// <summary>
+            /// Главная ссылка проекта (Можно ссылку на репозиторий или сайт)
+            /// </summary>
             public Builder URL        (string? URL        ){ __URL         = URL        ; return this; }
+            
+            /// <summary>
+            /// Лицензия проекта
+            /// </summary>
             public Builder License    (string? License    ){ __License     = License    ; return this; }
 
             public Project Build() => new Project(

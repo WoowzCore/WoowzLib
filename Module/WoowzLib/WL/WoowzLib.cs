@@ -14,9 +14,9 @@ public static partial class WL{
             .Name("WoowzLib")
             .Version(0)
             .Author("Woowz11")
-            .Description("Hi) Remind me to change this in the future")
+            .Description("НАПОМНИТЕ ИЗМЕНИТЬ В БУДУЩЕМ")
             .URL("https://github.com/WoowzCore/WoowzLib")
-            .License("Look in README.md")
+            .License("см. README.md")
             .Build();
     }
 }
