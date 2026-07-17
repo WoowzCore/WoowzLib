@@ -9,7 +9,7 @@ public static partial class WL{
     /// Взаимодействие с WoowzLib
     /// </summary>
     public static partial class WoowzLib{
-        public static readonly Project Info = Project
+        public static readonly Project ProjectInfo = Project
             .Create()
             .Name("WoowzLib")
             .Version(0)
