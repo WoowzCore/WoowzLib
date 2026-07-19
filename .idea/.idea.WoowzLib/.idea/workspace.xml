@@ -10,10 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0a1fe30c-5363-4bfb-ba90-a9304eac012b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.WoowzLib/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WoowzLib/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Module/WoowzLib/WL/WoowzLib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Module/WoowzLib/WL/WoowzLib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Module/WoowzLib/WLO/WLException.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Module/WoowzLib/WLO/WLException.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WoowzLib.sln" beforeDir="false" afterPath="$PROJECT_DIR$/WoowzLib.sln" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Other/WLVersionUpdater/Bootstrap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Other/WLVersionUpdater/Bootstrap.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,6 +24,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Module/Execution/WL/Execution.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Module/WoowzLib/WL/WoowzLib.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Module/WoowzLib/WLO/Project.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Module/WoowzLib/WLO/WLException.cs" root0="FORCE_HIGHLIGHTING" />
@@ -142,7 +140,7 @@
       <workItem from="1784190039138" duration="688000" />
       <workItem from="1784277562732" duration="624000" />
       <workItem from="1784278450517" duration="4492000" />
-      <workItem from="1784283199476" duration="871000" />
+      <workItem from="1784283199476" duration="1743000" />
     </task>
     <servers />
   </component>

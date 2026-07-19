@@ -11,6 +11,7 @@ public static partial class WL{
     public static partial class WoowzLib{
         public static readonly Project ProjectInfo = Project
             .Create()
+            .NotContainsWoowzLib()
             .Name("WoowzLib")
             .Version(0)
             .Author("Woowz11")

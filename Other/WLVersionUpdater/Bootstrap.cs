@@ -8,7 +8,7 @@ namespace WLVU{
             .Version(0)
             .Author("Woowz11")
             .Description("Обновляет версии у проектов WoowzLib при компиляции")
-            .URL("")
+            .URL("https://github.com/WoowzCore/WoowzLib/tree/main/Other/WLVersionUpdater")
             .License("см. README.md")
             .Build();
         
