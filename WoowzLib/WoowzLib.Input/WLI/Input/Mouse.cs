@@ -1,5 +1,5 @@
-﻿using WLO;
-using WLI;
+﻿using WLI;
+using WLO.Math;
 
 namespace WLI_Input;
 

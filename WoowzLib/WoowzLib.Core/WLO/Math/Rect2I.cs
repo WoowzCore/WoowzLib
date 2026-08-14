@@ -1,6 +1,6 @@
 ﻿using WLO;
 
-namespace WoowzLib.Core.WLO.Math;
+namespace WLO.Math;
 
 public readonly struct Rect2I{
     public readonly Vector2I Position;

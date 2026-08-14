@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace WoowzLib.Core.WLO.Math;
+namespace WLO.Math;
 
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Color4B{

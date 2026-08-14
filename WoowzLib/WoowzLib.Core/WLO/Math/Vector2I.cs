@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
-namespace WLO;
+namespace WLO.Math;
 
 public readonly struct Vector2I{
     public readonly int X;

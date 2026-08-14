@@ -1,5 +1,5 @@
-﻿using WoowzLib.Core.WLO;
-using WoowzLib.Core.WLO.Math;
+﻿using WLO;
+using WLO.Math;
 
 namespace WLI_Render;
 
