@@ -2,7 +2,7 @@
 
 public class Simple : WLI.Logger{
     public string GeneratePrefix(uint Type){
-        string Time = DateTime.Now.ToString("HH:mm:ss:");
+        string Time = DateTime.Now.ToString("HH:mm:ss");
         string TypePrefix = Type switch{
             (uint)WLI.Logger.Type.Debug   => "D",
             (uint)WLI.Logger.Type.Info    => "I",
@@ -13,7 +13,7 @@ public class Simple : WLI.Logger{
             _ => Type.ToString()
         };
 
-        return $"[{TypePrefix}][{Time}]";
+        return $"{TypePrefix}|{Time}|";
     }
 
     public void ChangeConsoleBackground(uint Type){
