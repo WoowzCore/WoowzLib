@@ -242,6 +242,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
     private ImageView     __RenderImageView;
     private Buffer        __StadingBuffer;
     private DeviceMemory  __StadingMemory;
+    private void*         __MappedPtr;
     private CommandPool   __CommandPool;
     private CommandBuffer __CommandBuffer;
     private Fence         __RenderFence;
@@ -321,6 +322,10 @@ public unsafe class Vulkan : WLI_Render.Hardware{
         }
 
         __VK.BindBufferMemory(__Device, __StadingBuffer, __StadingMemory, 0);
+
+        void* Ptr;
+        __VK.MapMemory(__Device, __StadingMemory, 0, BufferSize, 0, &Ptr);
+        __MappedPtr = Ptr;
     }
 
     private void __CreateSyncObjects(){
@@ -403,6 +408,8 @@ public unsafe class Vulkan : WLI_Render.Hardware{
     
     // ----------------------------------------------------------------------
 
+    public Vector2I Viewport{ get; set; }
+    
     public void Clear(Color4B Color){
         __TransitionImageLayout(__RenderImage, ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
 
@@ -416,20 +423,6 @@ public unsafe class Vulkan : WLI_Render.Hardware{
         ImageSubresourceRange Range = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1);
         __VK.CmdClearColorImage(__CommandBuffer, __RenderImage, ImageLayout.TransferDstOptimal, &ClearColor, 1, &Range);
     }
-
-    public void DrawFrameBuffer(FrameBuffer Buffer){
-        __VK.WaitForFences(__Device, 1, ref __RenderFence, true, ulong.MaxValue);
-
-        void* Pixels;
-        __VK.MapMemory(__Device, __StadingMemory, 0, (uint)(Buffer.Size.W * Buffer.Size.H * 4), 0, &Pixels);
-
-        fixed(Color4B* Dst = Buffer.Pixels){
-            System.Buffer.MemoryCopy(Pixels, Dst, Buffer.Pixels.Length * 4, Buffer.Pixels.Length * 4);
-        }
-        
-        __VK.UnmapMemory(__Device, __StadingMemory);
-    }
-    public Vector2I Viewport{ get; set; }
 
     public void FrameStart(){
         __VK.WaitForFences(__Device, 1, ref __RenderFence, true, ulong.MaxValue);
@@ -467,5 +460,13 @@ public unsafe class Vulkan : WLI_Render.Hardware{
 
            __VK.QueueSubmit(__GraphicsQueue, 1, &SubmitInfo, __RenderFence);
        }
+    }
+    
+    public void DrawFrameBuffer(FrameBuffer Buffer){
+        __VK.WaitForFences(__Device, 1, ref __RenderFence, true, ulong.MaxValue);
+
+        fixed(Color4B* Dst = Buffer.Pixels){
+            System.Buffer.MemoryCopy(__MappedPtr, Dst, Buffer.Pixels.Length * 4, Buffer.Pixels.Length * 4);
+        }
     }
 }

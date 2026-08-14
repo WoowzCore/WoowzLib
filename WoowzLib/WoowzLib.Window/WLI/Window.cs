@@ -8,9 +8,12 @@ public interface Window{
     bool Close();
 
     bool IsClosed{ get; }
-    Vector2I Size{ get; }
 
     void PollEvents();
 
     void Present(FrameBuffer Buffer);
+    
+    Vector2I Size{ get; set; }
+    Vector2I Position{ get; set; }
+    string Title{ get; set; }
 }

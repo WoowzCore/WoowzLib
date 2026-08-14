@@ -39,7 +39,7 @@ public unsafe class GLFW : WLI.Window{
     private GlfwNativeWindow __Native;
 
     public GLFW_Keyboard Keyboard{ get; }
-
+    
     // ----------------------------------------------------------------------
 
     public GLFW(Vector2I Size, string Title){
@@ -60,7 +60,7 @@ public unsafe class GLFW : WLI.Window{
                 Keyboard.__HandleCallback(Key, Action);
             });
 
-            WL.GLFW.API.SwapInterval(1);
+            WL.GLFW.API.SwapInterval(0); // todo, off vsync
         }
         catch(Exception e){
             throw new ExceptionWL($"Произошла ошибка при создании GLFW окна!\nnew WLO.Window.GLFW({Size}, \"{Title}\")\nРазмер: {Size}\nНазвание окна: \"{Title}\"", e);
@@ -89,6 +89,35 @@ public unsafe class GLFW : WLI.Window{
             if(__Handle == null){ return new Vector2I(0, 0); }
             WL.GLFW.API.GetWindowSize(__Handle, out int W, out int H);
             return new Vector2I(W, H);
+        }
+        set{
+            if(__Handle != null){
+                WL.GLFW.API.SetWindowSize(__Handle, value.W, value.H);
+            }
+        }
+    }
+    
+    public Vector2I Position{
+        get{
+            if(__Handle == null){ return new Vector2I(0, 0); }
+            WL.GLFW.API.GetWindowPos(__Handle, out int X, out int Y);
+            return new Vector2I(X, Y);
+        }
+        set{
+            if(__Handle != null){
+                WL.GLFW.API.SetWindowPos(__Handle, value.X, value.Y);
+            }
+        }
+    }
+
+    private string __Title = String.Empty;
+    public string Title{
+        get => __Title;
+        set{
+            if(__Handle != null){
+                __Title = Title;
+                WL.GLFW.API.SetWindowTitle(__Handle, value);
+            }
         }
     }
 
