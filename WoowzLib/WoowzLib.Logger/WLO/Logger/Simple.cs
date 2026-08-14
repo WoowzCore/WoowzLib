@@ -13,7 +13,7 @@ public class Simple : WLI.Logger{
             _ => Type.ToString()
         };
 
-        return $"[{TypePrefix}][${Time}]";
+        return $"[{TypePrefix}][{Time}]";
     }
 
     public void ChangeConsoleBackground(uint Type){
@@ -33,6 +33,6 @@ public class Simple : WLI.Logger{
         
         ChangeConsoleBackground(Type);
         
-        Console.WriteLine($"{GeneratePrefix(Type)}: ${Content}");
+        Console.WriteLine($"{GeneratePrefix(Type)}: {Content}");
     }
 }
