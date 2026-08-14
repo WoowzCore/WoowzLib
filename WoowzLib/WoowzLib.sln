@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Window", "WoowzLib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Window.GLFW", "WoowzLib.Window.GLFW\WoowzLib.Window.GLFW.csproj", "{790FBA61-F74D-4BE2-A623-1E2E9B2F31A1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Render", "WoowzLib.Render\WoowzLib.Render.csproj", "{51F97313-4876-49AA-8CEB-1226BA6B7152}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{790FBA61-F74D-4BE2-A623-1E2E9B2F31A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{790FBA61-F74D-4BE2-A623-1E2E9B2F31A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{790FBA61-F74D-4BE2-A623-1E2E9B2F31A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51F97313-4876-49AA-8CEB-1226BA6B7152}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51F97313-4876-49AA-8CEB-1226BA6B7152}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51F97313-4876-49AA-8CEB-1226BA6B7152}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51F97313-4876-49AA-8CEB-1226BA6B7152}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
