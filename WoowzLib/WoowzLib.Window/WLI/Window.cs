@@ -3,8 +3,7 @@
 namespace WLI;
 
 public interface Window{
-    void Create(int W, int H, string Title);
-    
+    static abstract Window Create(int W, int H, string Title);
     void Close();
 
     bool IsClosed{ get; }

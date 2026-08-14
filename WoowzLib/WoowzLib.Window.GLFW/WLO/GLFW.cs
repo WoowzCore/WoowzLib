@@ -2,9 +2,9 @@
 using Silk.NET.GLFW;
 using WLO;
 
-namespace WoowzLib.Window.GLFW.WLO;
+namespace WLO.Window;
 
-public unsafe class Window_GLFW : WLI.Window{
+public unsafe class GLFW : WLI.Window{
     private static readonly Glfw          __GLFW = Glfw.GetApi();
     private                 WindowHandle* __Handle;
     private static bool                   __IsInitialized = false;
@@ -24,8 +24,8 @@ public unsafe class Window_GLFW : WLI.Window{
             __IsInitialized = false;
         }
     }
-    
-    public void Create(int W, int H, string Title){
+
+    public GLFW(int W, int H, string Title){
         InitGLFW();
         
         __GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
@@ -41,6 +41,9 @@ public unsafe class Window_GLFW : WLI.Window{
         __GLFW.SwapInterval(1);
     }
 
+    public static WLI.Window Create(int W, int H, string Title){
+        return new GLFW(W, H, Title);
+    }
     public void Close(){
         if(__Handle != null){
             __GLFW.SetWindowShouldClose(__Handle, true);
