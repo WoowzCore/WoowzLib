@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="WLI\" />
+        <ProjectReference Include="..\WoowzLib.Window\WoowzLib.Window.csproj" />
     </ItemGroup>
 
 </Project>
