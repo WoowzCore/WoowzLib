@@ -6,17 +6,10 @@
         <Nullable>enable</Nullable>
         <Configurations>Release</Configurations>
         <Platforms>AnyCPU</Platforms>
-
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\WoowzLib.Window\WoowzLib.Window.csproj" />
-        <ProjectReference Include="..\WoowzLib.Input\WoowzLib.Input.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Silk.NET.GLFW" Version="2.23.0" />
+        <ProjectReference Include="..\WoowzLib.Core\WoowzLib.Core.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Silk.NET.GLFW;
+using WLI_Input;
 using WLO;
 using WoowzLib.Core.WLO;
 using WoowzLib.Core.WLO.Math;
@@ -36,7 +37,9 @@ public unsafe class GLFW : WLI.Window{
     private                 WindowHandle*    __Handle;
     private static          bool             __IsInitialized = false;
     private                 GlfwNativeWindow __Native;
-    
+
+    public GLFW_Keyboard Keyboard{ get; }
+
     // ----------------------------------------------------------------------
     
     public static void InitGLFW(){
@@ -65,6 +68,12 @@ public unsafe class GLFW : WLI.Window{
         if(__Handle == null){ throw new Exception("Произошла ошибка при создании окна!"); }
 
         __Native = new GlfwNativeWindow(__GLFW, __Handle);
+
+        Keyboard = new GLFW_Keyboard();
+
+        __GLFW.SetKeyCallback(__Handle, (Self, Key, Code, Action, Mods) => {
+            Keyboard.__HandleCallback(Key, Action);
+        });
         
         __GLFW.SwapInterval(1);
     }
@@ -89,9 +98,12 @@ public unsafe class GLFW : WLI.Window{
             return new Vector2I(W, H);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PollEvents() => __GLFW.PollEvents();
+    public void PollEvents(){
+        Keyboard.__UpdateStates();
+        __GLFW.PollEvents();
+    }
 
     public void Present(FrameBuffer Buffer){
         if(__Handle == null){ return; }
@@ -119,5 +131,30 @@ public unsafe class GLFW : WLI.Window{
         }
 
         ReleaseDC(HWND, HDC);
+    }
+    
+    // ----------------------------------------------------------------------
+    
+    public class GLFW_Keyboard : WLI_Input.Keyboard{
+        private readonly bool[] __Current  = new bool[512];
+        private readonly bool[] __Previous = new bool[512];
+
+        public void __UpdateStates() => Array.Copy(__Current, __Previous, 512);
+
+        public void __HandleCallback(Keys Key, InputAction Action){
+            int Key__ = (int)GLFWKeyToWLKey(Key);
+            if(Key__ >= 0){ __Current[Key__] = Action != InputAction.Release; }
+        }
+
+        public bool IsKeyDown(Keyboard.Key Key) => __Current[(int)Key];
+        public bool IsKeyPressed(Keyboard.Key Key) => __Current[(int)Key] && !__Previous[(int)Key];
+
+        public Keyboard.Key GLFWKeyToWLKey(Keys Key) => Key switch{
+            Keys.A => WLI_Input.Keyboard.Key.A,
+            Keys.W => WLI_Input.Keyboard.Key.W,
+            Keys.S => WLI_Input.Keyboard.Key.S,
+            Keys.D => WLI_Input.Keyboard.Key.D,
+            _ => WLI_Input.Keyboard.Key.Unknown
+        };
     }
 }
