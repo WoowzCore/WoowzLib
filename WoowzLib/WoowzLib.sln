@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Logger", "WoowzLib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Render.Vulkan", "WoowzLib.Render.Vulkan\WoowzLib.Render.Vulkan.csproj", "{40C9A899-C0F7-4A46-9CDD-4807052E48E1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Interface.ImGUI", "WoowzLib.Interface.ImGUI\WoowzLib.Interface.ImGUI.csproj", "{67EF38C9-16D3-4B25-8094-49241AC08495}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{40C9A899-C0F7-4A46-9CDD-4807052E48E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40C9A899-C0F7-4A46-9CDD-4807052E48E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40C9A899-C0F7-4A46-9CDD-4807052E48E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67EF38C9-16D3-4B25-8094-49241AC08495}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67EF38C9-16D3-4B25-8094-49241AC08495}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67EF38C9-16D3-4B25-8094-49241AC08495}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67EF38C9-16D3-4B25-8094-49241AC08495}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

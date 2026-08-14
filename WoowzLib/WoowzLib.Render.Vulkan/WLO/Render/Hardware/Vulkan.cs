@@ -10,11 +10,11 @@ using Buffer = Silk.NET.Vulkan.Buffer;
 namespace WLO.Render.Hardware;
 
 public unsafe class Vulkan : WLI_Render.Hardware{
-    private Vk                     __VK;
-    private Instance               __Instance;
+    public Vk                     __VK;
+    public Instance               __Instance;
     private DebugUtilsMessengerEXT __DebugMessanger;
-    private PhysicalDevice         __PhysicalDevice;
-    private Device                 __Device;
+    public PhysicalDevice         __PhysicalDevice;
+    public Device                 __Device;
     private Queue                  __GraphicsQueue;
     private uint                   __GraphicsQueueFamilyIndex;
     
@@ -33,7 +33,12 @@ public unsafe class Vulkan : WLI_Render.Hardware{
             
             __CreateCommandPool();
             __CreateSyncObjects();
+            
             __CreateResources(Viewport);
+            __CreateImageView();
+            __CreateRenderPass();
+            __CreateFramebuffer();
+            __CreateDescriptorPool();
             __CreateStagingBuffer(Viewport);
             
             WL.Logger.Debug("todo, Vulkan инициализирован!");
@@ -45,11 +50,19 @@ public unsafe class Vulkan : WLI_Render.Hardware{
     public void Stop(){
         __VK.DeviceWaitIdle(__Device);
         
+        if (__DescriptorPool.Handle != 0) __VK.DestroyDescriptorPool(__Device, __DescriptorPool, null);
+        if (__Framebuffer.Handle != 0) __VK.DestroyFramebuffer(__Device, __Framebuffer, null);
+        if (__MainRenderPass.Handle != 0) __VK.DestroyRenderPass(__Device, __MainRenderPass, null);
+        if (__RenderImageView.Handle != 0) __VK.DestroyImageView(__Device, __RenderImageView, null);
+        
         if(__RenderFence.Handle != 0){ __VK.DestroyFence(__Device, __RenderFence, null); }
         if(__CommandPool.Handle != 0){ __VK.DestroyCommandPool(__Device, __CommandPool, null); }
         
         if(__StadingBuffer.Handle != 0){ __VK.DestroyBuffer(__Device, __StadingBuffer, null); }
-        if(__StadingMemory.Handle != 0){ __VK.FreeMemory(__Device, __StadingMemory, null); }
+        if(__StadingMemory.Handle != 0){
+            __VK.UnmapMemory(__Device, __StadingMemory);
+            __VK.FreeMemory(__Device, __StadingMemory, null);
+        }
         
         if(__RenderImage.Handle != 0){ __VK.DestroyImage(__Device, __RenderImage, null); }
         if(__RenderImageMemory.Handle != 0){ __VK.FreeMemory(__Device, __RenderImageMemory, null); }
@@ -246,7 +259,11 @@ public unsafe class Vulkan : WLI_Render.Hardware{
     private CommandPool   __CommandPool;
     private CommandBuffer __CommandBuffer;
     private Fence         __RenderFence;
-
+    
+    public RenderPass     __MainRenderPass;
+    public DescriptorPool __DescriptorPool;
+    private Framebuffer    __Framebuffer;
+    
     private void __CreateResources(Vector2I Size){
         ImageCreateInfo ImageInfo = new ImageCreateInfo{
             SType = StructureType.ImageCreateInfo,
@@ -281,7 +298,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
         __VK.BindImageMemory(__Device, __RenderImage, __RenderImageMemory, 0);
     }
 
-    private uint __FindMemoryType(uint TypeFilter, MemoryPropertyFlags Properties){
+    public uint __FindMemoryType(uint TypeFilter, MemoryPropertyFlags Properties){
         PhysicalDeviceMemoryProperties MemoryProperties;
         __VK.GetPhysicalDeviceMemoryProperties(__PhysicalDevice, &MemoryProperties);
 
@@ -405,25 +422,103 @@ public unsafe class Vulkan : WLI_Render.Hardware{
         
         __VK.CmdPipelineBarrier(__CommandBuffer, SrcStage, DstStage, 0, 0, null, 0, null, 1, &Barrier);
     }
+
+    private void __CreateRenderPass(){
+        AttachmentDescription ColorAttachment = new AttachmentDescription{
+            Format = Format.B8G8R8A8Unorm,
+            Samples = SampleCountFlags.Count1Bit,
+            LoadOp = AttachmentLoadOp.Clear,
+            StoreOp = AttachmentStoreOp.Store,
+            StencilLoadOp = AttachmentLoadOp.DontCare,
+            StencilStoreOp = AttachmentStoreOp.DontCare,
+            InitialLayout = ImageLayout.Undefined,
+            FinalLayout = ImageLayout.TransferSrcOptimal
+        };
+
+        AttachmentReference ColorAttachmentReference = new AttachmentReference{
+            Attachment = 0,
+            Layout = ImageLayout.ColorAttachmentOptimal
+        };
+
+        SubpassDescription Subpass = new SubpassDescription{
+            PipelineBindPoint = PipelineBindPoint.Graphics,
+            ColorAttachmentCount = 1,
+            PColorAttachments = &ColorAttachmentReference
+        };
+
+        RenderPassCreateInfo RenderPassInfo = new RenderPassCreateInfo{
+            SType = StructureType.RenderPassCreateInfo,
+            AttachmentCount = 1,
+            PAttachments = &ColorAttachment,
+            SubpassCount = 1,
+            PSubpasses = &Subpass
+        };
+
+        fixed(RenderPass* Ptr = &__MainRenderPass){
+            __VK.CreateRenderPass(__Device, &RenderPassInfo, null, Ptr);
+        }
+    }
+
+    private void __CreateImageView(){
+        ImageViewCreateInfo ViewInfo = new ImageViewCreateInfo{
+            SType = StructureType.ImageViewCreateInfo,
+            Image = __RenderImage,
+            ViewType = ImageViewType.Type2D,
+            Format = Format.B8G8R8A8Unorm,
+            SubresourceRange = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+
+        fixed(ImageView* Ptr = &__RenderImageView){
+            __VK.CreateImageView(__Device, &ViewInfo, null, Ptr);
+        }
+    }
+
+    private void __CreateFramebuffer(){
+        fixed(ImageView* Attachment = &__RenderImageView){
+            FramebufferCreateInfo FramebufferInfo = new FramebufferCreateInfo{
+                SType = StructureType.FramebufferCreateInfo,
+                RenderPass = __MainRenderPass,
+                AttachmentCount = 1,
+                PAttachments = Attachment,
+                Width = (uint)Viewport.W,
+                Height = (uint)Viewport.H,
+                Layers = 1
+            };
+
+            fixed(Framebuffer* Ptr = &__Framebuffer){
+                __VK.CreateFramebuffer(__Device, &FramebufferInfo, null, Ptr);
+            }
+        }
+    }
+
+    private void __CreateDescriptorPool(){
+        DescriptorPoolSize[] PoolSizes = [
+            new DescriptorPoolSize(DescriptorType.CombinedImageSampler, 1000)
+        ];
+
+        fixed(DescriptorPoolSize* Sizes = PoolSizes){
+            DescriptorPoolCreateInfo PoolInfo = new DescriptorPoolCreateInfo{
+                SType = StructureType.DescriptorPoolCreateInfo,
+                PoolSizeCount = (uint)PoolSizes.Length,
+                PPoolSizes = Sizes,
+                MaxSets = 1000,
+                Flags = DescriptorPoolCreateFlags.FreeDescriptorSetBit
+            };
+
+            fixed(DescriptorPool* Ptr = &__DescriptorPool){
+                __VK.CreateDescriptorPool(__Device, &PoolInfo, null, Ptr);
+            }
+        }
+    }
     
     // ----------------------------------------------------------------------
 
     public Vector2I Viewport{ get; set; }
-    
+
     public void Clear(Color4B Color){
-        __TransitionImageLayout(__RenderImage, ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
-
-        ClearColorValue ClearColor = new ClearColorValue{
-            Float32_0 = Color.R / 255f,
-            Float32_1 = Color.G / 255f,
-            Float32_2 = Color.B / 255f,
-            Float32_3 = Color.A / 255f
-        };
-
-        ImageSubresourceRange Range = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1);
-        __VK.CmdClearColorImage(__CommandBuffer, __RenderImage, ImageLayout.TransferDstOptimal, &ClearColor, 1, &Range);
+        throw new NotImplementedException();
     }
-
+    
     public void FrameStart(){
         __VK.WaitForFences(__Device, 1, ref __RenderFence, true, ulong.MaxValue);
         __VK.ResetFences(__Device, 1, ref __RenderFence);
@@ -437,8 +532,6 @@ public unsafe class Vulkan : WLI_Render.Hardware{
     }
 
     public void FrameStop(){
-       __TransitionImageLayout(__RenderImage, ImageLayout.TransferDstOptimal, ImageLayout.TransferSrcOptimal);
-
        BufferImageCopy Region = new BufferImageCopy{
            BufferOffset = 0,
            BufferRowLength = 0,
@@ -460,6 +553,32 @@ public unsafe class Vulkan : WLI_Render.Hardware{
 
            __VK.QueueSubmit(__GraphicsQueue, 1, &SubmitInfo, __RenderFence);
        }
+    }
+    
+    public void RENDER_BEGIN(Color4B Color){
+        ClearValue ClearColor = new ClearValue{
+            Color = new ClearColorValue{
+                Float32_0 = Color.R / 255f,
+                Float32_1 = Color.G / 255f,
+                Float32_2 = Color.B / 255f,
+                Float32_3 = Color.A / 255f
+            }
+        };
+
+        RenderPassBeginInfo RenderPassInfo = new RenderPassBeginInfo{
+            SType = StructureType.RenderPassBeginInfo,
+            RenderPass = __MainRenderPass,
+            Framebuffer = __Framebuffer,
+            RenderArea = new Rect2D(new Offset2D(0, 0), new Extent2D((uint)Viewport.W, (uint)Viewport.H)),
+            ClearValueCount = 1,
+            PClearValues = &ClearColor
+        };
+        
+        __VK.CmdBeginRenderPass(__CommandBuffer, &RenderPassInfo, SubpassContents.Inline);
+    }
+
+    public void RENDER_END(){
+        __VK.CmdEndRenderPass(__CommandBuffer);
     }
     
     public void DrawFrameBuffer(FrameBuffer Buffer){
