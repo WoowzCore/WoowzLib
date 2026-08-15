@@ -2,9 +2,11 @@
 using System.Runtime.InteropServices;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
+using Silk.NET.Shaderc;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
 using WLO.Math;
+using WoowzLib.Render.WLO;
 using Buffer = Silk.NET.Vulkan.Buffer;
 
 namespace WLO.Render.Hardware;
@@ -12,10 +14,10 @@ namespace WLO.Render.Hardware;
 public unsafe class Vulkan : WLI_Render.Hardware{
     #region [ КОРНЕВЫЕ ОБЪЕКТЫ ]
 
-    /**
-    * API Vulkan
-    */
-    public Vk? API => __API;
+        /**
+        * API Vulkan
+        */
+        public Vk? API => __API;
         private Vk? __API;
 
         /**
@@ -124,6 +126,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
     public Vector2I Viewport{ get; set; }
     public bool IsStarted => __API != null;
     private GCHandle __VulkanInstanceHandle;
+    private Shaderc  __Shaderc;
     
     
     /**
@@ -149,6 +152,8 @@ public unsafe class Vulkan : WLI_Render.Hardware{
             if(IsStarted){ throw new ExceptionWL("Vulkan уже был инициализирован!"); }
 
             CurrentLogger = WL.Logger.CurrentLogger;
+
+            __Shaderc = Shaderc.GetApi();
             
             __API = Vk.GetApi();
         
@@ -256,6 +261,18 @@ public unsafe class Vulkan : WLI_Render.Hardware{
 
         __API!.BindImageMemory(__Device, Image, Memory, 0);
     }
+
+    public void InternalCreateMesh(Vertex[] Vertices, out Buffer Buffer, out DeviceMemory Memory){
+        uint Size = (uint)(Vertices.Length * sizeof(Vertex));
+        InternalCreateBuffer(Size, BufferUsageFlags.VertexBufferBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, out Buffer, out Memory);
+
+        void* Data;
+        __API!.MapMemory(__Device, Memory, 0, Size, 0, &Data);
+        fixed(Vertex* Vertices__ = Vertices){
+            System.Buffer.MemoryCopy(Vertices__, Data, Size, Size);
+        }
+        __API.UnmapMemory(__Device, Memory);
+    }
     
     /**
      * Находит подходящий индекс типа памяти видеокарты
@@ -269,6 +286,93 @@ public unsafe class Vulkan : WLI_Render.Hardware{
         }
 
         throw new ExceptionWL("Не удалось найти подходящий тип памяти! todo");
+    }
+    
+    // ----------------------------------------------------------------------
+
+    public ShaderModule CreateShaderModule(byte[] Code){
+        fixed(byte* Code__ = Code){
+            ShaderModuleCreateInfo Info = new ShaderModuleCreateInfo{ SType = StructureType.ShaderModuleCreateInfo, CodeSize = (nuint)Code.Length, PCode = (uint*)Code__ };
+            ShaderModule Module;
+            if(__API!.CreateShaderModule(__Device, &Info, null, &Module) != Result.Success){ throw new ExceptionWL($"Произошла ошибка при создании модуля шейдера!\nLO.Render.Hardware.Vulkan.CreateShaderModule({Code})"); }
+            return Module;
+        }
+    }
+
+    public (Pipeline, PipelineLayout) CreateGraphicsPipeline(ShaderModule VShader, ShaderModule FShader){
+        byte* Name = (byte*)Marshal.StringToHGlobalAnsi("main");
+        PipelineShaderStageCreateInfo* Stages = stackalloc PipelineShaderStageCreateInfo[2];
+        Stages[0] = new PipelineShaderStageCreateInfo{ SType = StructureType.PipelineShaderStageCreateInfo, Stage = ShaderStageFlags.VertexBit  , Module = VShader, PName = Name };
+        Stages[1] = new PipelineShaderStageCreateInfo{ SType = StructureType.PipelineShaderStageCreateInfo, Stage = ShaderStageFlags.FragmentBit, Module = FShader, PName = Name };
+
+        VertexInputBindingDescription Binding = new VertexInputBindingDescription(0, (uint)sizeof(Vertex), VertexInputRate.Vertex);
+        VertexInputAttributeDescription* Attributes = stackalloc VertexInputAttributeDescription[2];
+        Attributes[0] = new VertexInputAttributeDescription(0, 0, Format.R32G32Sfloat , 0);
+        Attributes[1] = new VertexInputAttributeDescription(1, 0, Format.R8G8B8A8Unorm, 8);
+
+        PipelineVertexInputStateCreateInfo VertexInput = new PipelineVertexInputStateCreateInfo{ SType = StructureType.PipelineVertexInputStateCreateInfo, VertexBindingDescriptionCount = 1, PVertexBindingDescriptions = &Binding, VertexAttributeDescriptionCount = 2, PVertexAttributeDescriptions = Attributes };
+        PipelineInputAssemblyStateCreateInfo InputAssembly = new PipelineInputAssemblyStateCreateInfo{ SType = StructureType.PipelineInputAssemblyStateCreateInfo, Topology = PrimitiveTopology.TriangleList };
+
+        Silk.NET.Vulkan.Viewport VP = new Viewport(0, 0, Viewport.W, Viewport.H, 0, 1);
+        Rect2D SC = new Rect2D(new Offset2D(0, 0), new Extent2D((uint)Viewport.W, (uint)Viewport.H));
+        PipelineViewportStateCreateInfo ViewportState = new PipelineViewportStateCreateInfo{ SType = StructureType.PipelineViewportStateCreateInfo, ViewportCount = 1, PViewports = &VP, ScissorCount = 1, PScissors = &SC };
+
+        PipelineRasterizationStateCreateInfo Rasterizer = new PipelineRasterizationStateCreateInfo{ SType = StructureType.PipelineRasterizationStateCreateInfo, LineWidth = 1f, CullMode = CullModeFlags.None, FrontFace = FrontFace.Clockwise };
+
+        PipelineMultisampleStateCreateInfo Multisampling = new PipelineMultisampleStateCreateInfo{ SType = StructureType.PipelineMultisampleStateCreateInfo, RasterizationSamples = SampleCountFlags.Count1Bit };
+        
+        PipelineColorBlendAttachmentState ColorBlendAttachment = new PipelineColorBlendAttachmentState{ BlendEnable = Vk.True, SrcColorBlendFactor = BlendFactor.SrcAlpha, DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha, ColorBlendOp = BlendOp.Add, SrcAlphaBlendFactor = BlendFactor.One, DstAlphaBlendFactor = BlendFactor.Zero, AlphaBlendOp = BlendOp.Add, ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit | ColorComponentFlags.ABit };
+        PipelineColorBlendStateCreateInfo ColorBlending = new PipelineColorBlendStateCreateInfo{ SType = StructureType.PipelineColorBlendStateCreateInfo, AttachmentCount = 1, PAttachments = &ColorBlendAttachment };
+
+        PipelineLayoutCreateInfo LayoutInfo = new PipelineLayoutCreateInfo{ SType = StructureType.PipelineLayoutCreateInfo };
+        PipelineLayout Layout;
+        __API!.CreatePipelineLayout(__Device, &LayoutInfo, null, &Layout);
+
+        GraphicsPipelineCreateInfo PipelineInfo = new GraphicsPipelineCreateInfo{
+            SType = StructureType.GraphicsPipelineCreateInfo,
+            StageCount = 2, PStages = Stages,
+            PVertexInputState = &VertexInput,
+            PInputAssemblyState = &InputAssembly,
+            PViewportState = &ViewportState,
+            PRasterizationState = &Rasterizer,
+            PMultisampleState = &Multisampling,
+            PColorBlendState = &ColorBlending,
+            Layout = Layout, RenderPass = __RenderPass, Subpass = 0
+        };
+
+        Pipeline Pipeline;
+        __API!.CreateGraphicsPipelines(__Device, default, 1, &PipelineInfo, null, &Pipeline);
+
+        SilkMarshal.Free((IntPtr)Name);
+        return (Pipeline, Layout);
+    }
+
+    public byte[] CompileShader(string Source, string FileName, ShaderKind Kind){
+        Compiler*       Compiler = __Shaderc.CompilerInitialize();
+        CompileOptions* Options  = __Shaderc.CompileOptionsInitialize();
+
+        __Shaderc.CompileOptionsSetTargetEnv(Options, TargetEnv.Vulkan, (uint)EnvVersion.Vulkan12);
+
+        CompilationResult* Result = __Shaderc.CompileIntoSpv(Compiler, Source, (nuint)Source.Length, Kind, FileName, "main", Options);
+
+        if(__Shaderc.ResultGetCompilationStatus(Result) != CompilationStatus.Success){
+            string Error = __Shaderc.ResultGetErrorMessageS(Result);
+            throw new ExceptionWL($"todo, Произошла ошибка при компиляции шейдера!\n{Error}");
+        }
+
+        nuint L = __Shaderc.ResultGetLength(Result);
+        byte* Bytes = __Shaderc.ResultGetBytes(Result);
+
+        byte[] ShaderCode = new byte[L];
+        fixed(byte* Dst = ShaderCode){
+            System.Buffer.MemoryCopy(Bytes, Dst, L, L);
+        }
+        
+        __Shaderc.ResultRelease(Result);
+        __Shaderc.CompileOptionsRelease(Options);
+        __Shaderc.CompilerRelease(Compiler);
+
+        return ShaderCode;
     }
     
     // ----------------------------------------------------------------------
