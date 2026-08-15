@@ -23,6 +23,10 @@ public class FrameBuffer{
         }
     }
 
+    public void Set(Color4B[] Pixels){
+        //todo
+    }
+
     /**
      * Заполняет буфер полностью указанным цветом
      * Все пиксели будут этим цветом

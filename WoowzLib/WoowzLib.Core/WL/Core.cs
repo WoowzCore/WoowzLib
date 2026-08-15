@@ -1,5 +1,3 @@
 ﻿namespace WL;
 
-public class Core{
-    
-}
+public class Core{}
