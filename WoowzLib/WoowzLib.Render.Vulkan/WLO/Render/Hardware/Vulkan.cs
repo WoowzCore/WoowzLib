@@ -143,7 +143,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 Log(LogType_InitDetail, $"Создан Instance: {__Instance}");
 
                 if(API_HasDebugLogger){
-                    API_DebugLogger = __SetupDebugLogger();
+                    API_DebugLogger = WL.Vulkan.SetupDebugLogger(__API, __Instance, API_Self);
                     Log(LogType_InitDetail, $"Создан DebugLogger: {API_DebugLogger}");
                 }
                 
@@ -151,9 +151,9 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 if(__GPUIndex__ != null){ __GPUIndex = __GPUIndex__.Value; }
                 Log(LogType_InitDetail, $"Выбран GPU: {__GPU}, GPUIndex: {__GPUIndex}");
 
-                PhysicalDeviceProperties VK_PhysicalDeviceProperties;
-                __API.GetPhysicalDeviceProperties(__GPU, &VK_PhysicalDeviceProperties);
-                Log(LogType_GPU, $"Выбрана видеокарта: {Marshal.PtrToStringAnsi((IntPtr)VK_PhysicalDeviceProperties.DeviceName)}");
+                PhysicalDeviceProperties VK_PDP;
+                __API.GetPhysicalDeviceProperties(__GPU, &VK_PDP);
+                Log(LogType_GPU, $"Выбрана видеокарта: {Marshal.PtrToStringAnsi((IntPtr)VK_PDP.DeviceName)}");
 
                 (__Device, __Queue) = __CreateDevice(__GPU, __GPUIndex);
                 Log(LogType_InitDetail, $"Создан Device: {__Device}, Queue: {__Queue}");
@@ -223,7 +223,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 Version32 ProjectVersion = new Version32((uint)ProjectInfo.Version.Major, (uint)ProjectInfo.Version.Minor, (uint)System.Math.Max(0, ProjectInfo.Version.Build));
                 Version32 EngineVersion  = new Version32((uint)EngineInfo .Version.Major, (uint)EngineInfo .Version.Minor, (uint)System.Math.Max(0, EngineInfo .Version.Build));
 
-                ApplicationInfo VK_ApplicationInfo = new ApplicationInfo{ ApiVersion = VulkanVersion, PApplicationName = (byte*)Ptr_ProjectName, PEngineName = (byte*)Ptr_EngineName, ApplicationVersion = ProjectVersion, EngineVersion = EngineVersion, SType = StructureType.ApplicationInfo };
+                ApplicationInfo VK_AI = new ApplicationInfo{ ApiVersion = VulkanVersion, PApplicationName = (byte*)Ptr_ProjectName, PEngineName = (byte*)Ptr_EngineName, ApplicationVersion = ProjectVersion, EngineVersion = EngineVersion, SType = StructureType.ApplicationInfo };
 
 
                 List<string> Layers     = [];
@@ -234,19 +234,19 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 }
                 
                 if(API_HasDebugLogger){
-                    __CheckVulkanSDK();
+                    WL.Vulkan.CheckVulkanSDK(__API);
                     
                     Layers.Add("VK_LAYER_KHRONOS_validation");
                 }
 
                 if(APIR_SupportSwapchain){
-                    Extensions.AddRange([KhrSurface.ExtensionName, "VK_KHR_win32_surface"]);
+                    Extensions.AddRange([KhrSurface.ExtensionName, "VK_KHR_win32_surface" /* нужно учитывать, что это для windows, а не linux и т.д */]);
                 }
                 
                 Log(LogType_InitDetail, $"Layers: [\"{string.Join("\",\"", Layers)}\"], Extensions: [\"{string.Join("\",\"", Extensions)}\"]");
                 
-                InstanceCreateInfo VK_InstanceCreateInfo = new InstanceCreateInfo{ EnabledLayerCount = (uint)Layers.Count, PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(Layers), EnabledExtensionCount = (uint)Extensions.Count, PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(Extensions), PApplicationInfo = &VK_ApplicationInfo, SType = StructureType.InstanceCreateInfo };
-                WL.Vulkan.CheckResult(__API.CreateInstance(&VK_InstanceCreateInfo, null, out Instance Result_Instance), $"Ошибка в CreateInstance({VK_InstanceCreateInfo})!");
+                InstanceCreateInfo VK_ICI = new InstanceCreateInfo{ EnabledLayerCount = (uint)Layers.Count, PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(Layers), EnabledExtensionCount = (uint)Extensions.Count, PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(Extensions), PApplicationInfo = &VK_AI, SType = StructureType.InstanceCreateInfo };
+                WL.Vulkan.CheckResult(__API.CreateInstance(&VK_ICI, null, out Instance Result_Instance), $"Ошибка в CreateInstance({VK_ICI})!");
 
                 if(APIR_SupportSwapchain){
                     if(!__API.TryGetInstanceExtension(Result_Instance, out __ExtensionSurface)){
@@ -255,8 +255,8 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                     Log(LogType_InitDetail, $"ExtensionSurface: {__ExtensionSurface}");
                 }
                 
-                SilkMarshal.Free((IntPtr)VK_InstanceCreateInfo.PpEnabledLayerNames    );
-                SilkMarshal.Free((IntPtr)VK_InstanceCreateInfo.PpEnabledExtensionNames);
+                SilkMarshal.Free((IntPtr)VK_ICI.PpEnabledLayerNames    );
+                SilkMarshal.Free((IntPtr)VK_ICI.PpEnabledExtensionNames);
                 
                 return Result_Instance;
             }catch(Exception e){
@@ -264,37 +264,6 @@ public unsafe class Vulkan : WLI_Render.Hardware{
             }finally{
                 if(Ptr_ProjectName != IntPtr.Zero){ SilkMarshal.Free(Ptr_ProjectName); }
                 if(Ptr_EngineName  != IntPtr.Zero){ SilkMarshal.Free(Ptr_EngineName ); }
-            }
-        }
-
-        private void __CheckVulkanSDK(){
-            uint LayerCount = 0;
-            __API.EnumerateInstanceLayerProperties(&LayerCount, null);
-            LayerProperties* AvailableLayers = stackalloc LayerProperties[(int)LayerCount];
-            __API.EnumerateInstanceLayerProperties(&LayerCount, AvailableLayers);
-
-            bool KhronosAvailable = false;
-            for(int i = 0; i < LayerCount; i++){
-                if(Marshal.PtrToStringAnsi((IntPtr)AvailableLayers[i].LayerName) == "VK_LAYER_KHRONOS_validation"){ KhronosAvailable = true; break; }
-            }
-        
-            if(!KhronosAvailable){
-                throw new ExceptionWL("Не найден Vulkan SDK! Для работы DebugLogger нужен Vulkan SDK!\nСкачать: https://vulkan.lunarg.com/sdk/home");
-            }
-        }
-        
-        private DebugUtilsMessengerEXT __SetupDebugLogger(){
-            try{
-                if(!__API.TryGetInstanceExtension(__Instance, out ExtDebugUtils DebugUtils)){ throw new ExceptionWL("Не удалось найти расширение ExtDebugUtils!"); }
-
-                DebugUtilsMessengerCreateInfoEXT CreateInfo = new DebugUtilsMessengerCreateInfoEXT{ MessageSeverity = DebugUtilsMessageSeverityFlagsEXT.VerboseBitExt | DebugUtilsMessageSeverityFlagsEXT.WarningBitExt | DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt, MessageType = DebugUtilsMessageTypeFlagsEXT.GeneralBitExt | DebugUtilsMessageTypeFlagsEXT.ValidationBitExt | DebugUtilsMessageTypeFlagsEXT.PerformanceBitExt, PfnUserCallback = new PfnDebugUtilsMessengerCallbackEXT(&__DebugLoggerCallback), PUserData = (void*)GCHandle.ToIntPtr(API_Self), SType = StructureType.DebugUtilsMessengerCreateInfoExt };
-
-                DebugUtilsMessengerEXT Result_DebugLogger;
-                DebugUtils.CreateDebugUtilsMessenger(__Instance, &CreateInfo, null, &Result_DebugLogger);
-
-                return Result_DebugLogger;
-            }catch(Exception e){
-                throw new ExceptionWL("Произошла ошибка при создании DebugLogger Vulkan!", e);
             }
         }
 
@@ -306,7 +275,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 if(GPUsCount == 0){ throw new ExceptionWL("Не найдены видеокарты с поддержкой Vulkan!"); }
 
                 PhysicalDevice* GPUs = stackalloc PhysicalDevice[(int)GPUsCount];
-                __API!.EnumeratePhysicalDevices(__Instance, &GPUsCount, GPUs);
+                __API.EnumeratePhysicalDevices(__Instance, &GPUsCount, GPUs);
 
                 PhysicalDevice Result_GPU = default;
                 uint? Result_GPUIndex = null;
@@ -333,11 +302,11 @@ public unsafe class Vulkan : WLI_Render.Hardware{
             uint QueueFamilyCount = 0;
             __API.GetPhysicalDeviceQueueFamilyProperties(GPU, &QueueFamilyCount, null);
 
-            QueueFamilyProperties* Families = stackalloc QueueFamilyProperties[(int)QueueFamilyCount];
-            __API.GetPhysicalDeviceQueueFamilyProperties(GPU, &QueueFamilyCount, Families);
+            QueueFamilyProperties* VK_QFP = stackalloc QueueFamilyProperties[(int)QueueFamilyCount];
+            __API.GetPhysicalDeviceQueueFamilyProperties(GPU, &QueueFamilyCount, VK_QFP);
 
             for(uint i = 0; i < QueueFamilyCount; i++){
-                if(Families[i].QueueFlags.HasFlag(QueueFlags.GraphicsBit)){
+                if(VK_QFP[i].QueueFlags.HasFlag(QueueFlags.GraphicsBit)){
                     if(APIR_SupportSwapchain && Surface.HasValue){
                         Bool32 Supported = false;
 
@@ -355,7 +324,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
         private (Device, Queue) __CreateDevice(PhysicalDevice GPU, uint GPUIndex){
             try{
                 float QueuePriority = 1f;
-                DeviceQueueCreateInfo VK_DeviceQueueCreateInfo = new DeviceQueueCreateInfo{ QueueFamilyIndex = GPUIndex, QueueCount = 1, PQueuePriorities = &QueuePriority, SType = StructureType.DeviceQueueCreateInfo };
+                DeviceQueueCreateInfo VK_DQCI = new DeviceQueueCreateInfo{ QueueFamilyIndex = GPUIndex, QueueCount = 1, PQueuePriorities = &QueuePriority, SType = StructureType.DeviceQueueCreateInfo };
 
                 List<string> Extensions = [];
                 if(APIR_SupportSwapchain){
@@ -364,10 +333,10 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 
                 Log(LogType_InitDetail, $"Extensions: [\"{string.Join("\",\"", Extensions)}\"]");
                 
-                DeviceCreateInfo VK_DeviceCreateInfo = new DeviceCreateInfo{ QueueCreateInfoCount = 1, PQueueCreateInfos = &VK_DeviceQueueCreateInfo, EnabledExtensionCount = (uint)Extensions.Count, PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(Extensions), SType = StructureType.DeviceCreateInfo };
+                DeviceCreateInfo VK_DCI = new DeviceCreateInfo{ QueueCreateInfoCount = 1, PQueueCreateInfos = &VK_DQCI, EnabledExtensionCount = (uint)Extensions.Count, PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(Extensions), SType = StructureType.DeviceCreateInfo };
 
                 Device Result_Device;
-                WL.Vulkan.CheckResult(__API.CreateDevice(GPU, &VK_DeviceCreateInfo, null, &Result_Device), "Ошибка при создании Device!");
+                WL.Vulkan.CheckResult(__API.CreateDevice(GPU, &VK_DCI, null, &Result_Device), "Ошибка при создании Device!");
 
                 if(APIR_SupportSwapchain){
                     if(!__API.TryGetDeviceExtension(__Instance, Result_Device, out __ExtensionSwapchain)){
@@ -376,7 +345,7 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                     Log(LogType_InitDetail, $"ExtensionSwapchain: {__ExtensionSwapchain}");
                 }
                 
-                SilkMarshal.Free((IntPtr)VK_DeviceCreateInfo.PpEnabledExtensionNames);
+                SilkMarshal.Free((IntPtr)VK_DCI.PpEnabledExtensionNames);
                 
                 Queue Result_Queue;
                 __API.GetDeviceQueue(Result_Device, GPUIndex, 0, &Result_Queue);
@@ -398,10 +367,8 @@ public unsafe class Vulkan : WLI_Render.Hardware{
                 CurrentRenderView = new VKRenderView(); // todo
                 CurrentRenderView.Viewport = new Vector2I(800, 600);
                 
-                (__CommandPool, __CommandBuffer, __Fence) = __CreateRenderOther(__GPUIndex);
+                (__CommandPool, __CommandBuffer, __Fence) = WL.Vulkan.CreateRenderOther(__API, __Device, __GPUIndex);
                 Log(LogType_InitDetail, $"CommandPool: {__CommandPool}, CommandBuffer: {__CommandBuffer}, Fence: {__Fence}");
-
-                Format PixelsFormat = Format.B8G8R8A8Unorm;
                 
                 Log(LogType_InitDetail, "Создан рендер Vulkan!");
             }catch(Exception e){
@@ -409,58 +376,14 @@ public unsafe class Vulkan : WLI_Render.Hardware{
             }
         }
 
-        private (CommandPool, CommandBuffer, Fence) __CreateRenderOther(uint GPUIndex){
-            // CommandPool
-        
-            CommandPoolCreateInfo VK_CommandPoolCreateInfo = new CommandPoolCreateInfo{ QueueFamilyIndex = GPUIndex, Flags = CommandPoolCreateFlags.ResetCommandBufferBit, SType = StructureType.CommandPoolCreateInfo };
-
-            CommandPool Result_CommandPool;
-            __API.CreateCommandPool(__Device, &VK_CommandPoolCreateInfo, null, &Result_CommandPool);
-
-            CommandBufferAllocateInfo VK_CommandBufferAllocateInfo = new CommandBufferAllocateInfo{ CommandPool = Result_CommandPool, Level = CommandBufferLevel.Primary, CommandBufferCount = 1, SType = StructureType.CommandBufferAllocateInfo };
-
-            CommandBuffer Result_CommandBuffer;
-            __API.AllocateCommandBuffers(__Device, &VK_CommandBufferAllocateInfo, &Result_CommandBuffer);
-        
-            // ----------------------------------------------------------------------
-            // Fence
-        
-            FenceCreateInfo VK_FenceCreateInfo = new FenceCreateInfo{ Flags = FenceCreateFlags.SignaledBit, SType = StructureType.FenceCreateInfo };
-
-            Fence Result_Fence;
-            __API.CreateFence(__Device, &VK_FenceCreateInfo, null, &Result_Fence);
-
-            return (Result_CommandPool, Result_CommandBuffer, Result_Fence);
-        }
-
     #endregion
     // ----------------------------------------------------------------------
     #region Остальное
 
-        private void Log(uint Type, object Message){
+        public void Log(uint Type, object Message){
             CurrentLogger?.PrefixPush("VK");
             CurrentLogger?.Log(Type, Message);
             CurrentLogger?.PrefixPop();
-        }
-
-        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-        private static Bool32 __DebugLoggerCallback(DebugUtilsMessageSeverityFlagsEXT Severity, DebugUtilsMessageTypeFlagsEXT Types, DebugUtilsMessengerCallbackDataEXT* CallbackData, void* UserData){
-            if(UserData != null){
-                GCHandle Self__ = GCHandle.FromIntPtr((IntPtr)UserData);
-
-                if(Self__.Target is Vulkan Self){
-                    uint Level = Self.LogType_DebugLogger_Info;
-                    if(Severity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.WarningBitExt)){
-                        Level = Self.LogType_DebugLogger_Warn;
-                    }else if(Severity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt)){
-                        Level = Self.LogType_DebugLogger_Error;
-                    }
-                    
-                    Self.Log(Level, Marshal.PtrToStringAnsi((IntPtr)CallbackData -> PMessage) ?? "Неизвестное Vulkan сообщение!");
-                }
-            }
-            
-            return Vk.False;
         }
 
     #endregion
