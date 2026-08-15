@@ -29,16 +29,18 @@ public class Simple : WLI.Logger{
     private void __ChangeConsoleBackground(uint Type){
         Console.ForegroundColor = Type switch{
             (uint)WLI.Logger.Type.Debug   => ConsoleColor.Green,
-            (uint)WLI.Logger.Type.Info    => ConsoleColor.White,
+            (uint)WLI.Logger.Type.Info    => ConsoleColor.Gray,
             (uint)WLI.Logger.Type.Warning => ConsoleColor.Yellow,
             (uint)WLI.Logger.Type.Error   => ConsoleColor.Red,
             (uint)WLI.Logger.Type.Fatal   => ConsoleColor.Magenta,
             (uint)WLI.Logger.Type.Trace   => ConsoleColor.Blue,
-            var _ => ConsoleColor.DarkGray
+            var _ => ConsoleColor.Cyan
         };
     }
     
     public void Log(uint Type, object Message){
+        if(Type == (uint)WLI.Logger.Type.NoLog){ return; }
+
         string Content = Message?.ToString() ?? "null";
         
         __ChangeConsoleBackground(Type);

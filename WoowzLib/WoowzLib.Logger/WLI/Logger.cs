@@ -14,11 +14,12 @@ public interface Logger{
     void PrefixPop (             );
     
     public enum Type : uint{
-        Debug   = 100,
-        Info    = 200,
-        Warning = 300,
-        Error   = 400,
-        Fatal   = 500,
-        Trace   = 600
+        Debug     = 100,
+        Info      = 200,
+        Warning   = 300,
+        Error     = 400,
+        Fatal     = 500,
+        Trace     = 600,
+        NoLog     = 700
     }
 }
