@@ -7,8 +7,4 @@
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="WLI\" />
-    </ItemGroup>
-
 </Project>
