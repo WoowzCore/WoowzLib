@@ -7,5 +7,7 @@ public interface Mesh : WLI.GPU.Resource{
     WLI.GPU.Buffer IndexBuffer { get; }
     
     uint VertexCount{ get; }
+    uint IndexCount{ get; }
+    
     void Draw(WLI_Render.RenderContext Context);
 }

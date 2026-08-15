@@ -42,16 +42,27 @@ public unsafe class GLFW : WLI.Window{
     
     // ----------------------------------------------------------------------
 
-    public GLFW(Vector2I Size, string Title){
+    public GLFW(Vector2I Size, string Title, bool UseOpenGL){ // todo...... БОЛЬШОЙ TODO........
         try{
             WL.GLFW.Start();
 
-            WL.GLFW.API.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
+            if(UseOpenGL){
+                WL.GLFW.API.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGL);
+                WL.GLFW.API.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                WL.GLFW.API.WindowHint(WindowHintInt.ContextVersionMinor, 3);
+                WL.GLFW.API.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+            }else{
+                WL.GLFW.API.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
+            }
 
             __Handle = WL.GLFW.API.CreateWindow(Size.W, Size.H, Title, null, null);
 
             if(__Handle == null){ throw new ExceptionWL($"WL.GLFW.API.CreateWindow({Size.W}, {Size.H}, \"{Title}\", null, null) вернул null! Произошла ошибка при создании окна GLFW!"); }
 
+            if(UseOpenGL){
+                WL.GLFW.API.MakeContextCurrent(__Handle);
+            }
+            
             __Native = new GlfwNativeWindow(WL.GLFW.API, __Handle);
 
             Keyboard = new GLFW_Keyboard();
@@ -67,7 +78,15 @@ public unsafe class GLFW : WLI.Window{
         }
     }
 
+    public GLFW(Vector2I Size, string Title) : this(Size, Title, true){}
+
     public static WLI.Window Create(Vector2I Size, string Title) => new GLFW(Size, Title);
+
+    public IntPtr GetProcAddress(string ProcessName) => (IntPtr)WL.GLFW.API.GetProcAddress(ProcessName);
+
+    public void SwapBuffers(){
+        if(__Handle != null){ WL.GLFW.API.SwapBuffers(__Handle); }
+    }
     
     public bool Close(){
         if(__Handle != null){
