@@ -24,10 +24,10 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
 
         IsLinked = true;
     }
-    
-    
 
-    public override void Dispose() => __Owner.API.DeleteProgram(ID);
+
+
+    public override void OnDestroy() => __Owner.API.DeleteProgram(ID);
     
     public void SetUniformF(int Uniform, float Value){
         throw new NotImplementedException();

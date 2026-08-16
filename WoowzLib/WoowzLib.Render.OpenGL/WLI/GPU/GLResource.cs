@@ -8,6 +8,11 @@ public abstract class GLResource : WLI.GPU.Resource{
     protected OpenGL __Owner;
 
     protected GLResource(OpenGL Render) => __Owner = Render;
-    
-    public abstract void Dispose();
+
+    public bool Destroyed{ get; set; }
+
+    public void Destroy() => ((Destroyable)this).Destroy();
+    public void Dispose() => Destroy();
+
+    public abstract void OnDestroy();
 }

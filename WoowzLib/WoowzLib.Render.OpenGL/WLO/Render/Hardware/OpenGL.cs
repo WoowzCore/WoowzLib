@@ -1,13 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using Silk.NET.OpenGL;
 using WLI_Render;
-using WLI.GPU;
 using WLO.GPU;
 using WLO.Math;
-using Buffer = WLI.GPU.Buffer;
-using Program = WLI.GPU.Program;
-using Shader = WLI.GPU.Shader;
-using Texture = WLI.GPU.Texture;
 
 namespace WLO.Render.Hardware;
 
@@ -20,22 +15,8 @@ public class OpenGL : WLI_Render.Hardware{
 
             public readonly Func<string, IntPtr> API_ProcessLoader;
 
-
-            private RenderView __CurrentRenderView = null!;
-            public RenderView CurrentRenderView{
-                get => __CurrentRenderView;
-                set{
-                    GLRenderView OldGLRenderView = (GLRenderView)__CurrentRenderView;
-                    GLRenderView NewRenderView   = (GLRenderView)value;
-                    uint OldID = OldGLRenderView.ID;
-                    uint NewID = NewRenderView  .ID;
-                    if(OldID == NewID){ return; }
-                    API.BindFramebuffer(FramebufferTarget.Framebuffer, NewID);
-                }
-            }
-
-            public GLRenderContext Context => (GLRenderContext)((GLRenderView)CurrentRenderView).Context;
-
+            public bool APIIsReady => API != null!;
+            
         #endregion
         
         #region Логирование
@@ -99,8 +80,8 @@ public class OpenGL : WLI_Render.Hardware{
                     Log(LogType_InitDetails, $"DebugLogger: {API_DebugLogger}");
                 }
                 
-                CurrentRenderView = new GLRenderView(this);
-                Log(LogType_InitDetails, $"CurrentRenderView: {CurrentRenderView}");
+                CRenderView = new GLRenderView(this);
+                Log(LogType_InitDetails, $"CurrentRenderView[0]: {CRenderView}");
             
                 Log(LogType_Initialization, "OpenGL запущен!");
                 
@@ -154,7 +135,7 @@ public class OpenGL : WLI_Render.Hardware{
     // ----------------------------------------------------------------------
 
     public void FrameStart(){
-        API.Viewport(0, 0, (uint)CurrentRenderView.Viewport.X, (uint)CurrentRenderView.Viewport.Y);
+        API.Viewport(0, 0, (uint)CRenderView.Viewport.X, (uint)CRenderView.Viewport.Y);
     }
     
     public void FrameStop(){
@@ -163,13 +144,13 @@ public class OpenGL : WLI_Render.Hardware{
     
     // ----------------------------------------------------------------------
     
-    public Buffer CreateBuffer(uint Usage, uint Size) => new GLBuffer(this, BufferTargetARB.ArrayBuffer, Size);
+    public WLI.GPU.Buffer CreateBuffer(uint Usage, uint Size) => new GLBuffer(this, BufferTargetARB.ArrayBuffer, Size);
 
-    public Shader CreateShader(Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
+    public WLI.GPU.Shader CreateShader(WLI.GPU.Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
 
-    public Program CreateProgram(params Shader[] Shaders) => new GLProgram(this, Shaders);
+    public WLI.GPU.Program CreateProgram(params WLI.GPU.Shader[] Shaders) => new GLProgram(this, Shaders);
 
-    public unsafe Mesh CreateMesh<T>(VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
+    public unsafe WLI.GPU.Mesh CreateMesh<T>(WLI.GPU.VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
         GLMesh Mesh = new GLMesh(this);
 
         uint VSize = (uint)(Vertices.Length * sizeof(T));
@@ -191,7 +172,136 @@ public class OpenGL : WLI_Render.Hardware{
         return Mesh;
     }
     
-    public Texture CreateTexture(Vector2I Size, uint Format){
+    public WLI.GPU.Texture CreateTexture(Vector2I Size, uint Format){
         throw new NotImplementedException();
     }
+    
+    // ----------------------------------------------------------------------
+    
+    private RenderView __CRenderView = null!;
+    public RenderView CRenderView{
+        get => __CRenderView;
+        set{
+            uint OldID = (__CRenderView as GLRenderView)?.ID ?? uint.MaxValue;
+            uint NewID = (value         as GLRenderView)?.ID ?? 0;
+            if(OldID == NewID){ return; }
+            API.BindFramebuffer(FramebufferTarget.Framebuffer, NewID);
+            __CRenderView = value;
+        }
+    }
+    
+    private WLI.GPU.Program? __CurrentProgram = null!;
+    public WLI.GPU.Program? CProgram{
+        get => __CurrentProgram;
+        set{
+            uint OldID = __CurrentProgram?.ID ?? 0;
+            uint NewID = value?.ID ?? 0;
+            if(OldID == NewID){ return; }
+            API.UseProgram(NewID);
+            __CurrentProgram = value;
+        }
+    }
+    
+    private WLI.GPU.Mesh? __CurrentMesh = null!;
+    public WLI.GPU.Mesh? CMesh{
+        get => __CurrentMesh;
+        set{
+            uint OldID = __CurrentMesh?.ID ?? 0;
+            uint NewID = value?.ID ?? 0;
+            if(OldID == NewID){ return; }
+            API.BindVertexArray(NewID);
+            __CurrentMesh = value;
+            // todo, мне ИИ утверждает, что BindVertexArray, изменяет CIBuffer, надо будет проверить!!!
+        }
+    }
+    
+    private WLI.GPU.Buffer? __CFBuffer = null!;
+    public WLI.GPU.Buffer? CFBuffer{
+        get => __CFBuffer;
+        set{
+            uint OldID = __CFBuffer?.ID ?? 0;
+            uint NewID = value?.ID ?? 0;
+            if(OldID == NewID){ return; }
+            API.BindBuffer(BufferTargetARB.ArrayBuffer, NewID);
+            __CFBuffer = value;
+        }
+    }
+    
+    private WLI.GPU.Buffer? __CIBuffer = null!;
+    public WLI.GPU.Buffer? CIBuffer{
+        get => __CIBuffer;
+        set{
+            uint OldID = __CIBuffer?.ID ?? 0;
+            uint NewID = value?.ID ?? 0;
+            if(OldID == NewID){ return; }
+            API.BindBuffer(BufferTargetARB.ElementArrayBuffer, NewID);
+            __CIBuffer = value;
+        }
+    }
+
+    public void SetCBuffer(BufferTargetARB Target, WLI.GPU.Buffer? Buffer){
+        switch(Target){
+            case BufferTargetARB.ArrayBuffer: CFBuffer = Buffer; break;
+            case BufferTargetARB.ElementArrayBuffer: CIBuffer = Buffer; break;
+            default: throw new ExceptionWL();
+        }
+    }
+
+    public WLI.GPU.Buffer? GetCBuffer(BufferTargetARB Target){
+        return Target switch{
+            BufferTargetARB.ArrayBuffer => CFBuffer,
+            BufferTargetARB.ElementArrayBuffer => CIBuffer,
+            var _ => throw new ExceptionWL()
+        };
+    }
+    
+    private WLI.GPU.Texture? __CTexture = null!;
+    public WLI.GPU.Texture? CTexture{
+        get => __CTexture;
+        set{
+            uint OldID = __CTexture?.ID ?? 0;
+            uint NewID = value?.ID ?? 0;
+            if(OldID == NewID){ return; }
+            API.BindTexture(TextureTarget.Texture2D, NewID);
+            __CTexture = value;
+        }
+    }
+    
+    // ----------------------------------------------------------------------
+    
+    public void Clear(Color4B Color){
+        API.ClearColor(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f);
+        API.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    }
+    
+    public void Draw(uint Count, uint Start = 0){
+        if(CProgram == null! || CMesh == null!){ return; }
+
+        API.DrawArrays(PrimitiveType.Triangles, (int)Start, Count);
+    }
+    
+    public unsafe void DrawIndexed(uint Count, uint StartIndex = 0, int BaseVertex = 0){
+        if(CProgram == null! || CMesh == null!){ return; }
+        
+        void* Offset = (void*)(StartIndex * sizeof(uint));
+        if(BaseVertex == 0){
+            API.DrawElements(PrimitiveType.Triangles, Count, DrawElementsType.UnsignedInt, Offset);   
+        }else{
+            API.DrawElementsBaseVertex(PrimitiveType.Triangles, Count, DrawElementsType.UnsignedInt, Offset, BaseVertex);  
+        }
+    }
+
+    public void Draw(WLI.GPU.Mesh Mesh, WLI.GPU.Program? Program){
+        if(Program != null){ CProgram = Program; }
+        
+        CMesh = Mesh;
+        
+        if(Mesh.IndexCount > 0){
+            DrawIndexed(Mesh.IndexCount);
+        }else{
+            Draw(Mesh.VertexCount);   
+        }
+    }
+
+    public void Draw(WLI.GPU.Mesh Mesh) => Draw(Mesh, null);
 }

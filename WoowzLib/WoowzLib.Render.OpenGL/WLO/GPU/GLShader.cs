@@ -10,5 +10,5 @@ public class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
         ID = WL.OpenGL.CompileGLSL(__Owner.API, Stage, Source);
     }
 
-    public override void Dispose() => __Owner.API.DeleteShader(ID);
+    public override void OnDestroy() => __Owner.API.DeleteShader(ID);
 }
