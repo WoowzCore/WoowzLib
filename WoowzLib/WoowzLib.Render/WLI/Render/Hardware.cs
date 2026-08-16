@@ -8,7 +8,7 @@ namespace WLI_Render;
 public interface Hardware : WLI.Render, WLI.Engine{
     RenderView CurrentRenderView{ get; }
     
-    void FrameStart(RenderView? Target = null);
+    void FrameStart();
     void FrameStop();
     
     WLI.GPU.Buffer CreateBuffer(uint Usage, uint Size);

@@ -3,8 +3,8 @@
 namespace WLI_Render;
 
 public interface RenderContext{
-    WLI.GPU.Program? CurrentProgram{ set; get; }
-    WLI.GPU.Mesh?    CurrentMesh  { set; get; }
+    WLI.GPU.Program? CProgram{ set; get; }
+    WLI.GPU.Mesh?    CMesh  { set; get; }
     
     void Clear(Color4B Color);
     

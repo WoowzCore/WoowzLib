@@ -2,7 +2,7 @@
 
 namespace WLO.GPU;
 
-public class GLBuffer : GLResource, WLI.GPU.Buffer{
+public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
     private BufferTargetARB __Target;
     public uint Size{ get; private set; }
 

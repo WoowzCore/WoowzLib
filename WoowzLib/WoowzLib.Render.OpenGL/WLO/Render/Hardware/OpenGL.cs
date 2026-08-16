@@ -14,13 +14,30 @@ namespace WLO.Render.Hardware;
 public class OpenGL : WLI_Render.Hardware{
     #region Значения
 
-        public GL API{ get; private set; } = null!;
+        #region Главные
 
-        public readonly Func<string, IntPtr> API_ProcessLoader;
-        
-        
-        public RenderView CurrentRenderView{ get; private set; } = null!;
+            public GL API{ get; private set; } = null!;
 
+            public readonly Func<string, IntPtr> API_ProcessLoader;
+
+
+            private RenderView __CurrentRenderView = null!;
+            public RenderView CurrentRenderView{
+                get => __CurrentRenderView;
+                set{
+                    GLRenderView OldGLRenderView = (GLRenderView)__CurrentRenderView;
+                    GLRenderView NewRenderView   = (GLRenderView)value;
+                    uint OldID = OldGLRenderView.ID;
+                    uint NewID = NewRenderView  .ID;
+                    if(OldID == NewID){ return; }
+                    API.BindFramebuffer(FramebufferTarget.Framebuffer, NewID);
+                }
+            }
+
+            public GLRenderContext Context => (GLRenderContext)((GLRenderView)CurrentRenderView).Context;
+
+        #endregion
+        
         #region Логирование
 
             public WLI.Logger? CurrentLogger = null!;
@@ -136,14 +153,15 @@ public class OpenGL : WLI_Render.Hardware{
     #endregion
     // ----------------------------------------------------------------------
 
-    public void FrameStart(RenderView? Target = null){
-        RenderView View = Target ?? CurrentRenderView;
-        API.Viewport(0, 0, (uint)View.Viewport.X, (uint)View.Viewport.Y);
+    public void FrameStart(){
+        API.Viewport(0, 0, (uint)CurrentRenderView.Viewport.X, (uint)CurrentRenderView.Viewport.Y);
     }
     
     public void FrameStop(){
         
     }
+    
+    // ----------------------------------------------------------------------
     
     public Buffer CreateBuffer(uint Usage, uint Size) => new GLBuffer(this, BufferTargetARB.ArrayBuffer, Size);
 

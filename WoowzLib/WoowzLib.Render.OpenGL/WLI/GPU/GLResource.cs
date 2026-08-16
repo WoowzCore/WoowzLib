@@ -1,6 +1,6 @@
 ﻿using WLO.Render.Hardware;
 
-namespace WLO.GPU;
+namespace WLI.GPU;
 
 public abstract class GLResource : WLI.GPU.Resource{
     public uint ID{ get; protected set; }

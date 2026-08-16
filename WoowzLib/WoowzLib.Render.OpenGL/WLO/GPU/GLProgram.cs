@@ -1,17 +1,16 @@
 ﻿using Silk.NET.OpenGL;
 using WLO.Math;
 using WLO.Render.Hardware;
-using Shader = WLI.GPU.Shader;
 
 namespace WLO.GPU;
 
-public class GLProgram : GLResource, WLI.GPU.Program{
+public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     public bool IsLinked{ get; } = false;
     
-    public GLProgram(OpenGL Render, Shader[] Shaders) : base(Render){
+    public GLProgram(OpenGL Render, WLI.GPU.Shader[] Shaders) : base(Render){
         ID = __Owner.API.CreateProgram();
 
-        foreach(Shader Shader in Shaders){
+        foreach(WLI.GPU.Shader Shader in Shaders){
             __Owner.API.AttachShader(ID, Shader.ID);
         }
         
@@ -33,7 +32,16 @@ public class GLProgram : GLResource, WLI.GPU.Program{
     public void SetUniformF(int Uniform, float Value){
         throw new NotImplementedException();
     }
+    public void SetUniformI(int Uniform, int Value){
+        throw new NotImplementedException();
+    }
+    public void SetUniformB(int Uniform, bool Value){
+        throw new NotImplementedException();
+    }
     public void SetUniformV2F(int Uniform, Vector2F Value){
+        throw new NotImplementedException();
+    }
+    public void SetUniformV2I(int Uniform, Vector2I Value){
         throw new NotImplementedException();
     }
 }

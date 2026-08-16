@@ -1,27 +1,30 @@
 ﻿using Silk.NET.OpenGL;
 using WLI_Render;
-using WLI.GPU;
 using WLO.Render.Hardware;
-using Buffer = WLI.GPU.Buffer;
 
 namespace WLO.GPU;
 
-public class GLMesh : GLResource, WLI.GPU.Mesh{
-    private List<WLI.GPU.Buffer> __VBO = [];
-    private WLI.GPU.Buffer?      __EBO;
+public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
+    private readonly List<WLI.GPU.Buffer> __VBO = [];
+    private               WLI.GPU.Buffer? __EBO;
 
     private uint __CurrentAttributeIndex = 0;
     
     public uint VertexCount{ get; set; }
     public uint IndexCount{ get; private set; }
 
+    // ----------------------------------------------------------------------
+    
     public GLMesh(OpenGL Render) : base(Render){
         ID = __Owner.API.GenVertexArray();
     }
     
-    public unsafe void AddVertexBuffer(Buffer Buffer, VertexLayout Layout){
-        __Owner.API.BindVertexArray(ID);
-        __Owner.API.BindBuffer(BufferTargetARB.ArrayBuffer, Buffer.ID);
+    public unsafe void AddVertexBuffer(WLI.GPU.Buffer Buffer, WLI.GPU.VertexLayout Layout){
+        WLI.GPU.Mesh? OldMesh = __Owner.Context.CMesh;
+        WLI.GPU.Buffer? OldFBuffer = __Owner.Context.CurrentFloatBuffer;
+        
+        __Owner.Context.CMesh        = this;
+        __Owner.Context.CurrentFloatBuffer = Buffer;
 
         uint Offset = 0;
         foreach(VertexAttribute Attribute in Layout.Attributes){
@@ -36,21 +39,27 @@ public class GLMesh : GLResource, WLI.GPU.Mesh{
         }
         
         __VBO.Add(Buffer);
-        __Owner.API.BindVertexArray(0);
+
+        __Owner.Context.CurrentFloatBuffer = OldFBuffer;
+        __Owner.Context.CMesh = OldMesh;
     }
     
-    public void SetIndexBuffer(Buffer? Buffer, uint IndexCount = 0){
-        __Owner.API.BindVertexArray(ID);
+    public void SetIndexBuffer(WLI.GPU.Buffer? Buffer, uint IndexCount = 0){
+        WLI.GPU.Mesh? OldMesh = __Owner.Context.CMesh;
+
+        __Owner.Context.CMesh = this;
         __EBO = Buffer;
         this.IndexCount = IndexCount;
 
         __Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, Buffer?.ID ?? 0);
 
-        __Owner.API.BindVertexArray(0);
+        __Owner.Context.CMesh = OldMesh;
     }
     
+    // ----------------------------------------------------------------------
+    
     public void Draw(RenderContext Context){
-        Context.CurrentMesh = this;
+        Context.CMesh = this;
         if(IndexCount > 0){
             Context.DrawIndexed(IndexCount);
         }else{
@@ -58,9 +67,9 @@ public class GLMesh : GLResource, WLI.GPU.Mesh{
         }
     }
     
-    public override void Dispose(){
-        __Owner.API.DeleteVertexArray(ID);
-    }
+    // ----------------------------------------------------------------------
+    
+    public override void Dispose() => __Owner.API.DeleteVertexArray(ID);
 
     public static VertexAttribPointerType MapType(VertexAttribute.AttributeType Type) => Type switch{
         VertexAttribute.AttributeType.Float => VertexAttribPointerType.Float,
