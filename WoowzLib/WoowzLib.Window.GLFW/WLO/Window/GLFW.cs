@@ -115,7 +115,14 @@ public unsafe class GLFW : WLI.Window{
             }
         }
     }
-    
+
+    public float Aspect{
+        get{
+            Vector2I Size__ = Size;
+            return (float)Size__.W / Size__.H;
+        }
+    }
+
     public Vector2I Position{
         get{
             if(__Handle == null){ return new Vector2I(0, 0); }
@@ -195,6 +202,10 @@ public unsafe class GLFW : WLI.Window{
             Keys.W => WLI_Input.Keyboard.Key.W,
             Keys.S => WLI_Input.Keyboard.Key.S,
             Keys.D => WLI_Input.Keyboard.Key.D,
+            Keys.Up => WLI_Input.Keyboard.Key.Up,
+            Keys.Down => WLI_Input.Keyboard.Key.Down,
+            Keys.Left => WLI_Input.Keyboard.Key.Left,
+            Keys.Right => WLI_Input.Keyboard.Key.Right,
             _ => WLI_Input.Keyboard.Key.Unknown
         };
     }

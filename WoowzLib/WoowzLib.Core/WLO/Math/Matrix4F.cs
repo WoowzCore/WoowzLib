@@ -12,7 +12,16 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     private readonly Vector128<float> __C4;
 
     public Matrix4F(Vector128<float> C1, Vector128<float> C2, Vector128<float> C3, Vector128<float> C4){ __C1 = C1; __C2 = C2; __C3 = C3; __C4 = C4; }
-
+    
+    // принимает column-major (для графики самое то)
+    public Matrix4F(float C0R0, float C0R1, float C0R2, float C0R3, float C1R0, float C1R1, float C1R2, float C1R3, float C2R0, float C2R1, float C2R2, float C2R3, float C3R0, float C3R1, float C3R2, float C3R3) : this(
+        Vector128.Create(C0R0, C0R1, C0R2, C0R3),
+        Vector128.Create(C1R0, C1R1, C1R2, C1R3),
+        Vector128.Create(C2R0, C2R1, C2R2, C2R3),
+        Vector128.Create(C3R0, C3R1, C3R2, C3R3)
+    ){}
+    
+    // принимает row-major
     public static Matrix4F FromRows(float R0C0, float R0C1, float R0C2, float R0C3, float R1C0, float R1C1, float R1C2, float R1C3, float R2C0, float R2C1, float R2C2, float R2C3, float R3C0, float R3C1, float R3C2, float R3C3){
         return new Matrix4F(
             Vector128.Create(R0C0, R1C0, R2C0, R3C0),
@@ -55,6 +64,70 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     }
 
     public static Matrix4F Identity => new Matrix4F(Vector128.Create(1f, 0, 0, 0), Vector128.Create(0, 1f, 0, 0), Vector128.Create(0, 0, 1f, 0), Vector128.Create(0, 0, 0, 1f));
+    
+    // ----------------------------------------------------------------------
+
+    // TODO ALL!!!! also add aggressive inlining
+    
+    public static Matrix4F CreatePerspective(float FOVRadians, float Aspect, float ZNear, float ZFar){
+        float F = 1f / (float)System.Math.Tan(FOVRadians / 2f);
+        return new Matrix4F(
+            F / Aspect, 0, 0, 0,
+            0, F, 0, 0,
+            0, 0, (ZFar + ZNear) / (ZNear - ZFar), -1,
+            0, 0, (2 * ZFar * ZNear) / (ZNear - ZFar), 0
+        );
+    }
+
+    public static Matrix4F CreateTranslation(float X, float Y, float Z) => new Matrix4F(
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        X, Y, Z, 1
+    );
+
+    public static Matrix4F CreateScale(float X, float Y, float Z) => new Matrix4F(
+        X, 0, 0, 0,
+        0, Y, 0, 0,
+        0, 0, Z, 0,
+        0, 0, 0, 1
+    );
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4F CreateRotationX(float Radians) {
+        float Cos = (float)System.Math.Cos(Radians);
+        float Sin = (float)System.Math.Sin(Radians);
+        return new Matrix4F(
+            1, 0, 0, 0,
+            0, Cos, Sin, 0,
+            0, -Sin, Cos, 0,
+            0, 0, 0, 1
+        );
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4F CreateRotationY(float Radians) {
+        float Cos = (float)System.Math.Cos(Radians);
+        float Sin = (float)System.Math.Sin(Radians);
+        return new Matrix4F(
+            Cos, 0, -Sin, 0,
+            0, 1, 0, 0,
+            Sin, 0, Cos, 0,
+            0, 0, 0, 1
+        );
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4F CreateRotationZ(float Radians) {
+        float Cos = (float)System.Math.Cos(Radians);
+        float Sin = (float)System.Math.Sin(Radians);
+        return new Matrix4F(
+            Cos, Sin, 0, 0,
+            -Sin, Cos, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+    }
     
     // ----------------------------------------------------------------------
 

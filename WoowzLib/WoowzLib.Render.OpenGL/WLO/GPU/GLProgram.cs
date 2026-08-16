@@ -47,6 +47,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     private readonly Dictionary<int, int     > __IValues   = [];
     private readonly Dictionary<int, Vector2F> __V2FValues = [];
     private readonly Dictionary<int, Vector2I> __V2IValues = [];
+    private readonly Dictionary<int, Vector3F> __V3FValues = [];
     private readonly Dictionary<int, Matrix4F> __M4FValues = [];
     
     // TODO, добавить get uniform
@@ -59,6 +60,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         __FValues[Uniform] = Value;
 
     }
+    
     public void SetUniformI(int Uniform, int Value){
         if(!UniformCorrect(Uniform)){ return; }
         if(__IValues.TryGetValue(Uniform, out int Old) && Old == Value){ return; }
@@ -67,6 +69,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         __IValues[Uniform] = Value;
         
     }
+    
     public void SetUniformB(int Uniform, bool Value){
         if(!UniformCorrect(Uniform)){ return; }
         int Value__ = Value ? 1 : 0;
@@ -76,6 +79,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         __IValues[Uniform] = Value__;
 
     }
+    
     public void SetUniformV2F(int Uniform, Vector2F Value){
         if(!UniformCorrect(Uniform)){ return; }
         if(__V2FValues.TryGetValue(Uniform, out Vector2F Old) && Old == Value){ return; }
@@ -83,6 +87,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         __Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
         __V2FValues[Uniform] = Value;
     }
+    
     public void SetUniformV2I(int Uniform, Vector2I Value){
         if(!UniformCorrect(Uniform)){ return; }
         if(__V2IValues.TryGetValue(Uniform, out Vector2I Old) && Old == Value){ return; }
@@ -91,6 +96,15 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         __V2IValues[Uniform] = Value;
         
     }
+    
+    public void SetUniformV3F(int Uniform, Vector3F Value){
+        if(!UniformCorrect(Uniform)){ return; }
+        if(__V3FValues.TryGetValue(Uniform, out Vector3F Old) && Old == Value){ return; }
+        
+        __Owner.API.ProgramUniform3(ID, Uniform, Value.X, Value.Y, Value.Z);
+        __V3FValues[Uniform] = Value;
+    }
+    
     public void SetUniformM4F(int Uniform, Matrix4F Value){
         if(!UniformCorrect(Uniform)){ return; }
         if(__M4FValues.TryGetValue(Uniform, out Matrix4F Old) && Old == Value){ return; }

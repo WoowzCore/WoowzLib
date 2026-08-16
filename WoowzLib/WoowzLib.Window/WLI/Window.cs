@@ -16,4 +16,6 @@ public interface Window{
     Vector2I Size{ get; set; }
     Vector2I Position{ get; set; }
     string Title{ get; set; }
+    
+    float Aspect{ get; }
 }

@@ -35,6 +35,18 @@ public readonly struct Vector2F : IEquatable<Vector2F>{
         Vector128<float> Result = Vector128.Multiply(A.AsVector128(), B.AsVector128());
         return new Vector2F(Result.GetElement(0), Result.GetElement(1));
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2F operator +(Vector2F A, float B){
+        Vector128<float> Result = Vector128.Add(A.AsVector128(), Vector128.Create(B));
+        return new Vector2F(Result.GetElement(0), Result.GetElement(1));
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2F operator *(Vector2F A, float B){
+        Vector128<float> Result = Vector128.Multiply(A.AsVector128(), Vector128.Create(B));
+        return new Vector2F(Result.GetElement(0), Result.GetElement(1));
+    }
         
     // ----------------------------------------------------------------------
 
