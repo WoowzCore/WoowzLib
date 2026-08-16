@@ -78,6 +78,25 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
             0, 0, (2 * ZFar * ZNear) / (ZNear - ZFar), 0
         );
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4F CreateOrtho(float Left, float Right, float Bottom, float Top, float ZNear, float ZFar)
+    {
+        float RminusL = Right - Left;
+        float TminusB = Top - Bottom;
+        float FminusN = ZFar - ZNear;
+
+        return new Matrix4F(
+            Vector128.Create(2.0f / RminusL, 0, 0, 0),                         // Колонка 0
+            Vector128.Create(0, 2.0f / TminusB, 0, 0),                         // Колонка 1
+            Vector128.Create(0, 0, -2.0f / FminusN, 0),                        // Колонка 2
+            Vector128.Create(                                                  // Колонка 3 (Смещение)
+                -(Right + Left) / RminusL, 
+                -(Top + Bottom) / TminusB, 
+                -(ZFar + ZNear) / FminusN, 
+                1.0f)
+        );
+    }
 
     public static Matrix4F CreateTranslation(float X, float Y, float Z) => new Matrix4F(
         1, 0, 0, 0,

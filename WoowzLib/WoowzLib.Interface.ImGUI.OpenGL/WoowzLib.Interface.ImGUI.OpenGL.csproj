@@ -5,15 +5,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Platforms>AnyCPU</Platforms>
+        
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\WoowzLib.Interface.ImGUI\WoowzLib.Interface.ImGUI.csproj" />
         <ProjectReference Include="..\WoowzLib.Render.OpenGL\WoowzLib.Render.OpenGL.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.23.0" />
     </ItemGroup>
 
 </Project>

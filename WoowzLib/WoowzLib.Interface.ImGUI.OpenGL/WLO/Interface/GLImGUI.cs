@@ -1,198 +1,161 @@
-﻿using System.Numerics;
-using Silk.NET.Core.Contexts;
-using Silk.NET.Input;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL.Extensions.ImGui;
-using Silk.NET.Windowing;
+﻿using System.Runtime.InteropServices;
+using ImGuiNET;
+using Silk.NET.OpenGL;
+using WLI_Render;
+using WLI.GPU;
+using WLO.GPU;
 using WLO.Math;
 using WLO.Render.Hardware;
+using Shader = WLI.GPU.Shader;
 
 namespace WLO.Interface;
 
-public class GLImGUI : WLO.Interface.ImGUI{
-    private readonly OpenGL __Owner;
-
-    public ImGuiController API{ get; private set; }
+public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
+    private OpenGL __Owner;
     
-    private GLImGUI(Builder Builder){
-        __Owner = Builder.TargetRender;
+    public GLImGUI(OpenGL Render, bool StartImmediately = false){
+        __Owner = Render;
+        
+        if(StartImmediately){ Start(); }
+    }
+    
+    public override void Start(){
+        try{
+            base.Start(); IsStarted = false;
 
-        API = new ImGuiController(__Owner.API, new GLImGUI_IView(this, Builder), new GLImGUI_IInputContext(this, Builder));
+            // language=GLSL
+            GLShader VShader = (GLShader)__Owner.CreateShader(Shader.Type.Vertex  , @"#version 330 core
+                layout (location = 0) in vec2 aPos;
+                layout (location = 1) in vec2 aUV;
+                layout (location = 2) in vec4 aColor;
+                uniform mat4 uProj;
+                out vec2 vUV;
+                out vec4 vColor;
+                void main() {
+                    vUV = aUV;
+                    vColor = aColor;
+                    gl_Position = uProj * vec4(aPos, 0, 1);
+                }");
+            // language=GLSL
+            GLShader FShader = (GLShader)__Owner.CreateShader(Shader.Type.Fragment, @"#version 330 core
+                in vec2 vUV;
+                in vec4 vColor;
+                uniform sampler2D uTex;
+                out vec4 fColor;
+                void main() {
+                    fColor = vColor * texture(uTex, vUV);
+                }");
+            __Program = (GLProgram)__Owner.CreateProgram(VShader, FShader);
+
+            __Uniform_Projection = __Program.GetUniform("uProj");
+            __Uniform_Texture    = __Program.GetUniform("uTex");
+
+            unsafe{
+                IO.Fonts.GetTexDataAsRGBA32(out byte* Pixels, out int W, out int H);
+                __FontTexture = new GLTexture(__Owner, new Vector2I(W, H));
+
+                byte[] ManagedPixels = new byte[W * H * 4];
+                Marshal.Copy((IntPtr)Pixels, ManagedPixels, 0, ManagedPixels.Length);
+                //todo, set textre pixels...
+                __Owner.CTexture = __FontTexture;
+                __Owner.API.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, (uint)W, (uint)H, GLEnum.Rgba, PixelType.UnsignedByte, Pixels);
+                
+                IO.Fonts.SetTexID((IntPtr)__FontTexture.ID);
+            }
+
+            __Vertices = new GLBuffer(__Owner, BufferTargetARB.ArrayBuffer, 1024 * 64);
+            __Indexes  = new GLBuffer(__Owner, BufferTargetARB.ElementArrayBuffer, 1024 * 16);
+
+            __Mesh = new GLMesh(__Owner);
+            VertexLayout Layout = new VertexLayout(
+                new VertexAttribute("aPos", 2, VertexAttribute.AttributeType.Float),
+                new VertexAttribute("aUV", 2, VertexAttribute.AttributeType.Float),
+                new VertexAttribute("aColor", 4, VertexAttribute.AttributeType.Byte, true)
+            );
+            __Mesh.AddVertexBuffer(__Vertices, Layout);
+            __Mesh.SetIndexBuffer(__Indexes);
+            
+            IsStarted = true;
+        }catch(Exception e){
+            throw new ExceptionWL("Произошла ошибка при создании ImGUI!", e);
+        }
+    }
+    
+    public void Dispose(){
+        __Program?.Destroy();
+        __FontTexture?.Destroy();
+        __Mesh?.Destroy();
     }
     
     // ----------------------------------------------------------------------
 
-    private double __TotalTime;
+    private GLProgram __Program;
+    private GLTexture __FontTexture;
+    private GLMesh    __Mesh;
+    private GLBuffer  __Vertices;
+    private GLBuffer  __Indexes;
+
+    private int __Uniform_Projection;
+    private int __Uniform_Texture;
     
-    public void Update(float DeltaTime){
-        __TotalTime += DeltaTime;
-        API.Update(DeltaTime);
-    }
-    
-    public void Render() => API.Render();
-    
-    // ----------------------------------------------------------------------
-
-    public class Builder{
-        public readonly OpenGL TargetRender;
-
-        public Func<Vector2I>? OnGetSize = null;
-        
-        public Builder(OpenGL Render){
-            TargetRender = Render;
-        }
-
-        public GLImGUI Build() => new GLImGUI(this);
-    }
-    
-    private class GLImGUI_IView : IView{
-        private GLImGUI __Owner;
-
-        public readonly Func<Vector2I> OnGetSize;
-        
-        public GLImGUI_IView(GLImGUI ImGUI, Builder Builder){
-            __Owner = ImGUI;
-
-            OnGetSize = Builder.OnGetSize ?? (() => new Vector2I(800, 600));
-        }
-        
-        // ----------------------------------------------------------------------
-        
-        public Vector2D<int> Size{
-            get{
-                Vector2I Size__ = OnGetSize();
-                return new Vector2D<int>(Size__.W, Size__.H);
-            }
-        }
-
-        public Vector2D<int> FramebufferSize{
-            get{
-                Vector2I Size__ = OnGetSize();
-                return new Vector2D<int>(Size__.W, Size__.H);
-            }
-        }
-        
-        // ----------------------------------------------------------------------
-        
-        public bool ShouldSwapAutomatically{ get; set; }
-        public bool IsEventDriven{ get; set; }
-        public bool IsContextControlDisabled{ get; set; }
-
-        public double FramesPerSecond{ get; set; }
-        public double UpdatesPerSecond{ get; set; }
-        public GraphicsAPI API{ get; }
-        public bool VSync{ get; set; }
-        public VideoMode VideoMode{ get; }
-        public int? PreferredDepthBufferBits{ get; }
-        public int? PreferredStencilBufferBits{ get; }
-        public Vector4D<int>? PreferredBitDepth{ get; }
-        public int? Samples{ get; }
-        public IGLContext? GLContext{ get; }
-        public IVkSurface? VkSurface{ get; }
-        public void Dispose(){}
-        public INativeWindow? Native{ get; }
-        public void Initialize(){}
-        public void DoRender(){}
-        public void DoUpdate(){}
-        public void DoEvents(){}
-        public void ContinueEvents(){}
-        public void Reset(){}
-        public void Focus(){}
-        public void Close(){}
-        public Vector2D<int> PointToClient(Vector2D<int> point){
-            return new Vector2D<int>();
-        }
-        public Vector2D<int> PointToScreen(Vector2D<int> point){
-            return new Vector2D<int>();
-        }
-        public Vector2D<int> PointToFramebuffer(Vector2D<int> point){
-            return new Vector2D<int>();
-        }
-        public object Invoke(Delegate d, params object[] args){
-            return null;
-        }
-        public void Run(Action onFrame){}
-        public IntPtr Handle{ get; }
-        public bool IsClosing{ get; }
-        public double Time{ get; }
-        public bool IsInitialized{ get; }
-        public event Action<Vector2D<int>>? Resize;
-        public event Action<Vector2D<int>>? FramebufferResize;
-        public event Action? Closing;
-        public event Action<bool>? FocusChanged;
-        public event Action? Load;
-        public event Action<double>? Update;
-        public event Action<double>? Render;
-    }
-    
-    private class GLImGUI_IInputContext : IInputContext{
-        private readonly GLImGUI __Owner;
-
-        private readonly GLImGUI_IKeyboard __Keyboard;
-        private readonly GLImGUI_IMouse    __Mouse;
-        
-        public GLImGUI_IInputContext(GLImGUI ImGUI, Builder Builder){
-            __Owner = ImGUI;
-
-            __Keyboard = new GLImGUI_IKeyboard(this);
-            __Mouse    = new GLImGUI_IMouse   (this);
+    protected override void OnRender(ImDrawDataPtr DrawData){
+        unsafe{
+            if(DrawData.NativePtr == null || DrawData.CmdListsCount == 0){ return; }
             
+            // todo......
+            __Owner.API.Enable(GLEnum.Blend);
+            __Owner.API.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+            __Owner.API.Disable(GLEnum.CullFace);
+            __Owner.API.Disable(GLEnum.DepthTest);
+            __Owner.API.Enable(GLEnum.ScissorTest);
             
+            Matrix4F proj = Matrix4F.CreateOrtho(
+                DrawData.DisplayPos.X, 
+                DrawData.DisplayPos.X + DrawData.DisplaySize.X, 
+                DrawData.DisplayPos.Y + DrawData.DisplaySize.Y, 
+                DrawData.DisplayPos.Y, 
+                -1.0f, 1.0f
+            );
+            
+            __Owner.CProgram = __Program;
+            __Program.SetUniformM4F(__Uniform_Projection, proj);
+            __Program.SetUniformI(__Uniform_Texture, 0);
+
+            for(int i = 0; i < DrawData.CmdListsCount; i++){
+                ImDrawListPtr cmdList = DrawData.CmdLists[i];
+                
+                UpdateBuffer(__Vertices, cmdList.VtxBuffer.Data, (uint)(cmdList.VtxBuffer.Size * sizeof(ImDrawVert)));
+                UpdateBuffer(__Indexes, cmdList.IdxBuffer.Data, (uint)(cmdList.IdxBuffer.Size * sizeof(ushort)));
+
+                for(int j = 0; j < cmdList.CmdBuffer.Size; j++){
+                    ImDrawCmdPtr cmd = cmdList.CmdBuffer[j];
+
+                    __Owner.API.Scissor(
+                        (int)cmd.ClipRect.X, 
+                        (int)(DrawData.DisplaySize.Y - cmd.ClipRect.W), 
+                        (uint)(cmd.ClipRect.Z - cmd.ClipRect.X), 
+                        (uint)(cmd.ClipRect.W - cmd.ClipRect.Y)
+                    );
+                    
+                    // 😨
+                    __Owner.API.ActiveTexture(TextureUnit.Texture0);
+                    __Owner.API.BindTexture(TextureTarget.Texture2D, (uint)cmd.TextureId);
+                    
+                    __Owner.API.BindVertexArray(__Mesh.ID);
+                    __Owner.API.DrawElements(PrimitiveType.Triangles, cmd.ElemCount, DrawElementsType.UnsignedShort, (void*)(cmd.IdxOffset * sizeof(ushort)));
+                }
+            }
+            
+            // todo.....
+            __Owner.API.Disable(GLEnum.ScissorTest);
+            __Owner.CMesh = null;
+            __Owner.CProgram = null;
         }
-        
-        // ----------------------------------------------------------------------
-
-        public IReadOnlyList<IKeyboard> Keyboards => [__Keyboard];
-        public IReadOnlyList<IMouse> Mice => [__Mouse];
-        
-        // ----------------------------------------------------------------------
-        
-        public void Dispose(){}
-        public IntPtr Handle{ get; }
-        public IReadOnlyList<IGamepad> Gamepads{ get; }
-        public IReadOnlyList<IJoystick> Joysticks{ get; }
-        public IReadOnlyList<IInputDevice> OtherDevices{ get; }
-        public event Action<IInputDevice, bool>? ConnectionChanged;
     }
-
-    private class GLImGUI_IKeyboard : IKeyboard{
-        private readonly GLImGUI_IInputContext __Owner;
-        public GLImGUI_IKeyboard(GLImGUI_IInputContext InputContext){ __Owner = InputContext; }
-        
-        public string Name{ get; }
-        public int Index{ get; }
-        public bool IsConnected{ get; } = true;
-        public bool IsKeyPressed(Key key){ return false; }
-        public bool IsScancodePressed(int scancode){ return false; }
-        public void BeginInput(){}
-        public void EndInput(){}
-        public IReadOnlyList<Key> SupportedKeys{ get; } = Enum.GetValues<Key>();
-        public string ClipboardText{ get; set; }
-        public event Action<IKeyboard, Key, int>? KeyDown;
-        public event Action<IKeyboard, Key, int>? KeyUp;
-        public event Action<IKeyboard, char>? KeyChar;
-    }
-
-    private class GLImGUI_IMouse : IMouse{
-        private readonly GLImGUI_IInputContext __Owner;
-
-        public GLImGUI_IMouse(GLImGUI_IInputContext InputContext){ __Owner = InputContext; }
-        
-        public string Name{ get; }
-        public int Index{ get; }
-        public bool IsConnected{ get; } = true;
-        public bool IsButtonPressed(MouseButton btn){ return false; }
-        public IReadOnlyList<MouseButton> SupportedButtons{ get; } = Enum.GetValues<MouseButton>();
-        public IReadOnlyList<ScrollWheel> ScrollWheels{ get; } = [default];
-        public Vector2 Position{ get; set; }
-        public ICursor Cursor{ get; }
-        public int DoubleClickTime{ get; set; }
-        public int DoubleClickRange{ get; set; }
-        public event Action<IMouse, MouseButton>? MouseDown;
-        public event Action<IMouse, MouseButton>? MouseUp;
-        public event Action<IMouse, MouseButton, Vector2>? Click;
-        public event Action<IMouse, MouseButton, Vector2>? DoubleClick;
-        public event Action<IMouse, Vector2>? MouseMove;
-        public event Action<IMouse, ScrollWheel>? Scroll;
+    
+    // todo, временный метод
+    private unsafe void UpdateBuffer(GLBuffer buffer, IntPtr data, uint size) {
+        __Owner.SetCBuffer(BufferTargetARB.ArrayBuffer, buffer); // Или соответствующий таргет
+        __Owner.API.BufferData(BufferTargetARB.ArrayBuffer, size, (void*)data, BufferUsageARB.StreamDraw);
     }
 }
