@@ -38,7 +38,8 @@ public unsafe class GLFW : WLI.Window{
     private WindowHandle*    __Handle;
     private GlfwNativeWindow __Native;
 
-    public GLFW_Keyboard Keyboard{ get; }
+    public GLFW_Keyboard Keyboard{ get; private set; }
+    public GLFW_Mouse    Mouse{ get; private set; }
     
     // ----------------------------------------------------------------------
 
@@ -65,12 +66,16 @@ public unsafe class GLFW : WLI.Window{
             
             __Native = new GlfwNativeWindow(WL.GLFW.API, __Handle);
 
-            Keyboard = new GLFW_Keyboard();
+            Keyboard = new GLFW_Keyboard(this);
 
-            WL.GLFW.API.SetKeyCallback(__Handle, (Self, Key, Code, Action, Mods) => {
-                Keyboard.__HandleCallback(Key, Action);
-            });
+            WL.GLFW.API.SetKeyCallback(__Handle, (Self, Key, Code, Action, Mods) => Keyboard.__HandleCallback(Key, Action));
+            
+            Mouse = new GLFW_Mouse(this);
 
+            WL.GLFW.API.SetCursorPosCallback(__Handle, (Self, X, Y) => Mouse.__HandlePositionCallback(X, Y));
+            WL.GLFW.API.SetMouseButtonCallback(__Handle, (Self, Button, Action, Mods) => Mouse.__HandleButtonCallback(Button, Action));
+            WL.GLFW.API.SetScrollCallback(__Handle, (Self, X, Y) => Mouse.__HandleScrollCallback(X, Y));
+            
             WL.GLFW.API.SwapInterval(0); // todo, off vsync
         }
         catch(Exception e){
@@ -153,6 +158,11 @@ public unsafe class GLFW : WLI.Window{
         WL.GLFW.API.PollEvents();
     }
 
+    // todo, это если что типо медленный pollevents
+    public void PollEvents2(){
+        Mouse.__UpdateStates();
+    }
+
     public void Present(FrameBuffer Buffer){
         if(__Handle == null){ return; }
         
@@ -184,6 +194,10 @@ public unsafe class GLFW : WLI.Window{
     // ----------------------------------------------------------------------
     
     public class GLFW_Keyboard : WLI_Input.Keyboard{
+        private GLFW __Owner;
+        
+        public GLFW_Keyboard(GLFW Window){ __Owner = Window; }
+        
         private readonly bool[] __Current  = new bool[512];
         private readonly bool[] __Previous = new bool[512];
 
@@ -206,7 +220,46 @@ public unsafe class GLFW : WLI.Window{
             Keys.Down => WLI_Input.Keyboard.Key.Down,
             Keys.Left => WLI_Input.Keyboard.Key.Left,
             Keys.Right => WLI_Input.Keyboard.Key.Right,
-            _ => WLI_Input.Keyboard.Key.Unknown
+            var _ => WLI_Input.Keyboard.Key.Unknown
         };
+    }
+
+    public class GLFW_Mouse : WLI_Input.Mouse{
+        private GLFW __Owner;
+        
+        public GLFW_Mouse(GLFW Window){ __Owner = Window; }
+
+        private          Vector2I __Position;
+        private          Vector2I __PrevPosition;
+        private          Vector2F __ScrollDelta;
+        private          Vector2F __ScrollAccumulator;
+        private readonly bool[]   __Buttons = new bool[8];
+
+        public void __UpdateStates(){
+            __PrevPosition = __Position;
+
+            __ScrollDelta = __ScrollAccumulator;
+            __ScrollAccumulator = new Vector2F(0, 0);
+        }
+
+        public bool IsButtonDown(Mouse.Button Button) => __Buttons[(int)Button];
+
+        public void __HandlePositionCallback(double X, double Y){
+            __Position = new Vector2I((int)X, (int)Y);
+        }
+
+        public void __HandleButtonCallback(MouseButton Button, InputAction Action){
+            if((int)Button < __Buttons.Length){
+                __Buttons[(int)Button] = Action != InputAction.Release;
+            }
+        }
+
+        public void __HandleScrollCallback(double X, double Y){
+            __ScrollAccumulator = new Vector2F(__ScrollAccumulator.X + (float)X, __ScrollAccumulator.Y + (float)Y);
+        }
+
+        public Vector2I Position => __Position;
+        public Vector2I Delta => __Position - __PrevPosition;
+        public Vector2F ScrollDelta => __ScrollDelta;
     }
 }

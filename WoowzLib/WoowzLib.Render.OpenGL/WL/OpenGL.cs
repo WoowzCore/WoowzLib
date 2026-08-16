@@ -23,8 +23,8 @@ public static partial class OpenGL{
         
         API.DebugMessageCallback(DebugLogger, UserParam);
         
-        // todo, фильтрация
-        //API.DebugMessageControl();
+        // todo, фильтрация (ВРЕМЕННОЕ РЕШЕНИЕ, просто заебал уже)
+        API.DebugMessageControl(DebugSource.DontCare, DebugType.DontCare, DebugSeverity.DebugSeverityNotification, 0u, (uint*)null, false);
     }
     
     public static uint CompileGLSL(GL API, WLI.GPU.Shader.Type Stage, string Source){

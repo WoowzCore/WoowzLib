@@ -40,6 +40,18 @@ public abstract class ImGUI : WLI.Engine{
     
     // ----------------------------------------------------------------------
 
+    public void MousePosition(Vector2I Position){
+        IO.AddMousePosEvent(Position.X, Position.Y);
+    }
+
+    public void MouseButton(int Button, bool Down){
+        IO.AddMouseButtonEvent(Button, Down);
+    }
+
+    public void MouseScroll(Vector2F Delta){
+        IO.AddMouseWheelEvent(Delta.X, Delta.Y);
+    }
+    
     public void FrameStart(float DT, Vector2I Viewport){
         IO.DeltaTime = DT;
         IO.DisplaySize = new Vector2(Viewport.X, Viewport.Y);

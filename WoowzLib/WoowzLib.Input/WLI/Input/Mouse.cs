@@ -7,6 +7,7 @@ public interface Mouse : Input{
     bool IsButtonDown(Button Button);
     Vector2I Position{ get; }
     Vector2I Delta{ get; }
+    public Vector2F ScrollDelta{ get; }
 
     public enum Button{
         Unknown = -1,
