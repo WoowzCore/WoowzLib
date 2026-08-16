@@ -33,6 +33,7 @@ public class OpenGL : WLI_Render.Hardware{
             public uint LogType_DebugLogger_Warn  = (uint)WLI.Logger.Type.Warning;
             public uint LogType_DebugLogger_Error = (uint)WLI.Logger.Type.Error;
             public uint LogType_DebugLogger_Fatal = (uint)WLI.Logger.Type.Fatal;
+            public uint LogType_Uniform           = (uint)WLI.Logger.Type.Warning;
 
             public bool DebugLogger_ThrowExceptionOnFatalErrors = true;
             

@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 
 namespace WLO.Math;
 
-public readonly struct Vector2F{
+public readonly struct Vector2F : IEquatable<Vector2F>{
     public readonly float X;
     public readonly float Y;
 
@@ -35,4 +35,18 @@ public readonly struct Vector2F{
         Vector128<float> Result = Vector128.Multiply(A.AsVector128(), B.AsVector128());
         return new Vector2F(Result.GetElement(0), Result.GetElement(1));
     }
+        
+    // ----------------------------------------------------------------------
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(Vector2F Other) => X == Other.X && Y == Other.Y;
+
+    public override bool Equals(object? Object) => Object is Vector2F Other && Equals(Other);
+
+    public override int GetHashCode() => HashCode.Combine(X, Y);
+
+    public static bool operator ==(Vector2F L, Vector2F R) =>  L.Equals(R);
+    public static bool operator !=(Vector2F L, Vector2F R) => !L.Equals(R);
+
+    public override string ToString() => $"Vector2F({X}, {Y})";
 }
