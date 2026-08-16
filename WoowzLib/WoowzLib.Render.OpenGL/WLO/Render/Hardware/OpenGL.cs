@@ -5,6 +5,7 @@ using WLI.GPU;
 using WLO.GPU;
 using WLO.Math;
 using Buffer = WLI.GPU.Buffer;
+using Program = WLI.GPU.Program;
 using Shader = WLI.GPU.Shader;
 using Texture = WLI.GPU.Texture;
 
@@ -146,8 +147,10 @@ public class OpenGL : WLI_Render.Hardware{
     
     public Buffer CreateBuffer(uint Usage, uint Size) => new GLBuffer(this, BufferTargetARB.ArrayBuffer, Size);
 
-    public Shader CreateShader(string VertexSource, string FragmentSource) => new GLShader(this, VertexSource, FragmentSource);
-    
+    public Shader CreateShader(Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
+
+    public Program CreateProgram(params Shader[] Shaders) => new GLProgram(this, Shaders);
+
     public unsafe Mesh CreateMesh<T>(T[] Vertices, uint[]? Indices = null) where T : unmanaged{
         GLBuffer VBO = new GLBuffer(this, BufferTargetARB.ArrayBuffer, (uint)(Vertices.Length * sizeof(T)));
         VBO.Update(Vertices);

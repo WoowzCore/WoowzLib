@@ -1,5 +1,12 @@
 ﻿namespace WLI.GPU;
 
 public interface Shader : WLI.GPU.Resource{
-    //todo
+    Type Stage{ get; }
+    
+    public enum Type{
+        Vertex,
+        Fragment,
+        Geometry,
+        Compute
+    }
 }

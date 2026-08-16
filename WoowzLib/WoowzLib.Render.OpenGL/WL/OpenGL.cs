@@ -1,5 +1,6 @@
 ﻿using Silk.NET.OpenGL;
 using WLO;
+using Shader = WLI.GPU.Shader;
 
 namespace WL;
 
@@ -25,5 +26,30 @@ public static class OpenGL{
         
         // todo, фильтрация
         //API.DebugMessageControl();
+    }
+    
+    public static uint CompileGLSL(GL API, Shader.Type Stage, string Source){
+        try{
+            uint Shader = API.CreateShader(Stage switch{
+                WLI.GPU.Shader.Type.Vertex => ShaderType.VertexShader,
+                WLI.GPU.Shader.Type.Fragment => ShaderType.FragmentShader,
+                WLI.GPU.Shader.Type.Geometry => ShaderType.GeometryShader,
+                WLI.GPU.Shader.Type.Compute => ShaderType.ComputeShader,
+                var _ => throw new ArgumentOutOfRangeException(nameof(Stage), Stage, null)
+            });
+
+            API.ShaderSource(Shader, Source);
+            API.CompileShader(Shader);
+
+            string InfoLog = API.GetShaderInfoLog(Shader);
+            if(!string.IsNullOrEmpty(InfoLog)){
+                throw new ExceptionWL($"Ошибка компиляции: {InfoLog}");
+            }
+            
+            return Shader;
+        }
+        catch(Exception e){
+            throw new ExceptionWL($"Произошла ошибка при компиляции OpenGL шейдера!\nGL: {API}\nТип шейдера: {Stage}\nКод шейдера:\n{Source}", e);
+        }
     }
 }
