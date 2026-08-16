@@ -151,17 +151,26 @@ public class OpenGL : WLI_Render.Hardware{
 
     public Program CreateProgram(params Shader[] Shaders) => new GLProgram(this, Shaders);
 
-    public unsafe Mesh CreateMesh<T>(T[] Vertices, uint[]? Indices = null) where T : unmanaged{
-        GLBuffer VBO = new GLBuffer(this, BufferTargetARB.ArrayBuffer, (uint)(Vertices.Length * sizeof(T)));
-        VBO.Update(Vertices);
+    public unsafe Mesh CreateMesh<T>(VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
+        GLMesh Mesh = new GLMesh(this);
 
-        GLBuffer EBO = null!;
-        if(Indices != null){
-            EBO = new GLBuffer(this, BufferTargetARB.ElementArrayBuffer, (uint)(Indices.Length * sizeof(uint)));
+        uint VSize = (uint)(Vertices.Length * sizeof(T));
+        GLBuffer VBO = new GLBuffer(this, BufferTargetARB.ArrayBuffer, VSize);
+        VBO.Update(Vertices);
+        
+        Mesh.AddVertexBuffer(VBO, Layout);
+
+        if(Indices != null && Indices.Length > 0){
+            uint ISize = (uint)(Indices.Length * sizeof(uint));
+            GLBuffer EBO = new GLBuffer(this, BufferTargetARB.ElementArrayBuffer, ISize);
             EBO.Update(Indices);
+            
+            Mesh.SetIndexBuffer(EBO, (uint)Indices.Length);
         }
 
-        return new GLMesh(this, VBO, EBO, (uint)Vertices.Length, (uint)(Indices?.Length ?? 0));
+        Mesh.VertexCount = (uint)Vertices.Length;
+        
+        return Mesh;
     }
     
     public Texture CreateTexture(Vector2I Size, uint Format){
