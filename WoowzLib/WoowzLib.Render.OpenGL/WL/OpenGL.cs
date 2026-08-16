@@ -3,7 +3,7 @@ using WLO;
 
 namespace WL;
 
-public static class OpenGL{
+public static partial class OpenGL{
     public static GL CreateAPI(Func<string, IntPtr> ProcessLoader){
         GL API = GL.GetApi(ProcessLoader);
         if(API == null!){ throw new ExceptionWL($"GL.GetApi({ProcessLoader}) вернул null!"); }

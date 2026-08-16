@@ -1,13 +1,9 @@
-﻿using System.Numerics;
-using ImGuiNET;
-using Silk.NET.Vulkan;
-using WLI_Input;
-using WLO.Math;
-using WLO.Render.Hardware;
-using Buffer = Silk.NET.Vulkan.Buffer;
+﻿using ImGuiNET;
 
 namespace WLO.Interface;
 
-public unsafe class ImGUI{
-    
+public abstract class ImGUI{
+    public void Render(){
+        // todo.... ремув нахуй
+    }
 }
