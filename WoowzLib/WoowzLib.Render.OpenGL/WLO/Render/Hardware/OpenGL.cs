@@ -256,16 +256,31 @@ public class OpenGL : WLI_Render.Hardware{
         };
     }
     
-    private WLI.GPU.Texture? __CTexture = null!;
     public WLI.GPU.Texture? CTexture{
-        get => __CTexture;
-        set{
-            uint OldID = __CTexture?.ID ?? 0;
-            uint NewID = value?.ID ?? 0;
-            if(OldID == NewID){ return; }
-            API.BindTexture(TextureTarget.Texture2D, NewID);
-            __CTexture = value;
+        get => __TextureSlots[__CTextureSlot];
+        set => SetCTexture(__CTextureSlot, value);
+    }
+
+    private          uint               __CTextureSlot = 0;
+    private readonly WLI.GPU.Texture?[] __TextureSlots = new WLI.GPU.Texture[32 /* todo, get max opengl textures count */];
+
+    // todo, см позже, что-то тут не чисто...
+    public void SetCTexture(uint Slot, WLI.GPU.Texture? Texture){
+        if(Slot >= __TextureSlots.Length){ throw new ExceptionWL("todo"); }
+
+        uint NewID = Texture?.ID ?? 0;
+        uint OldID = __TextureSlots[Slot]?.ID ?? 0;
+        
+        if(NewID == OldID){ return; }
+
+        if(__CTextureSlot != Slot){
+            API.ActiveTexture(TextureUnit.Texture0 + (int)Slot);
+            __CTextureSlot = Slot;
         }
+        
+        API.BindTexture(TextureTarget.Texture2D, NewID);
+
+        __TextureSlots[Slot] = Texture;
     }
     
     // ----------------------------------------------------------------------

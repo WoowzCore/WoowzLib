@@ -3,32 +3,62 @@
 namespace WLO.GPU;
 
 public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
-    private readonly BufferTargetARB __Target;
+    public readonly BufferTargetARB Target;
+    public  readonly BufferUsageARB Usage;
     
     public uint Size{ get; private set; }
 
-    public GLBuffer(WLO.Render.Hardware.OpenGL Render, BufferTargetARB Target, uint Size) : base(Render){
-        __Target = Target;
+    public GLBuffer(WLO.Render.Hardware.OpenGL Render, BufferTargetARB Target, uint Size, BufferUsageARB Usage = BufferUsageARB.StaticDraw) : base(Render){
+        this.Target = Target;
         this.Size = Size;
+        this.Usage = Usage;
         ID = __Owner.API.GenBuffer();
 
-        WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(__Target);
+        WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(this.Target);
         
-        __Owner.SetCBuffer(__Target, this);
-        __Owner.API.BufferData(__Target, Size, in nint.Zero, BufferUsageARB.StaticDraw);
-        __Owner.SetCBuffer(__Target, OldBuffer);
+        __Owner.SetCBuffer(this.Target, this);
+        unsafe{ __Owner.API.BufferData(this.Target, Size, null, Usage); }
+        __Owner.SetCBuffer(this.Target, OldBuffer);
+    }
+
+    public void Update(IntPtr Data, uint DataSize, uint Offset = 0){
+        if(Data == IntPtr.Zero){ throw new ExceptionWL("todo"); }
+
+        if(Offset + DataSize > Size){ throw new ExceptionWL("todo"); }
+        
+        WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(Target);
+        __Owner.SetCBuffer(Target, this);
+
+        unsafe{ __Owner.API.BufferSubData(Target, (nint)Offset, DataSize, (void*)Data); }
+            
+        __Owner.SetCBuffer(Target, OldBuffer);
     }
     
-    public unsafe void Update<T>(T[] Data) where T : unmanaged{
-        WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(__Target);
-        
-        __Owner.SetCBuffer(__Target, this);
-        fixed(void* Ptr = Data){
-            uint DataSize = (uint)(Data.Length * sizeof(T));
-            __Owner.API.BufferSubData(__Target, 0, DataSize, Ptr);
+    public void Update<T>(ReadOnlySpan<T> Data, uint Offset = 0) where T : unmanaged{
+        unsafe{
+            fixed(void* Ptr = Data){
+                Update((IntPtr)Ptr, (uint)(Data.Length * sizeof(T)), Offset);
+            }
         }
-        
-        __Owner.SetCBuffer(__Target, OldBuffer);
+    }
+
+    public void Update<T>(T[] Data, uint Offset = 0) where T : unmanaged => Update(new ReadOnlySpan<T>(Data), Offset);
+
+    public void Read<T>(Span<T> Destination, uint Offset = 0) where T : unmanaged{
+        unsafe{
+            uint ReadSize = (uint)(Destination.Length * sizeof(T));
+
+            if(Offset + ReadSize > Size){ throw new ExceptionWL("todo"); }
+            
+            WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(Target);
+            __Owner.SetCBuffer(Target, this);
+
+            fixed(void* Ptr = Destination){
+                __Owner.API.GetBufferSubData(Target, (nint)Offset, ReadSize, Ptr);
+            }
+            
+            __Owner.SetCBuffer(Target, OldBuffer);
+        }
     }
 
     public override void OnDestroy() => __Owner.API.DeleteBuffer(ID);

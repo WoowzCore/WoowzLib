@@ -20,7 +20,7 @@ public class GLRenderView : WLI.GPU.GLResource, WLI_Render.RenderView{
     public GLRenderView(OpenGL Render, Vector2I Size) : base(Render){
         Viewport = Size;
 
-        ResultTexture = new GLTexture(__Owner, Size);
+        ResultTexture = new GLTexture2D(__Owner, Size);
 
         ID = __Owner.API.GenFramebuffer();
 

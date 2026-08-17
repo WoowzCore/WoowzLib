@@ -36,6 +36,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
                     vColor = aColor;
                     gl_Position = uProj * vec4(aPos, 0, 1);
                 }");
+            
             // language=GLSL
             GLShader FShader = (GLShader)__Owner.CreateShader(Shader.Type.Fragment, @"#version 330 core
                 in vec2 vUV;
@@ -52,13 +53,11 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
 
             unsafe{
                 IO.Fonts.GetTexDataAsRGBA32(out byte* Pixels, out int W, out int H);
-                __FontTexture = new GLTexture(__Owner, new Vector2I(W, H));
+                __FontTexture = new GLTexture2D(__Owner, new Vector2I(W, H));
 
                 byte[] ManagedPixels = new byte[W * H * 4];
                 Marshal.Copy((IntPtr)Pixels, ManagedPixels, 0, ManagedPixels.Length);
-                //todo, set textre pixels...
-                __Owner.CTexture = __FontTexture;
-                __Owner.API.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, (uint)W, (uint)H, GLEnum.Rgba, PixelType.UnsignedByte, Pixels);
+                __FontTexture.SetData((IntPtr)Pixels);
                 
                 IO.Fonts.SetTexID((IntPtr)__FontTexture.ID);
             }
@@ -90,7 +89,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
     // ----------------------------------------------------------------------
 
     private GLProgram __Program;
-    private GLTexture __FontTexture;
+    private GLTexture2D __FontTexture;
     private GLMesh    __Mesh;
     private GLBuffer  __Vertices;
     private GLBuffer  __Indexes;
@@ -124,8 +123,8 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             for(int i = 0; i < DrawData.CmdListsCount; i++){
                 ImDrawListPtr cmdList = DrawData.CmdLists[i];
                 
-                UpdateBuffer(__Vertices, cmdList.VtxBuffer.Data, (uint)(cmdList.VtxBuffer.Size * sizeof(ImDrawVert)));
-                UpdateBuffer(__Indexes, cmdList.IdxBuffer.Data, (uint)(cmdList.IdxBuffer.Size * sizeof(ushort)));
+                __Vertices.Update(cmdList.VtxBuffer.Data, (uint)(cmdList.VtxBuffer.Size * sizeof(ImDrawVert)));
+                __Indexes.Update(cmdList.IdxBuffer.Data, (uint)(cmdList.IdxBuffer.Size * sizeof(ushort)));
 
                 for(int j = 0; j < cmdList.CmdBuffer.Size; j++){
                     ImDrawCmdPtr cmd = cmdList.CmdBuffer[j];
@@ -140,6 +139,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
                     // 😨
                     __Owner.API.ActiveTexture(TextureUnit.Texture0);
                     __Owner.API.BindTexture(TextureTarget.Texture2D, (uint)cmd.TextureId);
+                    // __Owner.SetCTexture(0, cmd.TextureId);, БЛЯТЬ, дерьмо!!!!!! я это не учёл....... смерть мне
                     
                     __Owner.API.BindVertexArray(__Mesh.ID);
                     __Owner.API.DrawElements(PrimitiveType.Triangles, cmd.ElemCount, DrawElementsType.UnsignedShort, (void*)(cmd.IdxOffset * sizeof(ushort)));
@@ -151,11 +151,5 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             __Owner.CMesh = null;
             __Owner.CProgram = null;
         }
-    }
-    
-    // todo, временный метод
-    private unsafe void UpdateBuffer(GLBuffer buffer, IntPtr data, uint size) {
-        __Owner.SetCBuffer(BufferTargetARB.ArrayBuffer, buffer); // Или соответствующий таргет
-        __Owner.API.BufferData(BufferTargetARB.ArrayBuffer, size, (void*)data, BufferUsageARB.StreamDraw);
     }
 }

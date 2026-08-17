@@ -18,6 +18,10 @@ public abstract class ImGUI : WLI.Engine{
             API.CreateContext();
             IO = API.GetIO();
 
+            unsafe{
+                IO.NativePtr -> IniFilename = null; // todo, отключение imgui.ini сохранения
+            }
+            
             //IO.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
             
             API.StyleColorsDark();
