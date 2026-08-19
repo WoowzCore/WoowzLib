@@ -6,11 +6,15 @@ using WLO.Math;
 
 namespace WLO.Render.Hardware;
 
-public class OpenGL : WLI_Render.Hardware{
+public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     #region Значения
 
         #region Главные
 
+            public readonly uint ID;
+
+            public static uint TotalID;
+            
             public GL API{ get; private set; } = null!;
 
             public readonly Func<string, IntPtr> API_ProcessLoader;
@@ -46,10 +50,11 @@ public class OpenGL : WLI_Render.Hardware{
         public bool IsStarted{ get; private set; }
     
         public OpenGL(Func<string, IntPtr> ProcessLoader, StartParameters? Parameters = null, bool StartImmediately = false){
+            ID = TotalID; TotalID++;
+            
             StartParameters Parameters__ = new StartParameters{
                 DebugLogger = Parameters.HasValue && Parameters.Value.DebugLogger.HasValue ? Parameters.Value.DebugLogger.Value : false,
                 UseThisLogger = Parameters.HasValue && Parameters.Value.UseThisLogger != null ? Parameters.Value.UseThisLogger : WL.Logger.CurrentLogger
-                
             };
             
             API_ProcessLoader = ProcessLoader;
@@ -323,4 +328,19 @@ public class OpenGL : WLI_Render.Hardware{
     }
 
     public void Draw(WLI.GPU.Mesh Mesh) => Draw(Mesh, null);
+    
+    // ----------------------------------------------------------------------
+
+    public override string ToString() => $"OpenGL({ID})";
+
+    public bool Equals(OpenGL? Other){
+        if(Other is null){ return false; }
+        if(ReferenceEquals(this, Other)){ return true; }
+
+        return ID == Other.ID;
+    }
+
+    public override bool Equals(object? Object) => Object is OpenGL Other && Equals(Other);
+
+    public override int GetHashCode() => HashCode.Combine(ID);
 }
