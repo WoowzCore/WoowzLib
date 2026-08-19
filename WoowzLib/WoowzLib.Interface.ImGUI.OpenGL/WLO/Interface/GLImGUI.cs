@@ -62,8 +62,8 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
                 IO.Fonts.SetTexID((IntPtr)__FontTexture.ID);
             }
 
-            __Vertices = GLBuffer.Create(__Owner, BufferTargetARB.ArrayBuffer, 1024 * 64);
-            __Indexes  = GLBuffer.Create(__Owner, BufferTargetARB.ElementArrayBuffer, 1024 * 16);
+            __Vertices = GLBuffer.Create(__Owner, BufferTargetARB.ArrayBuffer, 1024 * 512);
+            __Indexes  = GLBuffer.Create(__Owner, BufferTargetARB.ElementArrayBuffer, 1024 * 128);
 
             __Mesh = GLMesh.Create(__Owner);
             VertexLayout Layout = new VertexLayout(
@@ -100,56 +100,59 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
     protected override void OnRender(ImDrawDataPtr DrawData){
         unsafe{
             if(DrawData.NativePtr == null || DrawData.CmdListsCount == 0){ return; }
+
+            bool OldCullFace = __Owner.CullFace;
+            bool OldDepthTest = __Owner.DepthTest;
+            bool OldScissorTest = __Owner.ScissorTest;
+            (BlendingFactor, BlendingFactor)? OldBlend = __Owner.Blend;
             
-            // todo......
-            __Owner.API.Enable(GLEnum.Blend);
-            __Owner.API.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
-            __Owner.API.Disable(GLEnum.CullFace);
-            __Owner.API.Disable(GLEnum.DepthTest);
-            __Owner.API.Enable(GLEnum.ScissorTest);
+            __Owner.Blend = (BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            __Owner.CullFace = false;
+            __Owner.DepthTest = false;
+            __Owner.ScissorTest = true;
             
-            Matrix4F proj = Matrix4F.CreateOrtho(
+            Matrix4F Projection = Matrix4F.CreateOrtho(
                 DrawData.DisplayPos.X, 
                 DrawData.DisplayPos.X + DrawData.DisplaySize.X, 
                 DrawData.DisplayPos.Y + DrawData.DisplaySize.Y, 
                 DrawData.DisplayPos.Y, 
-                -1.0f, 1.0f
+                -1, 1
             );
             
             __Owner.CProgram = __Program;
-            __Program.SetUniformM4F(__Uniform_Projection, proj);
+            __Program.SetUniformM4F(__Uniform_Projection, Projection);
             __Program.SetUniformI(__Uniform_Texture, 0);
-
+            
             for(int i = 0; i < DrawData.CmdListsCount; i++){
-                ImDrawListPtr cmdList = DrawData.CmdLists[i];
-                
-                __Vertices.Update(cmdList.VtxBuffer.Data, (uint)(cmdList.VtxBuffer.Size * sizeof(ImDrawVert)));
-                __Indexes.Update(cmdList.IdxBuffer.Data, (uint)(cmdList.IdxBuffer.Size * sizeof(ushort)));
+                ImDrawListPtr CMDList = DrawData.CmdLists[i];
 
-                for(int j = 0; j < cmdList.CmdBuffer.Size; j++){
-                    ImDrawCmdPtr cmd = cmdList.CmdBuffer[j];
+                __Owner.CMesh = null;
+                __Vertices.Update(CMDList.VtxBuffer.Data, (uint)(CMDList.VtxBuffer.Size * sizeof(ImDrawVert)));
+                __Indexes .Update(CMDList.IdxBuffer.Data, (uint)(CMDList.IdxBuffer.Size * sizeof(ushort)));
+                
+                for(int j = 0; j < CMDList.CmdBuffer.Size; j++){
+                    ImDrawCmdPtr CMD = CMDList.CmdBuffer[j];
 
                     __Owner.API.Scissor(
-                        (int)cmd.ClipRect.X, 
-                        (int)(DrawData.DisplaySize.Y - cmd.ClipRect.W), 
-                        (uint)(cmd.ClipRect.Z - cmd.ClipRect.X), 
-                        (uint)(cmd.ClipRect.W - cmd.ClipRect.Y)
+                        (int)CMD.ClipRect.X, 
+                        (int)(DrawData.DisplaySize.Y - CMD.ClipRect.W), 
+                        (uint)(CMD.ClipRect.Z - CMD.ClipRect.X), 
+                        (uint)(CMD.ClipRect.W - CMD.ClipRect.Y)
                     );
                     
-                    __Owner.SetCTexture2D(0, GLTexture2D.GetExists(__Owner, (uint)cmd.TextureId));
+                    __Owner.SetCTexture2D(0, GLTexture2D.GetExists(__Owner, (uint)CMD.TextureId));
                     
-                    //__Owner.API.ActiveTexture(TextureUnit.Texture0);
-                    //__Owner.API.BindTexture(TextureTarget.Texture2D, (uint)cmd.TextureId);
-                    
-                    //__Owner.API.BindVertexArray(__Mesh.ID);
                     __Owner.CMesh = __Mesh;
-                    __Owner.API.DrawElements(PrimitiveType.Triangles, cmd.ElemCount, DrawElementsType.UnsignedShort, (void*)(cmd.IdxOffset * sizeof(ushort)));
+                    __Owner.API.DrawElementsBaseVertex(PrimitiveType.Triangles, CMD.ElemCount, DrawElementsType.UnsignedShort, (void*)(CMD.IdxOffset * sizeof(ushort)), (int)CMD.VtxOffset);
                 }
             }
+
+            __Owner.Blend = OldBlend;
+            __Owner.CullFace = OldCullFace;
+            __Owner.DepthTest = OldDepthTest;
+            __Owner.ScissorTest = OldScissorTest;
             
-            // todo.....
-            __Owner.API.Disable(GLEnum.ScissorTest);
-            __Owner.CMesh = null;
+            __Owner.CMesh    = null;
             __Owner.CProgram = null;
         }
     }

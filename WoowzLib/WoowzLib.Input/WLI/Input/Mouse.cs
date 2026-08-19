@@ -9,6 +9,10 @@ public interface Mouse : Input{
     Vector2I Delta{ get; }
     public Vector2F ScrollDelta{ get; }
 
+    event Action<Button, bool>? OnButton;
+    event Action<Vector2I, Vector2I>? OnMove;
+    event Action<Vector2F>? OnScroll;
+    
     public enum Button{
         Unknown = -1,
     

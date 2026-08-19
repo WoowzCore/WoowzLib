@@ -6,6 +6,23 @@ using WLO.Math;
 
 namespace WLO.Render.Hardware;
 
+/*
+
+НЕ ПРАВИЛЬНО Я ДЕЛАЮ, НУЖНО ПРИМЕНЯТЬ ЗНАЧЕНИЯ ВО ВРЕМЯ РЕНДЕРА ИЛИ КАКИХ-ТО ДЕЙСТВИЙ А НЕ СРАЗУ ПРИ ПОЛУЧЕНИИ!
+
+к примеру,
+
+DepthTest = true, (будет просто в памяти лежать что true),
+
+а когда рендер будет типо такого...
+
+api.depthtest = DepthTest;
+render();
+
+что-бы меньше команд к видеокарте бла бла бла
+
+ */
+
 public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     #region Значения
 
@@ -89,6 +106,22 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
                 CRenderView = GLRenderView.GetExists(this, 0);
                 Log(LogType_InitDetails, $"CurrentRenderView[0]: {CRenderView}");
             
+                Log(LogType_Initialization, "Установка значений...");
+                __DepthTest = true;
+                DepthTest = false;
+                
+                __CullFace = true;
+                CullFace = false;
+                
+                __ScissorTest = true;
+                ScissorTest = false;
+                
+                __StencilTest = true;
+                StencilTest = false;
+                
+                __Blend = (BlendingFactor.Zero, BlendingFactor.Zero);
+                Blend = null;
+                
                 Log(LogType_Initialization, "OpenGL запущен!");
                 
                 IsStarted = true;
@@ -289,6 +322,63 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         API.BindTexture(TextureTarget.Texture2D, NewID);
 
         __TextureSlots[Slot] = Texture2D;
+    }
+    
+    // ----------------------------------------------------------------------
+
+    private bool __DepthTest;
+    public bool DepthTest{
+        get => __DepthTest;
+        set{
+            if(__DepthTest == value){ return; }
+            if(value){ API.Enable(EnableCap.DepthTest); }else{ API.Disable(EnableCap.DepthTest); }
+            __DepthTest = value;
+        }
+    }
+    
+    private bool __CullFace;
+    public bool CullFace{
+        get => __CullFace;
+        set{
+            if(__CullFace == value){ return; }
+            if(value){ API.Enable(EnableCap.CullFace); }else{ API.Disable(EnableCap.CullFace); }
+            __CullFace = value;
+        }
+    }
+    
+    private bool __ScissorTest;
+    public bool ScissorTest{
+        get => __ScissorTest;
+        set{
+            if(__ScissorTest == value){ return; }
+            if(value){ API.Enable(EnableCap.ScissorTest); }else{ API.Disable(EnableCap.ScissorTest); }
+            __ScissorTest = value;
+        }
+    }
+    
+    private bool __StencilTest;
+    public bool StencilTest{
+        get => __StencilTest;
+        set{
+            if(__StencilTest == value){ return; }
+            if(value){ API.Enable(EnableCap.StencilTest); }else{ API.Disable(EnableCap.StencilTest); }
+            __StencilTest = value;
+        }
+    }
+    
+    private (BlendingFactor, BlendingFactor)? __Blend;
+    public (BlendingFactor, BlendingFactor)? Blend{
+        get => __Blend;
+        set{
+            if(__Blend == value){ return; }
+            if(value == null){
+                API.Disable(EnableCap.Blend);
+            }else{
+                if(__Blend == null){ API.Enable(EnableCap.Blend); }
+                API.BlendFunc(value.Value.Item1, value.Value.Item2);
+            }
+            __Blend = value;
+        }
     }
     
     // ----------------------------------------------------------------------
