@@ -81,7 +81,7 @@ public class OpenGL : WLI_Render.Hardware{
                     Log(LogType_InitDetails, $"DebugLogger: {API_DebugLogger}");
                 }
                 
-                CRenderView = new GLRenderView(this);
+                CRenderView = GLRenderView.GetExists(this, 0);
                 Log(LogType_InitDetails, $"CurrentRenderView[0]: {CRenderView}");
             
                 Log(LogType_Initialization, "OpenGL запущен!");
@@ -145,24 +145,24 @@ public class OpenGL : WLI_Render.Hardware{
     
     // ----------------------------------------------------------------------
     
-    public WLI.GPU.Buffer CreateBuffer(uint Usage, uint Size) => new GLBuffer(this, BufferTargetARB.ArrayBuffer, Size);
+    public WLI.GPU.Buffer CreateBuffer(uint Usage, uint Size) => GLBuffer.Create(this, BufferTargetARB.ArrayBuffer, Size);
 
     public WLI.GPU.Shader CreateShader(WLI.GPU.Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
 
-    public WLI.GPU.Program CreateProgram(params WLI.GPU.Shader[] Shaders) => new GLProgram(this, Shaders);
+    public WLI.GPU.Program CreateProgram(params WLI.GPU.Shader[] Shaders) => GLProgram.Create(this, Shaders);
 
     public unsafe WLI.GPU.Mesh CreateMesh<T>(WLI.GPU.VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
-        GLMesh Mesh = new GLMesh(this);
+        GLMesh Mesh = GLMesh.Create(this);
 
         uint VSize = (uint)(Vertices.Length * sizeof(T));
-        GLBuffer VBO = new GLBuffer(this, BufferTargetARB.ArrayBuffer, VSize);
+        GLBuffer VBO = (GLBuffer)CreateBuffer((uint)BufferTargetARB.ArrayBuffer, VSize);
         VBO.Update(Vertices);
         
         Mesh.AddVertexBuffer(VBO, Layout);
 
         if(Indices != null && Indices.Length > 0){
             uint ISize = (uint)(Indices.Length * sizeof(uint));
-            GLBuffer EBO = new GLBuffer(this, BufferTargetARB.ElementArrayBuffer, ISize);
+            GLBuffer EBO = (GLBuffer)CreateBuffer((uint)BufferTargetARB.ElementArrayBuffer, ISize);
             EBO.Update(Indices);
             
             Mesh.SetIndexBuffer(EBO, (uint)Indices.Length);
@@ -173,13 +173,12 @@ public class OpenGL : WLI_Render.Hardware{
         return Mesh;
     }
     
-    public WLI.GPU.Texture CreateTexture(Vector2I Size, uint Format){
-        throw new NotImplementedException();
-    }
+    public WLI.GPU.Texture CreateTexture(Vector2I Size, uint Format = (uint)InternalFormat.Rgba) => GLTexture2D.Create(this, Size, (InternalFormat)Format);
     
     // ----------------------------------------------------------------------
-    
-    private RenderView __CRenderView = null!;
+
+    public readonly Dictionary<uint, GLRenderView> Registry_RenderView = new Dictionary<uint, GLRenderView>();
+    private RenderView __CRenderView  = null!;
     public RenderView CRenderView{
         get => __CRenderView;
         set{
@@ -191,6 +190,7 @@ public class OpenGL : WLI_Render.Hardware{
         }
     }
     
+    public readonly Dictionary<uint, GLProgram> Registry_Program = new Dictionary<uint, GLProgram>();
     private WLI.GPU.Program? __CurrentProgram = null!;
     public WLI.GPU.Program? CProgram{
         get => __CurrentProgram;
@@ -203,6 +203,7 @@ public class OpenGL : WLI_Render.Hardware{
         }
     }
     
+    public readonly Dictionary<uint, GLMesh> Registry_Mesh = new Dictionary<uint, GLMesh>();
     private WLI.GPU.Mesh? __CurrentMesh = null!;
     public WLI.GPU.Mesh? CMesh{
         get => __CurrentMesh;
@@ -240,6 +241,7 @@ public class OpenGL : WLI_Render.Hardware{
         }
     }
 
+    public readonly Dictionary<uint, GLBuffer> Registry_Buffer = new Dictionary<uint, GLBuffer>();
     public void SetCBuffer(BufferTargetARB Target, WLI.GPU.Buffer? Buffer){
         switch(Target){
             case BufferTargetARB.ArrayBuffer: CFBuffer = Buffer; break;
@@ -256,19 +258,20 @@ public class OpenGL : WLI_Render.Hardware{
         };
     }
     
-    public WLI.GPU.Texture? CTexture{
+    public readonly Dictionary<uint, GLTexture2D> Registry_Texture2D = new Dictionary<uint, GLTexture2D>();
+    public WLI.GPU.Texture? CTexture2D{
         get => __TextureSlots[__CTextureSlot];
-        set => SetCTexture(__CTextureSlot, value);
+        set => SetCTexture2D(__CTextureSlot, value);
     }
 
     private          uint               __CTextureSlot = 0;
     private readonly WLI.GPU.Texture?[] __TextureSlots = new WLI.GPU.Texture[32 /* todo, get max opengl textures count */];
 
     // todo, см позже, что-то тут не чисто...
-    public void SetCTexture(uint Slot, WLI.GPU.Texture? Texture){
+    public void SetCTexture2D(uint Slot, WLI.GPU.Texture? Texture2D){
         if(Slot >= __TextureSlots.Length){ throw new ExceptionWL("todo"); }
 
-        uint NewID = Texture?.ID ?? 0;
+        uint NewID = Texture2D?.ID ?? 0;
         uint OldID = __TextureSlots[Slot]?.ID ?? 0;
         
         if(NewID == OldID){ return; }
@@ -280,7 +283,7 @@ public class OpenGL : WLI_Render.Hardware{
         
         API.BindTexture(TextureTarget.Texture2D, NewID);
 
-        __TextureSlots[Slot] = Texture;
+        __TextureSlots[Slot] = Texture2D;
     }
     
     // ----------------------------------------------------------------------

@@ -5,19 +5,52 @@ using WLO.Render.Hardware;
 namespace WLO.GPU;
 
 public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
+    private GLMesh(OpenGL Render) : base(Render){
+        ID = __Owner.API.GenVertexArray();
+    }
+
+    public static GLMesh Create(OpenGL Render){
+        GLMesh Result = new GLMesh(Render);
+        
+        Render.Registry_Mesh[Result.ID] = Result;
+
+        return Result;
+    }
+    
+    private GLMesh(OpenGL Render, uint TargetID) : base(Render){
+        FromID = true;
+        ID = TargetID;
+        
+        // todo, get __CurrentAttributeIndex
+    }
+
+    public static GLMesh GetExists(OpenGL Render, uint TargetID){
+        if(TargetID == 0){ return null!; }
+        
+        if(Render.Registry_Mesh.TryGetValue(TargetID, out GLMesh Result)){ return Result; }
+
+        if(!Render.API.IsVertexArray(TargetID)){ throw new ExceptionWL("Указан несуществующий ID!"); }
+
+        Result = new GLMesh(Render, TargetID);
+        Render.Registry_Mesh[TargetID] = Result;
+
+        return Result;
+    }
+
+    public override void OnDestroy(){
+        __Owner.Registry_Mesh.Remove(ID);
+        __Owner.API.DeleteVertexArray(ID);
+    }
+    
+    // ----------------------------------------------------------------------
+    
     private readonly List<WLI.GPU.Buffer> __VBO = [];
-    private               WLI.GPU.Buffer? __EBO;
+    private          WLI.GPU.Buffer?      __EBO;
 
     private uint __CurrentAttributeIndex = 0;
     
     public uint VertexCount{ get; set; }
     public uint IndexCount{ get; private set; }
-
-    // ----------------------------------------------------------------------
-    
-    public GLMesh(OpenGL Render) : base(Render){
-        ID = __Owner.API.GenVertexArray();
-    }
     
     public unsafe void AddVertexBuffer(WLI.GPU.Buffer Buffer, WLI.GPU.VertexLayout Layout){
         WLI.GPU.Mesh?   OldMesh    = __Owner.CMesh;
@@ -58,8 +91,6 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     }
     
     // ----------------------------------------------------------------------
-
-    public override void OnDestroy() => __Owner.API.DeleteVertexArray(ID);
 
     public static VertexAttribPointerType MapType(VertexAttribute.AttributeType Type) => Type switch{
         VertexAttribute.AttributeType.Float => VertexAttribPointerType.Float,

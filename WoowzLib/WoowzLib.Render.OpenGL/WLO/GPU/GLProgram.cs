@@ -7,7 +7,7 @@ namespace WLO.GPU;
 public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     public bool IsLinked{ get; } = false;
     
-    public GLProgram(OpenGL Render, WLI.GPU.Shader[] Shaders) : base(Render){
+    private GLProgram(OpenGL Render, WLI.GPU.Shader[] Shaders) : base(Render){
         ID = __Owner.API.CreateProgram();
 
         foreach(WLI.GPU.Shader Shader in Shaders){
@@ -24,7 +24,43 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
 
         IsLinked = true;
     }
+    
+    public static GLProgram Create(OpenGL Render, WLI.GPU.Shader[] Shaders){
+        GLProgram Result = new GLProgram(Render, Shaders);
+        
+        Render.Registry_Program[Result.ID] = Result;
 
+        return Result;
+    }
+    
+    private GLProgram(OpenGL Render, uint TargetID) : base(Render){
+        FromID = true;
+        ID = TargetID;
+
+        __Owner.API.GetProgram(ID, ProgramPropertyARB.LinkStatus, out int Status);
+        IsLinked = Status != 0;
+    }
+
+    public static GLProgram GetExists(OpenGL Render, uint TargetID){
+        if(TargetID == 0){ return null!; }
+        
+        if(Render.Registry_Program.TryGetValue(TargetID, out GLProgram Result)){ return Result; }
+
+        if(!Render.API.IsProgram(TargetID)){ throw new ExceptionWL("Указан несуществующий ID!"); }
+
+        Result = new GLProgram(Render, TargetID);
+        Render.Registry_Program[TargetID] = Result;
+
+        return Result;
+    }
+
+    public override void OnDestroy(){
+        __Owner.Registry_Program.Remove(ID);
+        __Owner.API.DeleteProgram(ID);
+    }
+
+    // ----------------------------------------------------------------------
+    
     private readonly Dictionary<string, int> __Uniforms = [];
     public int GetUniform(string Name){
         if(__Uniforms.TryGetValue(Name, out int Location)){ return Location; }
@@ -36,9 +72,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         
         return Location;
     }
-
-    public override void OnDestroy() => __Owner.API.DeleteProgram(ID);
-
+    
     public bool UniformCorrect(int Uniform) => Uniform != -1;
     
     // ----------------------------------------------------------------------

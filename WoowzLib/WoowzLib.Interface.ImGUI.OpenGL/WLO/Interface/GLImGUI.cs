@@ -53,7 +53,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
 
             unsafe{
                 IO.Fonts.GetTexDataAsRGBA32(out byte* Pixels, out int W, out int H);
-                __FontTexture = new GLTexture2D(__Owner, new Vector2I(W, H));
+                __FontTexture = GLTexture2D.Create(__Owner, new Vector2I(W, H));
 
                 byte[] ManagedPixels = new byte[W * H * 4];
                 Marshal.Copy((IntPtr)Pixels, ManagedPixels, 0, ManagedPixels.Length);
@@ -62,10 +62,10 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
                 IO.Fonts.SetTexID((IntPtr)__FontTexture.ID);
             }
 
-            __Vertices = new GLBuffer(__Owner, BufferTargetARB.ArrayBuffer, 1024 * 64);
-            __Indexes  = new GLBuffer(__Owner, BufferTargetARB.ElementArrayBuffer, 1024 * 16);
+            __Vertices = GLBuffer.Create(__Owner, BufferTargetARB.ArrayBuffer, 1024 * 64);
+            __Indexes  = GLBuffer.Create(__Owner, BufferTargetARB.ElementArrayBuffer, 1024 * 16);
 
-            __Mesh = new GLMesh(__Owner);
+            __Mesh = GLMesh.Create(__Owner);
             VertexLayout Layout = new VertexLayout(
                 new VertexAttribute("aPos", 2, VertexAttribute.AttributeType.Float),
                 new VertexAttribute("aUV", 2, VertexAttribute.AttributeType.Float),
@@ -136,12 +136,13 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
                         (uint)(cmd.ClipRect.W - cmd.ClipRect.Y)
                     );
                     
-                    // 😨
-                    __Owner.API.ActiveTexture(TextureUnit.Texture0);
-                    __Owner.API.BindTexture(TextureTarget.Texture2D, (uint)cmd.TextureId);
-                    // __Owner.SetCTexture(0, cmd.TextureId);, БЛЯТЬ, дерьмо!!!!!! я это не учёл....... смерть мне
+                    __Owner.SetCTexture2D(0, GLTexture2D.GetExists(__Owner, (uint)cmd.TextureId));
                     
-                    __Owner.API.BindVertexArray(__Mesh.ID);
+                    //__Owner.API.ActiveTexture(TextureUnit.Texture0);
+                    //__Owner.API.BindTexture(TextureTarget.Texture2D, (uint)cmd.TextureId);
+                    
+                    //__Owner.API.BindVertexArray(__Mesh.ID);
+                    __Owner.CMesh = __Mesh;
                     __Owner.API.DrawElements(PrimitiveType.Triangles, cmd.ElemCount, DrawElementsType.UnsignedShort, (void*)(cmd.IdxOffset * sizeof(ushort)));
                 }
             }

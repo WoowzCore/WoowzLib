@@ -25,7 +25,7 @@ public interface Hardware : WLI.Render, WLI.Engine{
     Program? CProgram{ get; }
     Buffer? CFBuffer{ get; }
     Buffer? CIBuffer{ get; }
-    Texture? CTexture{ get; }
+    Texture? CTexture2D{ get; }
     
     // ----------------------------------------------------------------------
     
