@@ -27,6 +27,22 @@ public abstract class ImGUI : WLI.Engine{
             
             API.StyleColorsDark();
             
+            //todo \/
+
+            string FontPath = @"C:\Windows\Fonts\consola.ttf";
+
+            if(System.IO.File.Exists(FontPath)){
+                IO.Fonts.Clear();
+
+                IO.Fonts.AddFontFromFileTTF(FontPath, 16, null, IO.Fonts.GetGlyphRangesCyrillic());
+                
+                IO.Fonts.Build();
+            }else{
+                WL.Logger.Warn("todo, font not found");
+            }
+            
+            // todo /\
+            
             IsStarted = true;
         }catch(Exception e){
             throw new ExceptionWL("Произошла ошибка при создании ImGUI!", e);

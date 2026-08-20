@@ -39,13 +39,19 @@ public class Simple : WLI.Logger{
     }
     
     public void Log(uint Type, object Message){
+        OnRawLog?.Invoke(Type, Message);
+        
         if(Type == (uint)WLI.Logger.Type.NoLog){ return; }
 
         string Content = Message?.ToString() ?? "null";
         
         __ChangeConsoleBackground(Type);
+
+        string Result = $"{GeneratePrefix(Type)}: {Content}";
         
-        Console.WriteLine($"{GeneratePrefix(Type)}: {Content}");
+        OnLog?.Invoke(Type, Result);
+        
+        Console.WriteLine(Result);
     }
     
     // ----------------------------------------------------------------------
@@ -62,4 +68,7 @@ public class Simple : WLI.Logger{
             __Prefixes.Pop();
         }
     }
+    
+    public event Action<uint, object>? OnRawLog;
+    public event Action<uint, string>? OnLog;
 }

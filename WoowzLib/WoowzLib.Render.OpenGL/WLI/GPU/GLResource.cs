@@ -12,7 +12,13 @@ public abstract class GLResource : WLI.GPU.Resource, IEquatable<GLResource>{
 
     public bool Destroyed{ get; set; }
 
-    public void Destroy() => ((Destroyable)this).Destroy();
+    public void Destroy(){
+        if(Destroyed){ return; }
+
+        Destroyed = true;
+        OnDestroy();
+        ID = 0;
+    }
     public void Dispose() => Destroy();
 
     public abstract void OnDestroy();

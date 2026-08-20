@@ -72,6 +72,7 @@ public class GLRenderView : WLI.GPU.GLResource, WLI_Render.RenderView{
     }
     
     public override void OnDestroy(){
+        __Owner.Registry_RenderView.Remove(ID);
         if(ID != 0){ __Owner.API.DeleteFramebuffer(ID); }
         ResultTexture?.Destroy();
     }

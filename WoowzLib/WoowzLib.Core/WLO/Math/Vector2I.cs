@@ -50,6 +50,10 @@ public struct Vector2I : IEquatable<Vector2I>{
     
     // ----------------------------------------------------------------------
 
+    public float Aspect => (float)X / Y;
+
+    // ----------------------------------------------------------------------
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(Vector2I Other) => X == Other.X && Y == Other.Y;
 

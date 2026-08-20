@@ -13,6 +13,9 @@ public interface Logger{
     void PrefixPush(object Prefix);
     void PrefixPop (             );
     
+    event Action<uint, object>? OnRawLog;
+    event Action<uint, string>? OnLog;
+    
     public enum Type : uint{
         Debug     = 100,
         Info      = 200,

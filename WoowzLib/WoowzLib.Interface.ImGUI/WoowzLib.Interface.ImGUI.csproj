@@ -12,6 +12,7 @@
     <ItemGroup>
         <ProjectReference Include="..\WoowzLib.Core\WoowzLib.Core.csproj" />
         <ProjectReference Include="..\WoowzLib.Input\WoowzLib.Input.csproj" />
+        <ProjectReference Include="..\WoowzLib.Logger\WoowzLib.Logger.csproj" />
     </ItemGroup>
 
     <ItemGroup>

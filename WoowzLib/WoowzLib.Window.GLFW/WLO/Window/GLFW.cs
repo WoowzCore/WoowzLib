@@ -120,12 +120,7 @@ public unsafe class GLFW : WLI.Window{
         }
     }
 
-    public float Aspect{
-        get{
-            Vector2I Size__ = Size;
-            return (float)Size__.W / Size__.H;
-        }
-    }
+    public float Aspect => Size.Aspect;
 
     public Vector2I Position{
         get{
