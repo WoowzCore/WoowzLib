@@ -4,5 +4,5 @@ public interface Engine{
     bool IsStarted{ get; }
     
     void Start();
-    void Stop ();
+    bool Stop ();
 }

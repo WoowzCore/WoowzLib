@@ -33,11 +33,12 @@ public abstract class ImGUI : WLI.Engine{
         }
     }
     
-    public void Stop(){
+    public bool Stop(){
         try{
-            if(!IsStarted){ throw new ExceptionWL("ImGUI даже не был запущен!"); }
+            if(!IsStarted){ return false; }
 
             IsStarted = false;
+            return true;
         }catch(Exception e){
             throw new ExceptionWL("Произошла ошибка при остановке ImGUI!", e);
         }

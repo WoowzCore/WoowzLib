@@ -130,9 +130,9 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             } 
         }
         
-        public void Stop(){
+        public bool Stop(){
             try{
-                if(!IsStarted){ throw new ExceptionWL("Рендер OpenGL даже не был запущен!"); }
+                if(!IsStarted){ return false; }
                 
                 Log(LogType_Initialization, "Остановка OpenGL...");
                 
@@ -141,6 +141,7 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
                 Log(LogType_Initialization, "OpenGL остановлен!");
                 
                 IsStarted = false;
+                return true;
             }catch(Exception e){
                 throw new ExceptionWL("Произошла ошибка при остановке OpenGL!", e);
             } 
