@@ -3,9 +3,9 @@ using System.Runtime.Intrinsics;
 
 namespace WLO.Math;
 
-public readonly struct Vector2I : IEquatable<Vector2I>{
-    public readonly int X;
-    public readonly int Y;
+public struct Vector2I : IEquatable<Vector2I>{
+    public int X;
+    public int Y;
 
     public int W => X;
     public int H => Y;

@@ -98,17 +98,17 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         );
     }
 
-    public static Matrix4F CreateTranslation(float X, float Y, float Z) => new Matrix4F(
+    public static Matrix4F CreateTranslation(Vector3F Position) => new Matrix4F(
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
-        X, Y, Z, 1
+        Position.X, Position.Y, Position.Z, 1
     );
 
-    public static Matrix4F CreateScale(float X, float Y, float Z) => new Matrix4F(
-        X, 0, 0, 0,
-        0, Y, 0, 0,
-        0, 0, Z, 0,
+    public static Matrix4F CreateScale(Vector3F Scale) => new Matrix4F(
+        Scale.W, 0, 0, 0,
+        0, Scale.H, 0, 0,
+        0, 0, Scale.D, 0,
         0, 0, 0, 1
     );
     

@@ -3,9 +3,9 @@ using System.Runtime.Intrinsics;
 
 namespace WLO.Math;
 
-public readonly struct Vector2F : IEquatable<Vector2F>{
-    public readonly float X;
-    public readonly float Y;
+public struct Vector2F : IEquatable<Vector2F>{
+    public float X;
+    public float Y;
 
     public float W => X;
     public float H => Y;

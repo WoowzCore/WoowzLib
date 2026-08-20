@@ -3,13 +3,13 @@
 namespace WLO.Math;
 
 [StructLayout(LayoutKind.Explicit)]
-public readonly struct Color4B{
-    [FieldOffset(0)] public readonly byte R;
-    [FieldOffset(1)] public readonly byte G;
-    [FieldOffset(2)] public readonly byte B;
-    [FieldOffset(3)] public readonly byte A;
+public struct Color4B{
+    [FieldOffset(0)] public byte R;
+    [FieldOffset(1)] public byte G;
+    [FieldOffset(2)] public byte B;
+    [FieldOffset(3)] public byte A;
     
-    [FieldOffset(0)] public readonly uint Value;
+    [FieldOffset(0)] public uint Value;
 
     public Color4B(byte R, byte G, byte B, byte A = 255){
         Value = 0;
