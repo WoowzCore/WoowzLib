@@ -103,7 +103,8 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
                     Log(LogType_InitDetails, $"DebugLogger: {API_DebugLogger}");
                 }
                 
-                CRenderView = GLRenderView.GetExists(this, 0);
+                DefaultRenderView = GLRenderView.GetExists(this, 0);
+                CRenderView = DefaultRenderView;
                 Log(LogType_InitDetails, $"CurrentRenderView[0]: {CRenderView}");
             
                 Log(LogType_Initialization, "Установка значений...");
@@ -216,11 +217,15 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     
     // ----------------------------------------------------------------------
 
+    public RenderView DefaultRenderView{ get; private set; }
+    
     public readonly Dictionary<uint, GLRenderView> Registry_RenderView = new Dictionary<uint, GLRenderView>();
     private RenderView __CRenderView  = null!;
     public RenderView CRenderView{
         get => __CRenderView;
         set{
+            value ??= DefaultRenderView;
+
             uint OldID = (__CRenderView as GLRenderView)?.ID ?? uint.MaxValue;
             uint NewID = (value         as GLRenderView)?.ID ?? 0;
             if(OldID == NewID){ return; }
