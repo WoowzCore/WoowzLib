@@ -8,8 +8,8 @@ public class HierarchyNode<T> where T : class{
     public List<HierarchyNode<T>> Children{ get; } = [];
 
     public event Action<HierarchyNode<T>, HierarchyNode<T>?, HierarchyNode<T>?>? OnParentChanged;
-    public event Action<HierarchyNode<T>>? OnChildAdded;
-    public event Action<HierarchyNode<T>>? OnChildRemoved;
+    public event Action<HierarchyNode<T>, HierarchyNode<T>>? OnChildAdded;
+    public event Action<HierarchyNode<T>, HierarchyNode<T>>? OnChildRemoved;
 
     public HierarchyNode(T Owner){ this.Owner = Owner; }
 
@@ -21,14 +21,14 @@ public class HierarchyNode<T> where T : class{
 
         if(Parent != null){
             Parent.Children.Remove(this);
-            Parent.OnChildRemoved?.Invoke(this);
+            Parent.OnChildRemoved?.Invoke(Parent, this);
         }
 
         Parent = NewParent;
 
         if(Parent != null){
             Parent.Children.Add(this);
-            Parent.OnChildAdded?.Invoke(this);
+            Parent.OnChildAdded?.Invoke(Parent, this);
         }
         
         OnParentChanged?.Invoke(this, OldParent, NewParent);

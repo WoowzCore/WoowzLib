@@ -83,6 +83,17 @@ public abstract class ImGUI : WLI.Engine{
     }
 
     public void KeyboardKey(WLI_Input.Keyboard.Key Key, bool Down){
+        // todo??????
+        if(Key is Keyboard.Key.ShiftL or Keyboard.Key.ShiftR){ 
+            IO.AddKeyEvent(ImGuiKey.ModShift, Down);
+        }
+        if(Key is Keyboard.Key.ControlL or Keyboard.Key.ControlR){ 
+            IO.AddKeyEvent(ImGuiKey.ModCtrl, Down);
+        }
+        if(Key is Keyboard.Key.AltL or Keyboard.Key.AltR){ 
+            IO.AddKeyEvent(ImGuiKey.ModAlt, Down);
+        }
+        
         IO.AddKeyEvent(Key switch{
             Keyboard.Key.Unknown => ImGuiKey.None,
             Keyboard.Key.A => ImGuiKey.A,
@@ -202,7 +213,7 @@ public abstract class ImGUI : WLI.Engine{
             Keyboard.Key.NumEnter => ImGuiKey.KeypadEnter,
             Keyboard.Key.NumDecimal => ImGuiKey.KeypadDecimal,
             
-            var _ => (int)ImGuiKey.None
+            var _ => ImGuiKey.None
         }, Down);
     }
 
