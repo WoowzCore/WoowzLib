@@ -185,6 +185,22 @@ public unsafe class GLFW : WLI.Window{
 
         ReleaseDC(HWND, HDC);
     }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    public void TODO_UseDarkMode(){
+        IntPtr hwnd = __Native.Win32!.Value.Hwnd;
+        
+        int trueValue = 1;
+        if (DwmSetWindowAttribute(hwnd, 20, ref trueValue, sizeof(int)) != 0){
+            DwmSetWindowAttribute(hwnd, 19, ref trueValue, sizeof(int));
+        }
+        
+        WL.GLFW.API.HideWindow(__Handle);
+        WL.GLFW.API.ShowWindow(__Handle); // todo 😇
+    }
     
     // ----------------------------------------------------------------------
     

@@ -10,8 +10,20 @@ namespace WL;
 
 public static class Serializer{
     public const string __Type  = "__Type";
-    public const string __Items = "__Items";
-    public const string __Value = "__Value";
+
+    public static Type? FindType(string? TypeName){
+        if(string.IsNullOrEmpty(TypeName)){ return null; }
+
+        Type? Result = Type.GetType(TypeName);
+        if(Result != null){ return Result; }
+
+        foreach(Assembly Assembly in AppDomain.CurrentDomain.GetAssemblies()){
+            Result = Assembly.GetType(TypeName);
+            if(Result != null){ return Result; }
+        }
+        
+        return null;
+    }
     
     public static Dictionary<string, object> Serialize(object? Object){
         if(Object == null){ return []; }
@@ -24,14 +36,14 @@ public static class Serializer{
                 List.Add(Serialize(Item));
             }
             return new Dictionary<string, object>{
-                [__Items] = List,
+                ["Items"] = List,
                 [__Type] = "List"
             };
         }
         
         if(IsPrimitive(Object.GetType())){
             return new Dictionary<string, object>{
-                [__Value] = Object,
+                ["Value"] = Object,
                 [__Type] = Object.GetType().FullName!
             };
         }
@@ -41,16 +53,26 @@ public static class Serializer{
 
     public static object? Deserialize(Dictionary<string, object> Data, Type? TargetType = null){
         if(Data.Count == 0){ return null; }
-
-        if(Data.TryGetValue(__Value, value: out object? Value) && Data.TryGetValue(__Type, out object? TypeName)){
-            Type? Type = System.Type.GetType(TypeName.ToString()!);
+        
+        if(Data.TryGetValue(__Type, out object? TypeName)){
+            Type? Type = FindType(TypeName.ToString());
+            
+            if(Type != null && typeof(Serializable).IsAssignableFrom(Type)){
+                Serializable? Instance = Activator.CreateInstance(Type) as Serializable;
+                Instance?.Deserialize(Data);
+                return Instance;
+            }
+        }
+        
+        if(Data.TryGetValue("Value", value: out object? Value) && Data.TryGetValue(__Type, out TypeName)){
+            Type? Type = FindType(TypeName.ToString());
             if(Type != null && IsPrimitive(Type)){
                 return Convert.ChangeType(Value, Type);
             }
             return Value;
         }
         
-        if(Data.TryGetValue(__Items, out object? Items) && Data.TryGetValue(__Type, out TypeName) && TypeName.ToString() == "List"){
+        if(Data.TryGetValue("Items", out object? Items) && Data.TryGetValue(__Type, out TypeName) && TypeName.ToString() == "List"){
             List<object?> List = [];
             foreach(object Item in (List<object>)Items){
                 if(Item is Dictionary<string, object> Dictionary){
@@ -61,17 +83,10 @@ public static class Serializer{
             }
             return List;
         }
-        
-        if(Data.TryGetValue("__Type", out TypeName)){
-            Type? Type = System.Type.GetType(TypeName.ToString()!);
-            if(Type != null && typeof(Serializable).IsAssignableFrom(Type)){
-                Serializable? Instance = Activator.CreateInstance(Type) as Serializable;
-                Instance?.Deserialize(Data);
-                return Instance;
-            }
-            if(Type != null){
-                return DeserializeObject(Data, Type);
-            }
+
+        if(Data.TryGetValue(__Type, out TypeName)){
+            Type? Type = FindType(TypeName.ToString());
+            if(Type != null){ return DeserializeObject(Data, Type); }
         }
         
         if(TargetType != null){
@@ -81,17 +96,17 @@ public static class Serializer{
         return null;
     }
 
-    public static Dictionary<string, object> SInt(int Value) => new Dictionary<string, object>{ [__Value] = Value, [__Type] = typeof(int).FullName! };
-    public static Dictionary<string, object> SFloat(float Value) => new Dictionary<string, object>{ [__Value] = Value, [__Type] = typeof(float).FullName! };
-    public static Dictionary<string, object> SDouble(double Value) => new Dictionary<string, object>{ [__Value] = Value, [__Type] = typeof(double).FullName! };
-    public static Dictionary<string, object> SBool(bool Value) => new Dictionary<string, object>{ [__Value] = Value, [__Type] = typeof(bool).FullName! };
-    public static Dictionary<string, object> SString(string Value) => new Dictionary<string, object>{ [__Value] = Value, [__Type] = typeof(string).FullName! };
+    public static Dictionary<string, object> SInt(int Value) => new Dictionary<string, object>{ ["Value"] = Value, [__Type] = typeof(int).FullName! };
+    public static Dictionary<string, object> SFloat(float Value) => new Dictionary<string, object>{ ["Value"] = Value, [__Type] = typeof(float).FullName! };
+    public static Dictionary<string, object> SDouble(double Value) => new Dictionary<string, object>{ ["Value"] = Value, [__Type] = typeof(double).FullName! };
+    public static Dictionary<string, object> SBool(bool Value) => new Dictionary<string, object>{ ["Value"] = Value, [__Type] = typeof(bool).FullName! };
+    public static Dictionary<string, object> SString(string Value) => new Dictionary<string, object>{ ["Value"] = Value, [__Type] = typeof(string).FullName! };
 
-    public static int DInt(Dictionary<string, object> Data) => Convert.ToInt32(Data[__Value]);
-    public static float DFloat(Dictionary<string, object> Data) => Convert.ToSingle(Data[__Value]);
-    public static double DDouble(Dictionary<string, object> Data) => Convert.ToDouble(Data[__Value]);
-    public static bool DBool(Dictionary<string, object> Data) => Convert.ToBoolean(Data[__Value]);
-    public static string DString(Dictionary<string, object> Data) => Data[__Value]?.ToString() ?? "";
+    public static int DInt(Dictionary<string, object> Data) => Convert.ToInt32(Data["Value"]);
+    public static float DFloat(Dictionary<string, object> Data) => Convert.ToSingle(Data["Value"]);
+    public static double DDouble(Dictionary<string, object> Data) => Convert.ToDouble(Data["Value"]);
+    public static bool DBool(Dictionary<string, object> Data) => Convert.ToBoolean(Data["Value"]);
+    public static string DString(Dictionary<string, object> Data) => Data["Value"]?.ToString() ?? "";
 
     private static bool IsPrimitive(Type Type) => Type.IsPrimitive || Type == typeof(string) || Type == typeof(decimal) || Type == typeof(DateTime);
 
