@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 
 namespace WLO.Math;
 
-public struct Vector3F : IEquatable<Vector3F>{
+public struct Vector3F : IEquatable<Vector3F>, WLI.Serializable{
     public float X;
     public float Y;
     public float Z;
@@ -16,6 +16,19 @@ public struct Vector3F : IEquatable<Vector3F>{
         this.X = X;
         this.Y = Y;
         this.Z = Z;
+    }
+    
+    public Dictionary<string, object> Serialize() => new Dictionary<string, object>(){
+        [WL.Serializer.__Type] = typeof(Vector3F).FullName!,
+        ["X"] = X,
+        ["Y"] = Y,
+        ["Z"] = Z
+    };
+
+    public void Deserialize(Dictionary<string, object> Data){
+        X = Convert.ToSingle(Data["X"]);
+        Y = Convert.ToSingle(Data["Y"]);
+        Z = Convert.ToSingle(Data["Z"]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
