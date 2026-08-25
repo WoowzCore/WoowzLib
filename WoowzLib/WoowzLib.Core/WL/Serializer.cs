@@ -5,8 +5,7 @@ using WLI;
 
 namespace WL;
 
-// TODO, сделать параметр Deserialize включить параметр (bool) типо изменять значения на дефолтные если не найдено, и сделать удобнее
-// а то писать каждый раз (data.TryGetValue("Transform", out var t) && t is Dictionary<string, object> td) не удобно!!!!
+// нужен рефакторинг... очень сильно, насрано вонояет
 
 public static class Serializer{
     public const string __Type  = "__Type";
@@ -242,5 +241,31 @@ public static class Serializer{
             case JsonValueKind.Null: return null;
             default: return null;
         }
+    }
+    
+    // ----------------------------------------------------------------------
+
+    public static Dictionary<string, object> Pack(object Anonymous){
+        if(Anonymous is Dictionary<string, object?> Dictionary){ return Pack(Dictionary); }
+
+        Dictionary<string, object> Result = new Dictionary<string, object>();
+        Type Type = Anonymous.GetType();
+        
+        foreach(PropertyInfo Property in Type.GetProperties(BindingFlags.Public | BindingFlags.Instance)){
+            Result[Property.Name] = Serialize(Property.GetValue(Anonymous));
+        }
+        
+        foreach(FieldInfo Field in Type.GetFields(BindingFlags.Public | BindingFlags.Instance)){
+            Result[Field.Name] = Serialize(Field.GetValue(Anonymous));
+        }
+        return Result;
+    }
+    
+    public static Dictionary<string, object> Pack(Dictionary<string, object?> RawData){
+        Dictionary<string, object> Result = new Dictionary<string, object>();
+        foreach(KeyValuePair<string, object?> KVP in RawData){
+            Result[KVP.Key] = Serialize(KVP.Value);
+        }
+        return Result;
     }
 }
