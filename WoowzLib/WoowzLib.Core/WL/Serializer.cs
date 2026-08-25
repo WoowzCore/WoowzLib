@@ -27,28 +27,33 @@ public static class Serializer{
     
     public static Dictionary<string, object> Serialize(object? Object){
         if(Object == null){ return []; }
+
+        Dictionary<string, object> Data;
         
-        if(Object is Serializable Serializable){ return Serializable.Serialize(); }
-        
-        if(Object is System.Collections.IEnumerable Enumerable and not string){
+        if(Object is Serializable Serializable){
+            Data = Serializable.Serialize();
+        }else if(Object is System.Collections.IEnumerable Enumerable and not string){
             List<object> List = [];
-            foreach(object? Item in Enumerable){
-                List.Add(Serialize(Item));
-            }
-            return new Dictionary<string, object>{
+            foreach(object? Item in Enumerable){ List.Add(Serialize(Item)); }
+            
+            Data = new Dictionary<string, object>{
                 ["Items"] = List,
                 [__Type] = "List"
             };
-        }
-        
-        if(IsPrimitive(Object.GetType())){
-            return new Dictionary<string, object>{
+        }else if(IsPrimitive(Object.GetType())){
+            Data = new Dictionary<string, object>{
                 ["Value"] = Object,
                 [__Type] = Object.GetType().FullName!
             };
+        }else{
+            Data = SerializeObject(Object);
+        }
+
+        if(!Data.ContainsKey(__Type)){
+            Data[__Type] = Object.GetType().AssemblyQualifiedName!;
         }
         
-        return SerializeObject(Object);
+        return Data;
     }
 
     public static object? Deserialize(Dictionary<string, object> Data, Type? TargetType = null){
@@ -191,6 +196,19 @@ public static class Serializer{
         return Value;
     }
 
+    public static T? Get<T>(Dictionary<string, object> Data, string Key, T? DefaultValue = default){
+        if(Data.TryGetValue(Key, out object? Value)){
+            if(Value is T TypedValue){ return TypedValue; }
+
+            if(Value is Dictionary<string, object> Dictionary){
+                return (T?)Deserialize(Dictionary, typeof(T));
+            }
+
+            try{ return (T?)Convert.ChangeType(Value, typeof(T)); }catch{}
+        }
+        
+        return DefaultValue;
+    }
     
     // todo, remove that later
     public static string ToJson(Dictionary<string, object> Data) => JsonSerializer.Serialize(Data, new JsonSerializerOptions{ WriteIndented = true });
