@@ -1,9 +1,10 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace WLO.Math;
 
 [StructLayout(LayoutKind.Explicit)]
-public struct Color4B : WLI.Serializable{
+public struct Color4B : WLI.Packable{
     [FieldOffset(0)] public byte R;
     [FieldOffset(1)] public byte G;
     [FieldOffset(2)] public byte B;
@@ -24,14 +25,23 @@ public struct Color4B : WLI.Serializable{
         this.Value = Value;
     }
 
-    public Dictionary<string, object> Serialize() => new Dictionary<string, object>(){
-        [WL.Serializer.__Type] = typeof(Color4B).FullName!,
-        ["Value"] = Value
+    public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
+        ["RGBA"] = $"{R}|{G}|{B}|{A}"
     };
 
-    public void Deserialize(Dictionary<string, object> Data){
-        Value = Convert.ToUInt32(Data["Value"]);
+    public void __Unpack(Dictionary<string, object?> Data){
+        string RGBA = WL.Packer.Get<string>(Data, "RGBA", "0|0|0|0")!;
+
+        string[] Parts = RGBA.Split("|");
+        if(Parts.Length >= 3){
+            byte.TryParse(Parts[0], out R);
+            byte.TryParse(Parts[1], out G);
+            byte.TryParse(Parts[2], out B);
+            byte.TryParse(Parts[3], out A);
+        }
     }
 
-    public static Color4B Transparent => new Color4B(0);
+    public static Color4B Transparent => new Color4B(0, 0, 0, 0);
+    public static Color4B White => new Color4B(255, 255, 255);
+    public static Color4B Black => new Color4B(0, 0, 0);
 }

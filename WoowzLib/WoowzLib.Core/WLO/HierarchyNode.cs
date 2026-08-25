@@ -1,7 +1,8 @@
 ﻿namespace WLO;
 
-public class HierarchyNode<T> : WLI.Serializable where T : class{
-    public readonly T Owner;
+public class HierarchyNode<T> : WLI.Packable where T : class{
+    private T __Owner;
+    public  T Owner => __Owner;
 
     public HierarchyNode<T>? Parent{ get; private set; }
 
@@ -13,7 +14,8 @@ public class HierarchyNode<T> : WLI.Serializable where T : class{
     public event Action<HierarchyNode<T>, HierarchyNode<T>>? OnChildAdded;
     public event Action<HierarchyNode<T>, HierarchyNode<T>>? OnChildRemoved;
 
-    public HierarchyNode(T Owner){ this.Owner = Owner; }
+    private HierarchyNode(){}
+    public HierarchyNode(T Owner){ __Owner = Owner; }
 
     public void SetParent(HierarchyNode<T>? NewParent){
         if(Parent == NewParent){ return; }
@@ -51,25 +53,23 @@ public class HierarchyNode<T> : WLI.Serializable where T : class{
             Child.Traverse(Action);
         }
     }
-    
-    public Dictionary<string, object> Serialize() => new Dictionary<string, object> {
-        ["Children"] = Children.Select(C => {
-            if(C.Owner is WLI.Serializable s){ return s.Serialize(); }
-            throw new ExceptionWL($"Объект типа {typeof(T)} не является Serializable!  TODO");
-        }).ToList()
-    };
-    
-    
-    public void Deserialize(Dictionary<string, object> Data){
-        if (ChildFactory == null){ return; }
 
-        if(Data.TryGetValue("Children", out object? V_Children__) && V_Children__ is IEnumerable<object> V_Children){
-            foreach(object V_Child__ in V_Children){
-                if (V_Child__ is Dictionary<string, object> V_Child){
-                    T Child = ChildFactory(V_Child);
-                    
-                    if(Child is WLI.Hierarchical<T> ChildHierarchical){
-                        ChildHierarchical.Node.SetParent(this);
+    public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
+        ["Children"] = Children.Select(C => WL.Packer.Pack(C.Owner)).ToList()
+    };
+
+    public void __Unpack(Dictionary<string, object?> Data){
+        if(ChildFactory == null){ return; }
+
+        List<object>? ChildrenData = WL.Packer.Get<List<object>>(Data, "Children");
+
+        if(ChildrenData != null){
+            foreach(object NodeData in ChildrenData){
+                if(NodeData is Dictionary<string, object> Dictionary){
+                    T Child = ChildFactory(Dictionary);
+
+                    if(Child is WLI.Hierarchical<T> Hierarchical){
+                        Hierarchical.Node.SetParent(this);
                     }
                 }
             }

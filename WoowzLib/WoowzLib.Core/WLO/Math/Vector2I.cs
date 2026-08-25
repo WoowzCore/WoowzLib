@@ -1,9 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
 namespace WLO.Math;
 
-public struct Vector2I : IEquatable<Vector2I>, WLI.Serializable{
+public struct Vector2I : IEquatable<Vector2I>, WLI.Packable{
     public int X;
     public int Y;
 
@@ -13,17 +14,6 @@ public struct Vector2I : IEquatable<Vector2I>, WLI.Serializable{
     public Vector2I(int X, int Y){
         this.X = X;
         this.Y = Y;
-    }
-    
-    public Dictionary<string, object> Serialize() => new Dictionary<string, object>(){
-        [WL.Serializer.__Type] = typeof(Vector2I).FullName!,
-        ["X"] = X,
-        ["Y"] = Y
-    };
-
-    public void Deserialize(Dictionary<string, object> Data){
-        X = Convert.ToInt32(Data["X"]);
-        Y = Convert.ToInt32(Data["Y"]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,6 +53,22 @@ public struct Vector2I : IEquatable<Vector2I>, WLI.Serializable{
 
     public float Aspect => (float)X / Y;
 
+    // ----------------------------------------------------------------------
+    
+    public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
+        ["XY"] = $"{X}|{Y}"
+    };
+
+    public void __Unpack(Dictionary<string, object?> Data){
+        string XY = WL.Packer.Get<string>(Data, "XY", "0|0")!;
+
+        string[] Parts = XY.Split("|");
+        if(Parts.Length >= 3){
+            int.TryParse(Parts[0], out X);
+            int.TryParse(Parts[1], out Y);
+        }
+    }
+    
     // ----------------------------------------------------------------------
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

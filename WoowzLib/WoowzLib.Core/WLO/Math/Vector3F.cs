@@ -1,9 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
 namespace WLO.Math;
 
-public struct Vector3F : IEquatable<Vector3F>, WLI.Serializable{
+public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
     public float X;
     public float Y;
     public float Z;
@@ -16,19 +17,6 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Serializable{
         this.X = X;
         this.Y = Y;
         this.Z = Z;
-    }
-    
-    public Dictionary<string, object> Serialize() => new Dictionary<string, object>(){
-        [WL.Serializer.__Type] = typeof(Vector3F).FullName!,
-        ["X"] = X,
-        ["Y"] = Y,
-        ["Z"] = Z
-    };
-
-    public void Deserialize(Dictionary<string, object> Data){
-        X = Convert.ToSingle(Data["X"]);
-        Y = Convert.ToSingle(Data["Y"]);
-        Z = Convert.ToSingle(Data["Z"]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -101,6 +89,23 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Serializable{
     public float Length{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => System.MathF.Sqrt(X * X + Y * Y + Z * Z);
+    }
+    
+    // ----------------------------------------------------------------------
+    
+    public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
+        ["XYZ"] = $"{X}|{Y}|{Z}"
+    };
+
+    public void __Unpack(Dictionary<string, object?> Data){
+        string XYZ = WL.Packer.Get<string>(Data, "XYZ", "0|0|0")!;
+
+        string[] Parts = XYZ.Split("|");
+        if(Parts.Length >= 3){
+            float.TryParse(Parts[0], out X);
+            float.TryParse(Parts[1], out Y);
+            float.TryParse(Parts[2], out Z);
+        }
     }
     
     // ----------------------------------------------------------------------
