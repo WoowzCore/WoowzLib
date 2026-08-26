@@ -69,7 +69,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             VertexLayout Layout = new VertexLayout(
                 new VertexAttribute("aPos", 2, VertexAttribute.AttributeType.Float),
                 new VertexAttribute("aUV", 2, VertexAttribute.AttributeType.Float),
-                new VertexAttribute("aColor", 4, VertexAttribute.AttributeType.Byte, true)
+                new VertexAttribute("aColor", 4, VertexAttribute.AttributeType.UByte, true)
             );
             __Mesh.AddVertexBuffer(__Vertices, Layout);
             __Mesh.SetIndexBuffer(__Indexes);
@@ -101,8 +101,8 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
         unsafe{
             if(DrawData.NativePtr == null || DrawData.CmdListsCount == 0){ return; }
 
-            bool OldCullFace = __Owner.CullFace;
-            bool OldDepthTest = __Owner.DepthTest;
+            bool OldCullFace    = __Owner.CullFace;
+            bool OldDepthTest   = __Owner.DepthTest;
             bool OldScissorTest = __Owner.ScissorTest;
             (BlendingFactor, BlendingFactor)? OldBlend = __Owner.Blend;
             
@@ -121,7 +121,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             
             __Owner.CProgram = __Program;
             __Program.SetUniformM4F(__Uniform_Projection, Projection);
-            __Program.SetUniformI(__Uniform_Texture, 0);
+            __Program.SetUniformI  (__Uniform_Texture, 0);
             
             for(int i = 0; i < DrawData.CmdListsCount; i++){
                 ImDrawListPtr CMDList = DrawData.CmdLists[i];

@@ -53,7 +53,7 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
             MultiplyColumn(A, B.__C4)
         );
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector128<float> MultiplyColumn(Matrix4F Matrix, Vector128<float> Column){
         Vector128<float> Result = Vector128.Multiply(Matrix.__C1, Vector128.Create(Column.GetElement(0)));
@@ -63,6 +63,27 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         return Result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3F operator *(Matrix4F Matrix, Vector3F Vector) {
+        Vector128<float> Vector__ = Vector128.Create(Vector.X, Vector.Y, Vector.Z, 1.0f);
+        Vector128<float> Result = Vector128.Multiply(Matrix.__C1, Vector__.GetElement(0));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C2, Vector__.GetElement(1)));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C3, Vector__.GetElement(2)));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C4, Vector__.GetElement(3)));
+        
+        return new Vector3F(Result.GetElement(0), Result.GetElement(1), Result.GetElement(2));
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector3F TransformNormal(Vector3F Vector){
+        Vector128<float> Vector__ = Vector128.Create(Vector.X, Vector.Y, Vector.Z, 0.0f);
+        Vector128<float> Result = Vector128.Multiply(__C1, Vector__.GetElement(0));
+        Result = Vector128.Add(Result, Vector128.Multiply(__C2, Vector__.GetElement(1)));
+        Result = Vector128.Add(Result, Vector128.Multiply(__C3, Vector__.GetElement(2)));
+        
+        return new Vector3F(Result.GetElement(0), Result.GetElement(1), Result.GetElement(2));
+    }
+    
     public static Matrix4F Identity => new Matrix4F(Vector128.Create(1f, 0, 0, 0), Vector128.Create(0, 1f, 0, 0), Vector128.Create(0, 0, 1f, 0), Vector128.Create(0, 0, 0, 1f));
     
     // ----------------------------------------------------------------------
@@ -80,20 +101,19 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Matrix4F CreateOrtho(float Left, float Right, float Bottom, float Top, float ZNear, float ZFar)
-    {
-        float RminusL = Right - Left;
-        float TminusB = Top - Bottom;
-        float FminusN = ZFar - ZNear;
+    public static Matrix4F CreateOrtho(float Left, float Right, float Bottom, float Top, float ZNear, float ZFar){
+        float RL = Right - Left;
+        float TB = Top - Bottom;
+        float FN = ZFar - ZNear;
 
         return new Matrix4F(
-            Vector128.Create(2.0f / RminusL, 0, 0, 0),                         // Колонка 0
-            Vector128.Create(0, 2.0f / TminusB, 0, 0),                         // Колонка 1
-            Vector128.Create(0, 0, -2.0f / FminusN, 0),                        // Колонка 2
-            Vector128.Create(                                                  // Колонка 3 (Смещение)
-                -(Right + Left) / RminusL, 
-                -(Top + Bottom) / TminusB, 
-                -(ZFar + ZNear) / FminusN, 
+            Vector128.Create(2.0f / RL, 0, 0, 0),
+            Vector128.Create(0, 2.0f / TB, 0, 0),
+            Vector128.Create(0, 0, -2.0f / FN, 0),
+            Vector128.Create(
+                -(Right + Left) / RL, 
+                -(Top + Bottom) / TB, 
+                -(ZFar + ZNear) / FN, 
                 1.0f)
         );
     }

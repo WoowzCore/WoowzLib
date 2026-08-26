@@ -62,7 +62,13 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
         uint Offset = 0;
         foreach(VertexAttribute Attribute in Layout.Attributes){
             __Owner.API.EnableVertexAttribArray(__CurrentAttributeIndex);
-            __Owner.API.VertexAttribPointer(__CurrentAttributeIndex, Attribute.Count, MapType(Attribute.Type), Attribute.Normalized, Layout.Stride, (void*)Offset);
+
+            if((Attribute.Type is VertexAttribute.AttributeType.Int or VertexAttribute.AttributeType.UInt) && !Attribute.Normalized){
+                __Owner.API.VertexAttribIPointer(__CurrentAttributeIndex, Attribute.Count, (VertexAttribIType)MapType(Attribute.Type), Layout.Stride, (void*)Offset);
+            }else{
+                __Owner.API.VertexAttribPointer(__CurrentAttributeIndex, Attribute.Count, MapType(Attribute.Type), Attribute.Normalized, Layout.Stride, (void*)Offset);
+            }
+            
             Offset += (uint)Attribute.Count * VertexAttribute.GetTypeSize(Attribute.Type);
             __CurrentAttributeIndex++;
         }
@@ -86,7 +92,7 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
         this.IndexCount = IndexCount;
 
         __Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, Buffer?.ID ?? 0);
-
+        
         __Owner.CMesh = OldMesh;
     }
     
@@ -94,8 +100,10 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
 
     public static VertexAttribPointerType MapType(VertexAttribute.AttributeType Type) => Type switch{
         VertexAttribute.AttributeType.Float => VertexAttribPointerType.Float,
-        VertexAttribute.AttributeType.Int => VertexAttribPointerType.Int,
-        VertexAttribute.AttributeType.Byte => VertexAttribPointerType.UnsignedByte,
+        VertexAttribute.AttributeType.Int   => VertexAttribPointerType.Int,
+        VertexAttribute.AttributeType.UInt  => VertexAttribPointerType.UnsignedInt,
+        VertexAttribute.AttributeType.Byte  => VertexAttribPointerType.Byte,
+        VertexAttribute.AttributeType.UByte => VertexAttribPointerType.UnsignedByte,
         var _ => throw new ArgumentOutOfRangeException(nameof(Type), Type, null)
     };
 }
