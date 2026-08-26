@@ -388,10 +388,18 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     }
     
     // ----------------------------------------------------------------------
-    
-    public void Clear(Color4B Color){
-        API.ClearColor(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f);
-        API.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+    public void Clear(Color4B Color) => Clear(Color, true, true, true);
+
+    public void Clear(Color4B Color, bool ColorBuffer, bool DepthBuffer = false, bool StencilBuffer = false){
+        if(ColorBuffer){ API.ClearColor(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f); }
+
+        ClearBufferMask Mask = 0;
+        if(ColorBuffer  ){ Mask |= ClearBufferMask.ColorBufferBit  ; }
+        if(DepthBuffer  ){ Mask |= ClearBufferMask.DepthBufferBit  ; }
+        if(StencilBuffer){ Mask |= ClearBufferMask.StencilBufferBit; }
+
+        if(Mask != 0){ API.Clear(Mask); }
     }
     
     public void Draw(uint Count, uint Start = 0){
