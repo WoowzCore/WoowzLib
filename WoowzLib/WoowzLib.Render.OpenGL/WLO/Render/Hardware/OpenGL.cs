@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using Silk.NET.OpenGL;
 using WLI_Render;
 using WLO.GPU;
@@ -405,10 +406,24 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         
         private GLTexture2D?[] TargetTexture2D = null!;
         private uint[]         BoundTexture2D  = null!;
+
+        private ulong __ActiveSlotsMask = 0;
+        private uint  __MaxUsedSlots    = 0;
         
         public void SetTexture2D(GLTexture2D? Texture2D, uint Slot = 0, bool Immediately = false){
             if(Slot > MaxTextureSlots){ WL.Logger.Warn($"todo, slot [{Slot}] > maxtextureslots {MaxTextureSlots}!"); return; }
             TargetTexture2D[Slot] = Texture2D;
+
+            if(Slot < 64){
+                if(Texture2D != null){
+                    __ActiveSlotsMask |= (1UL << (int)Slot);
+                }else{
+                    __ActiveSlotsMask &= ~(1UL << (int)Slot);
+                }
+            }else{
+                if(Slot > __MaxUsedSlots){ __MaxUsedSlots = Slot; }
+            }
+            
             if(Immediately){ BindTexture2D(Slot); }
         }
 
@@ -461,6 +476,23 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
 
             if(ActiveTexture2DSlot != Slot){ Owner.API.ActiveTexture((GLEnum)((uint)TextureUnit.Texture0 + Slot)); ActiveTexture2DSlot = Slot; }
             Owner.API.BindTexture(TextureTarget.Texture2D, ID);
+        }
+
+        public void BindTexture2DAll(){
+            if(__ActiveSlotsMask != 0){
+                ulong Mask = __ActiveSlotsMask;
+                while(Mask != 0){
+                    int Slot = BitOperations.TrailingZeroCount(Mask);
+                    BindTexture2D((uint)Slot);
+                    Mask &= ~(1UL << Slot);
+                }
+            }
+
+            if(__MaxUsedSlots >= 64){
+                for(uint i = 64; i <= __MaxUsedSlots; i++){
+                    if(TargetTexture2D[i] != null){ BindTexture2D(i); }
+                }
+            }
         }
         
         // ----------------------------------------------------------------------
@@ -550,13 +582,11 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             
             BindProgram();
             BindMesh();
-            for(uint i = 0; i < UseTextureSlots; i++){ BindTexture2D(i); }
+            BindTexture2DAll();
         }
 
         public void BindForView(){
             BindView();
-            
-            BindForDraw();
         }
 
         public bool CanDraw => TargetProgram != null && TargetMesh != null;

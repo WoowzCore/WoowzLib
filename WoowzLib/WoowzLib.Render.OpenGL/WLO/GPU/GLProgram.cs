@@ -1,5 +1,6 @@
 ﻿using Silk.NET.OpenGL;
 using WLO.Math;
+using WLO.Render;
 using WLO.Render.Hardware;
 
 namespace WLO.GPU;
@@ -21,6 +22,44 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(Status == 0){
             string InfoLog = Owner.API.GetProgramInfoLog(ID);
             throw new ExceptionWL($"Ошибка линковки программы: {InfoLog}");
+        }
+
+        Owner.API.GetProgramInterface(ID, ProgramInterface.Uniform, ProgramInterfacePName.ActiveResources, out int UniformsCount);
+        if(UniformsCount > 0){
+
+            ReadOnlySpan<ProgramResourceProperty> Properties =[
+                ProgramResourceProperty.Location,
+                ProgramResourceProperty.NameLength
+            ];
+
+            uint PropsCount = (uint)Properties.Length;
+            int[] Results = new int[Properties.Length];
+
+            unsafe{
+                fixed(ProgramResourceProperty* PtrProperties = Properties){
+                    for(uint i = 0; i < (uint)UniformsCount; i++){
+                        uint Written;
+
+                        fixed(int* PtrResults = Results){
+                            Owner.API.GetProgramResource(ID, ProgramInterface.Uniform, i, PropsCount, PtrProperties, PropsCount, &Written, PtrResults);
+                        }
+
+                        int Location   = Results[0];
+                        int NameLength = Results[1];
+
+                        if(Location != -1){
+                            __Uniforms.Add(Location);
+
+                            if(NameLength > 0){
+                                Owner.API.GetProgramResourceName(ID, ProgramInterface.Uniform, i, (uint)NameLength, out uint _, out string Name);
+
+                                if(!string.IsNullOrEmpty(Name)){ __UniformNames[Name] = Location; }
+                            }
+                        }
+                    }
+                }
+            }
+            
         }
 
         IsLinked = true;
@@ -62,92 +101,41 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     }
 
     // ----------------------------------------------------------------------
+
+    private readonly HashSet   <int              > __Uniforms      = [];
+    private readonly Dictionary<int, UniformValue> __UniformValues = [];
+    private readonly Dictionary<string, int      > __UniformNames  = [];
     
-    private readonly Dictionary<string, int> __Uniforms = [];
-    public int GetUniform(string Name){
-        if(__Uniforms.TryGetValue(Name, out int Location)){ return Location; }
+    public int GetLocationFromName(string Name){
+        if(__UniformNames.TryGetValue(Name, out int Location)){ return Location; }
 
         Location = Owner.API.GetUniformLocation(ID, Name);
-        __Uniforms[Name] = Location;
+        __UniformNames[Name] = Location;
 
-        if(Location == -1){ Owner.Log(Owner.LogType_Uniform, $"Uniform \"{Name}\" не найден в программе {this}!"); }
+        if(Location == -1){ Owner.Log(Owner.LogType_Uniform, $"Uniform ID \"{Name}\" не найден в программе {this}!"); }
         
         return Location;
     }
     
-    public bool UniformCorrect(int Uniform) => Uniform != -1;
-    
-    // ----------------------------------------------------------------------
+    public void SetUniform(UniformValue NewValue){
+        if(NewValue.Location <= -1){ return; }
 
-    private readonly Dictionary<int, float   > __FValues   = [];
-    private readonly Dictionary<int, int     > __IValues   = [];
-    private readonly Dictionary<int, Vector2F> __V2FValues = [];
-    private readonly Dictionary<int, Vector2I> __V2IValues = [];
-    private readonly Dictionary<int, Vector3F> __V3FValues = [];
-    private readonly Dictionary<int, Matrix4F> __M4FValues = [];
-    
-    // TODO, добавить get uniform
-    
-    public void SetUniformF(int Uniform, float Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        if(__FValues.TryGetValue(Uniform, out float Old) && Old == Value){ return; }
-        
-        Owner.API.ProgramUniform1(ID, Uniform, Value);
-        __FValues[Uniform] = Value;
+        if(!__Uniforms.Contains(NewValue.Location)){ return; }
 
-    }
-    
-    public void SetUniformI(int Uniform, int Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        if(__IValues.TryGetValue(Uniform, out int Old) && Old == Value){ return; }
-        
-        Owner.API.ProgramUniform1(ID, Uniform, Value);
-        __IValues[Uniform] = Value;
-        
-    }
-    
-    public void SetUniformB(int Uniform, bool Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        int Value__ = Value ? 1 : 0;
-        if(__IValues.TryGetValue(Uniform, out int Old) && Old == Value__){ return; }
-        
-        Owner.API.ProgramUniform1(ID, Uniform, Value__);
-        __IValues[Uniform] = Value__;
-
-    }
-    
-    public void SetUniformV2F(int Uniform, Vector2F Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        if(__V2FValues.TryGetValue(Uniform, out Vector2F Old) && Old == Value){ return; }
-        
-        Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
-        __V2FValues[Uniform] = Value;
-    }
-    
-    public void SetUniformV2I(int Uniform, Vector2I Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        if(__V2IValues.TryGetValue(Uniform, out Vector2I Old) && Old == Value){ return; }
-        
-        Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
-        __V2IValues[Uniform] = Value;
-        
-    }
-    
-    public void SetUniformV3F(int Uniform, Vector3F Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        if(__V3FValues.TryGetValue(Uniform, out Vector3F Old) && Old == Value){ return; }
-        
-        Owner.API.ProgramUniform3(ID, Uniform, Value.X, Value.Y, Value.Z);
-        __V3FValues[Uniform] = Value;
-    }
-    
-    public void SetUniformM4F(int Uniform, Matrix4F Value){
-        if(!UniformCorrect(Uniform)){ return; }
-        if(__M4FValues.TryGetValue(Uniform, out Matrix4F Old) && Old == Value){ return; }
+        if(__UniformValues.TryGetValue(NewValue.Location, out UniformValue OldValue) && OldValue.Equals(NewValue)){ return; }
 
         unsafe{
-            Owner.API.ProgramUniformMatrix4(ID, Uniform, 1, false, (float*)&Value);
+            switch(NewValue.Type){
+                case UniformValue.DataType.Float   : Owner.API.ProgramUniform1(ID, NewValue.Location, NewValue.F1); break;
+                case UniformValue.DataType.Int     : Owner.API.ProgramUniform1(ID, NewValue.Location, (int)NewValue.F1); break;
+                case UniformValue.DataType.Vector2F: Owner.API.ProgramUniform2(ID, NewValue.Location, NewValue.F1, NewValue.F2); break;
+                case UniformValue.DataType.Vector3F: Owner.API.ProgramUniform3(ID, NewValue.Location, NewValue.F1, NewValue.F2, NewValue.F3); break;
+                case UniformValue.DataType.Matrix4F: Owner.API.ProgramUniformMatrix4(ID, NewValue.Location, 1, false, (float*)&NewValue.Matrix); break;
+            }
         }
-        __M4FValues[Uniform] = Value;
+
+        __UniformValues[NewValue.Location] = NewValue;
     }
+
+    public UniformValue? GetUniform(int Location) => __UniformValues.TryGetValue(Location, out UniformValue Value) ? Value : null;
 }

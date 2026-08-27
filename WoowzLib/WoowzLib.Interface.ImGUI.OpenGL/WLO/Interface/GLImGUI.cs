@@ -5,13 +5,14 @@ using WLI_Render;
 using WLI.GPU;
 using WLO.GPU;
 using WLO.Math;
+using WLO.Render;
 using WLO.Render.Hardware;
 using Shader = WLI.GPU.Shader;
 
 namespace WLO.Interface;
 
 public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
-    private OpenGL __Owner;
+    private readonly OpenGL __Owner;
     
     public GLImGUI(OpenGL Render, bool StartImmediately = false){
         __Owner = Render;
@@ -24,32 +25,38 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             base.Start(); IsStarted = false;
 
             // language=GLSL
-            GLShader VShader = (GLShader)__Owner.CreateShader(Shader.Type.Vertex  , @"#version 330 core
-                layout (location = 0) in vec2 aPos;
-                layout (location = 1) in vec2 aUV;
-                layout (location = 2) in vec4 aColor;
-                uniform mat4 uProj;
-                out vec2 vUV;
-                out vec4 vColor;
-                void main() {
-                    vUV = aUV;
-                    vColor = aColor;
-                    gl_Position = uProj * vec4(aPos, 0, 1);
-                }");
+            GLShader VShader = (GLShader)__Owner.CreateShader(Shader.Type.Vertex  , @"
+#version 430 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aUV;
+layout (location = 2) in vec4 aColor;
+
+uniform mat4 uProj;
+
+out vec2 vUV;
+out vec4 vColor;
+void main() {
+    vUV = aUV;
+    vColor = aColor;
+    gl_Position = uProj * vec4(aPos, 0, 1);
+}");
             
             // language=GLSL
-            GLShader FShader = (GLShader)__Owner.CreateShader(Shader.Type.Fragment, @"#version 330 core
-                in vec2 vUV;
-                in vec4 vColor;
-                uniform sampler2D uTex;
-                out vec4 fColor;
-                void main() {
-                    fColor = vColor * texture(uTex, vUV);
-                }");
+            GLShader FShader = (GLShader)__Owner.CreateShader(Shader.Type.Fragment, @"
+#version 430 core
+in vec2 vUV;
+in vec4 vColor;
+
+uniform sampler2D uTex;
+
+out vec4 fColor;
+void main() {
+    fColor = vColor * texture(uTex, vUV);
+}");
             __Program = (GLProgram)__Owner.CreateProgram(VShader, FShader);
 
-            __Uniform_Projection = __Program.GetUniform("uProj");
-            __Uniform_Texture    = __Program.GetUniform("uTex");
+            __Uniform_Projection = __Program.GetLocationFromName("uProj");
+            __Uniform_Texture    = __Program.GetLocationFromName("uTex");
 
             unsafe{
                 IO.Fonts.GetTexDataAsRGBA32(out byte* Pixels, out int W, out int H);
@@ -88,11 +95,11 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
     
     // ----------------------------------------------------------------------
 
-    private GLProgram __Program;
-    private GLTexture2D __FontTexture;
-    private GLMesh    __Mesh;
-    private GLBuffer  __Vertices;
-    private GLBuffer  __Indexes;
+    private GLProgram   __Program     = null!;
+    private GLTexture2D __FontTexture = null!;
+    private GLMesh      __Mesh        = null!;
+    private GLBuffer    __Vertices    = null!;
+    private GLBuffer    __Indexes     = null!;
 
     private int __Uniform_Projection;
     private int __Uniform_Texture;
@@ -108,6 +115,9 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             bool OldDepthTest   = __Owner.Pool.GetDepthTest();
             bool OldScissorTest = __Owner.Pool.GetScissorTest();
             (BlendingFactor, BlendingFactor)? OldBlend = __Owner.Pool.GetBlend();
+
+            uint OldUseTextureSlots = __Owner.Pool.UseTextureSlots;
+            __Owner.Pool.UseTextureSlots = __Owner.Pool.MaxTextureSlots;
             
             __Owner.Pool.SetBlend((BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha));
             __Owner.Pool.SetCullFace   (false);
@@ -123,8 +133,9 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             );
             
             __Owner.Pool.SetProgram(__Program);
-            __Program.SetUniformM4F(__Uniform_Projection, Projection);
-            __Program.SetUniformI  (__Uniform_Texture, 0);
+            
+            __Program.SetUniform(UniformValue.CreateM4F(__Uniform_Projection, Projection));
+            __Program.SetUniform(UniformValue.CreateI(__Uniform_Texture, 0));
             
             for(int i = 0; i < DrawData.CmdListsCount; i++){
                 ImDrawListPtr CMDList = DrawData.CmdLists[i];
@@ -159,6 +170,8 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
                 }
             }
 
+            __Owner.Pool.UseTextureSlots = OldUseTextureSlots;
+            
             __Owner.Pool.SetBlend      (OldBlend      );
             __Owner.Pool.SetCullFace   (OldCullFace   );
             __Owner.Pool.SetDepthTest  (OldDepthTest  );
