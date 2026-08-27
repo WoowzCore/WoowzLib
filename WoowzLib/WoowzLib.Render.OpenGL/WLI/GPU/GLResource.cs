@@ -6,9 +6,9 @@ public abstract class GLResource : WLI.GPU.Resource, IEquatable<GLResource>{
     public uint ID{ get; protected set; }
     public bool FromID{ get; protected set; }
     
-    protected readonly OpenGL __Owner;
+    protected readonly OpenGL Owner;
 
-    protected GLResource(OpenGL Render) => __Owner = Render;
+    protected GLResource(OpenGL Render) => Owner = Render;
 
     public bool Destroyed{ get; set; }
 
@@ -25,17 +25,17 @@ public abstract class GLResource : WLI.GPU.Resource, IEquatable<GLResource>{
     
     // ----------------------------------------------------------------------
 
-    public string ToString_GLResource() => $"{ID}, {(Destroyed ? "DESTROYED" : $"{FromID}, {__Owner}")}";
+    public string ToString_GLResource() => $"{ID}, {(Destroyed ? "DESTROYED" : $"{FromID}, {Owner}")}";
     public override string ToString() => $"{GetType().Name}({ToString_GLResource()})";
 
     public bool Equals(GLResource? Other){
         if(Other is null){ return false; }
         if(ReferenceEquals(this, Other)){ return true; }
 
-        return ID == Other.ID && __Owner == Other.__Owner && GetType() == Other.GetType();
+        return ID == Other.ID && Owner == Other.Owner && GetType() == Other.GetType();
     }
 
     public override bool Equals(object? Object) => Object is GLResource Other && Equals(Other);
 
-    public override int GetHashCode() => HashCode.Combine(ID, __Owner, GetType());
+    public override int GetHashCode() => HashCode.Combine(ID, Owner, GetType());
 }

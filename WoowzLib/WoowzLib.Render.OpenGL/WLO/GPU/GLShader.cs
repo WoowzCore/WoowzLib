@@ -7,8 +7,8 @@ public class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
     
     public GLShader(OpenGL Render, WLI.GPU.Shader.Type Stage, string Source) : base(Render){
         this.Stage = Stage;
-        ID = WL.OpenGL.CompileGLSL(__Owner.API, Stage, Source);
+        ID = WL.OpenGL.CompileGLSL(Owner.API, Stage, Source);
     }
 
-    public override void OnDestroy() => __Owner.API.DeleteShader(ID);
+    public override void OnDestroy() => Owner.API.DeleteShader(ID);
 }

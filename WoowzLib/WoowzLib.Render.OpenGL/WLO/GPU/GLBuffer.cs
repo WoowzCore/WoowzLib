@@ -7,19 +7,20 @@ public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
         this.Target = Target;
         this.Size = Size;
         this.Usage = Usage;
-        ID = __Owner.API.GenBuffer();
+        ID = Owner.API.GenBuffer();
+        if(ID == 0){ throw new ExceptionWL("todo, failed create glbuffer"); }
 
-        WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(this.Target);
+        GLBuffer? OldBuffer = Owner.Pool.GetBuffer(this.Target);
         
-        __Owner.SetCBuffer(this.Target, this);
-        unsafe{ __Owner.API.BufferData(this.Target, Size, null, Usage); }
-        __Owner.SetCBuffer(this.Target, OldBuffer);
+        Owner.Pool.SetBuffer(this.Target, this, true);
+        unsafe{ Owner.API.BufferData(this.Target, Size, null, Usage); }
+        Owner.Pool.SetBuffer(this.Target, OldBuffer, true);
     }
     
     public static GLBuffer Create(WLO.Render.Hardware.OpenGL Render, BufferTargetARB Target, uint Size, BufferUsageARB Usage = BufferUsageARB.StaticDraw){
         GLBuffer Result = new GLBuffer(Render, Target, Size, Usage);
         
-        Render.Registry_Buffer[Result.ID] = Result;
+        Render.Pool.RegistryBuffer[Result.ID] = Result;
 
         return Result;
     }
@@ -47,19 +48,20 @@ public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
     public static GLBuffer GetExisting(WLO.Render.Hardware.OpenGL Render, uint TargetID, BufferTargetARB Target = BufferTargetARB.ArrayBuffer){
         if(TargetID == 0){ return null!; }
         
-        if(Render.Registry_Buffer.TryGetValue(TargetID, out GLBuffer Result)){ return Result; }
+        if(Render.Pool.RegistryBuffer.TryGetValue(TargetID, out GLBuffer? Result)){ return Result; }
 
         if(!Render.API.IsBuffer(TargetID)){ throw new ExceptionWL("Указан несуществующий ID!"); }
 
         Result = new GLBuffer(Render, TargetID, Target);
-        Render.Registry_Buffer[TargetID] = Result;
+        Render.Pool.RegistryBuffer[TargetID] = Result;
 
         return Result;
     }
     
     public override void OnDestroy(){
-        __Owner.Registry_Buffer.Remove(ID);
-        __Owner.API.DeleteBuffer(ID);
+        Owner.Pool.RegistryBuffer.Remove(ID);
+        if(object.Equals(Owner.Pool.GetBuffer(Target), this)){ Owner.Pool.SetBuffer(Target, null, true); }
+        Owner.API.DeleteBuffer(ID);
     }
     
     // ----------------------------------------------------------------------
@@ -71,15 +73,15 @@ public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
     
     public void Update(IntPtr Data, uint DataSize, uint Offset = 0){
         if(Data == IntPtr.Zero){ throw new ExceptionWL("todo"); }
-
+        
         if(Offset + DataSize > Size){ throw new ExceptionWL("todo"); }
         
-        WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(Target);
-        __Owner.SetCBuffer(Target, this);
-
-        unsafe{ __Owner.API.BufferSubData(Target, (nint)Offset, DataSize, (void*)Data); }
-            
-        __Owner.SetCBuffer(Target, OldBuffer);
+        GLBuffer? OldBuffer = Owner.Pool.GetBuffer(Target);
+        Owner.Pool.SetBuffer(Target, this, true);
+        
+        unsafe{ Owner.API.BufferSubData(Target, (nint)Offset, DataSize, (void*)Data); }
+        
+        Owner.Pool.SetBuffer(Target, OldBuffer, true);
     }
     
     public void Update<T>(ReadOnlySpan<T> Data, uint Offset = 0) where T : unmanaged{
@@ -98,14 +100,14 @@ public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
 
             if(Offset + ReadSize > Size){ throw new ExceptionWL("todo"); }
             
-            WLI.GPU.Buffer? OldBuffer = __Owner.GetCBuffer(Target);
-            __Owner.SetCBuffer(Target, this);
+            GLBuffer? OldBuffer = Owner.Pool.GetBuffer(Target);
+            Owner.Pool.SetBuffer(Target, this, true);
 
             fixed(void* Ptr = Destination){
-                __Owner.API.GetBufferSubData(Target, (nint)Offset, ReadSize, Ptr);
+                Owner.API.GetBufferSubData(Target, (nint)Offset, ReadSize, Ptr);
             }
             
-            __Owner.SetCBuffer(Target, OldBuffer);
+            Owner.Pool.SetBuffer(Target, OldBuffer, true);
         }
     }
 }

@@ -38,7 +38,7 @@ public class Simple : WLI.Logger{
         };
     }
     
-    public void Log(uint Type, object Message){
+    public void Log(uint Type, object? Message){
         OnRawLog?.Invoke(Type, Message);
         
         if(Type == (uint)WLI.Logger.Type.NoLog){ return; }
@@ -69,6 +69,6 @@ public class Simple : WLI.Logger{
         }
     }
     
-    public event Action<uint, object>? OnRawLog;
-    public event Action<uint, string>? OnLog;
+    public event Action<uint, object?>? OnRawLog;
+    public event Action<uint, string >? OnLog;
 }

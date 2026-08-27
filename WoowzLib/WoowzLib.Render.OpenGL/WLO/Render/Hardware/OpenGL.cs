@@ -78,7 +78,7 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             API_HasDebugLogger = Parameters__.DebugLogger.Value;
 
             CurrentLogger = Parameters__.UseThisLogger;
-
+            
             if(StartImmediately){ Start(); }
         }
         public struct StartParameters{
@@ -103,25 +103,12 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
                     Log(LogType_InitDetails, $"DebugLogger: {API_DebugLogger}");
                 }
                 
-                DefaultRenderView = GLRenderView.GetExists(this, 0);
-                CRenderView = DefaultRenderView;
-                Log(LogType_InitDetails, $"CurrentRenderView[0]: {CRenderView}");
-            
-                Log(LogType_Initialization, "Установка значений...");
-                __DepthTest = true;
-                DepthTest = false;
+                Pool = new RenderPool(this);
+                Pool.Start();
                 
-                __CullFace = true;
-                CullFace = false;
+                Log(LogType_InitDetails, $"RenderPool: {Pool}");
                 
-                __ScissorTest = true;
-                ScissorTest = false;
-                
-                __StencilTest = true;
-                StencilTest = false;
-                
-                __Blend = (BlendingFactor.Zero, BlendingFactor.Zero);
-                Blend = null;
+                Log(LogType_InitDetails, $"DefaultView: {Pool.DefaultView}");
                 
                 Log(LogType_Initialization, "OpenGL запущен!");
                 
@@ -176,7 +163,8 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     // ----------------------------------------------------------------------
 
     public void FrameStart(){
-        API.Viewport(0, 0, (uint)CRenderView.Viewport.X, (uint)CRenderView.Viewport.Y);
+        Pool.BindForView();
+        API.Viewport(0, 0, (uint)Pool.GetView().Viewport.X, (uint)Pool.GetView().Viewport.Y);
     }
     
     public void FrameStop(){
@@ -217,181 +205,15 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     
     // ----------------------------------------------------------------------
 
-    public RenderView DefaultRenderView{ get; private set; }
-    
-    public readonly Dictionary<uint, GLRenderView> Registry_RenderView = new Dictionary<uint, GLRenderView>();
-    private RenderView __CRenderView  = null!;
-    public RenderView CRenderView{
-        get => __CRenderView;
-        set{
-            value ??= DefaultRenderView;
+    public RenderPool Pool{ get; private set; } = null!;
 
-            uint OldID = (__CRenderView as GLRenderView)?.ID ?? uint.MaxValue;
-            uint NewID = (value         as GLRenderView)?.ID ?? 0;
-            if(OldID == NewID){ return; }
-            API.BindFramebuffer(FramebufferTarget.Framebuffer, NewID);
-            __CRenderView = value;
-        }
-    }
-    
-    public readonly Dictionary<uint, GLProgram> Registry_Program = new Dictionary<uint, GLProgram>();
-    private WLI.GPU.Program? __CurrentProgram = null!;
-    public WLI.GPU.Program? CProgram{
-        get => __CurrentProgram;
-        set{
-            uint OldID = __CurrentProgram?.ID ?? 0;
-            uint NewID = value?.ID ?? 0;
-            if(OldID == NewID){ return; }
-            API.UseProgram(NewID);
-            __CurrentProgram = value;
-        }
-    }
-    
-    public readonly Dictionary<uint, GLMesh> Registry_Mesh = new Dictionary<uint, GLMesh>();
-    private WLI.GPU.Mesh? __CurrentMesh = null!;
-    public WLI.GPU.Mesh? CMesh{
-        get => __CurrentMesh;
-        set{
-            uint OldID = __CurrentMesh?.ID ?? 0;
-            uint NewID = value?.ID ?? 0;
-            if(OldID == NewID){ return; }
-            API.BindVertexArray(NewID);
-            __CurrentMesh = value;
-            // todo, мне ИИ утверждает, что BindVertexArray, изменяет CIBuffer, надо будет проверить!!!
-        }
-    }
-    
-    private WLI.GPU.Buffer? __CFBuffer = null!;
-    public WLI.GPU.Buffer? CFBuffer{
-        get => __CFBuffer;
-        set{
-            uint OldID = __CFBuffer?.ID ?? 0;
-            uint NewID = value?.ID ?? 0;
-            if(OldID == NewID){ return; }
-            API.BindBuffer(BufferTargetARB.ArrayBuffer, NewID);
-            __CFBuffer = value;
-        }
-    }
-    
-    private WLI.GPU.Buffer? __CIBuffer = null!;
-    public WLI.GPU.Buffer? CIBuffer{
-        get => __CIBuffer;
-        set{
-            uint OldID = __CIBuffer?.ID ?? 0;
-            uint NewID = value?.ID ?? 0;
-            if(OldID == NewID){ return; }
-            API.BindBuffer(BufferTargetARB.ElementArrayBuffer, NewID);
-            __CIBuffer = value;
-        }
-    }
-
-    public readonly Dictionary<uint, GLBuffer> Registry_Buffer = new Dictionary<uint, GLBuffer>();
-    public void SetCBuffer(BufferTargetARB Target, WLI.GPU.Buffer? Buffer){
-        switch(Target){
-            case BufferTargetARB.ArrayBuffer: CFBuffer = Buffer; break;
-            case BufferTargetARB.ElementArrayBuffer: CIBuffer = Buffer; break;
-            default: throw new ExceptionWL();
-        }
-    }
-
-    public WLI.GPU.Buffer? GetCBuffer(BufferTargetARB Target){
-        return Target switch{
-            BufferTargetARB.ArrayBuffer => CFBuffer,
-            BufferTargetARB.ElementArrayBuffer => CIBuffer,
-            var _ => throw new ExceptionWL()
-        };
-    }
-    
-    public readonly Dictionary<uint, GLTexture2D> Registry_Texture2D = new Dictionary<uint, GLTexture2D>();
-    public WLI.GPU.Texture? CTexture2D{
-        get => __TextureSlots[__CTextureSlot];
-        set => SetCTexture2D(__CTextureSlot, value);
-    }
-
-    private          uint               __CTextureSlot = 0;
-    private readonly WLI.GPU.Texture?[] __TextureSlots = new WLI.GPU.Texture[32 /* todo, get max opengl textures count */];
-
-    // todo, см позже, что-то тут не чисто...
-    public void SetCTexture2D(uint Slot, WLI.GPU.Texture? Texture2D){
-        if(Slot >= __TextureSlots.Length){ throw new ExceptionWL("todo"); }
-
-        uint NewID = Texture2D?.ID ?? 0;
-        uint OldID = __TextureSlots[Slot]?.ID ?? 0;
-        
-        if(NewID == OldID){ return; }
-
-        if(__CTextureSlot != Slot){
-            API.ActiveTexture(TextureUnit.Texture0 + (int)Slot);
-            __CTextureSlot = Slot;
-        }
-        
-        API.BindTexture(TextureTarget.Texture2D, NewID);
-
-        __TextureSlots[Slot] = Texture2D;
-    }
-    
-    // ----------------------------------------------------------------------
-
-    private bool __DepthTest;
-    public bool DepthTest{
-        get => __DepthTest;
-        set{
-            if(__DepthTest == value){ return; }
-            if(value){ API.Enable(EnableCap.DepthTest); }else{ API.Disable(EnableCap.DepthTest); }
-            __DepthTest = value;
-        }
-    }
-    
-    private bool __CullFace;
-    public bool CullFace{
-        get => __CullFace;
-        set{
-            if(__CullFace == value){ return; }
-            if(value){ API.Enable(EnableCap.CullFace); }else{ API.Disable(EnableCap.CullFace); }
-            __CullFace = value;
-        }
-    }
-    
-    private bool __ScissorTest;
-    public bool ScissorTest{
-        get => __ScissorTest;
-        set{
-            if(__ScissorTest == value){ return; }
-            if(value){ API.Enable(EnableCap.ScissorTest); }else{ API.Disable(EnableCap.ScissorTest); }
-            __ScissorTest = value;
-        }
-    }
-    
-    private bool __StencilTest;
-    public bool StencilTest{
-        get => __StencilTest;
-        set{
-            if(__StencilTest == value){ return; }
-            if(value){ API.Enable(EnableCap.StencilTest); }else{ API.Disable(EnableCap.StencilTest); }
-            __StencilTest = value;
-        }
-    }
-    
-    private (BlendingFactor, BlendingFactor)? __Blend;
-    public (BlendingFactor, BlendingFactor)? Blend{
-        get => __Blend;
-        set{
-            if(__Blend == value){ return; }
-            if(value == null){
-                API.Disable(EnableCap.Blend);
-            }else{
-                if(__Blend == null){ API.Enable(EnableCap.Blend); }
-                API.BlendFunc(value.Value.Item1, value.Value.Item2);
-            }
-            __Blend = value;
-        }
-    }
-    
     // ----------------------------------------------------------------------
 
     public void Clear(Color4B Color) => Clear(Color, true, true, true);
 
     public void Clear(Color4B Color, bool ColorBuffer, bool DepthBuffer = false, bool StencilBuffer = false){
+        Pool.BindStates();
+        
         if(ColorBuffer){ API.ClearColor(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f); }
 
         ClearBufferMask Mask = 0;
@@ -403,13 +225,15 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     }
     
     public void Draw(uint Count, uint Start = 0){
-        if(CProgram == null! || CMesh == null!){ return; }
+        if(!Pool.CanDraw){ return; }
+        Pool.BindForDraw();
 
         API.DrawArrays(PrimitiveType.Triangles, (int)Start, Count);
     }
     
     public unsafe void DrawIndexed(uint Count, uint StartIndex = 0, int BaseVertex = 0){
-        if(CProgram == null! || CMesh == null!){ return; }
+        if(!Pool.CanDraw){ return; }
+        Pool.BindForDraw();
         
         void* Offset = (void*)(StartIndex * sizeof(uint));
         if(BaseVertex == 0){
@@ -419,10 +243,10 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         }
     }
 
-    public void Draw(WLI.GPU.Mesh Mesh, WLI.GPU.Program? Program){
-        if(Program != null){ CProgram = Program; }
+    public void Draw(GLMesh Mesh, GLProgram? Program = null){
+        if(Program != null){ Pool.SetProgram(Program); }
         
-        CMesh = Mesh;
+        Pool.SetMesh(Mesh);
         
         if(Mesh.IndexCount > 0){
             DrawIndexed(Mesh.IndexCount);
@@ -430,8 +254,6 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             Draw(Mesh.VertexCount);   
         }
     }
-
-    public void Draw(WLI.GPU.Mesh Mesh) => Draw(Mesh, null);
     
     // ----------------------------------------------------------------------
 
@@ -447,4 +269,296 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     public override bool Equals(object? Object) => Object is OpenGL Other && Equals(Other);
 
     public override int GetHashCode() => HashCode.Combine(ID);
+    
+    // ----------------------------------------------------------------------
+    
+    // todo, абабаба баг!!! будет баг!!!! если кто-то из вне поменяет что-то в opengl, это всё взлетит на воздух!!!!
+    public class RenderPool{
+        private readonly OpenGL Owner;
+
+        // ----------------------------------------------------------------------
+
+        public uint MaxTextureSlots{ get; private set; }
+
+        private uint __UseTextureSlots;
+        public uint UseTextureSlots{
+            get => __UseTextureSlots;
+            set{
+                __UseTextureSlots = value;
+                if(__UseTextureSlots > MaxTextureSlots){ throw new ExceptionWL("todo, usetextureslots > maxtextureslots!"); }
+            }
+        }
+
+        public GLView DefaultView{ get; private set; } = null!;
+
+        public RenderPool(OpenGL Render){ Owner = Render; }
+
+        public void Start(){
+            Owner.API.GetInteger(GetPName.MaxCombinedTextureImageUnits, out int MaxTextureSlots__);
+            MaxTextureSlots = (uint)MaxTextureSlots__;
+            UseTextureSlots = MaxTextureSlots;
+            
+            TargetTexture2D = new GLTexture2D[MaxTextureSlots];
+            BoundTexture2D  = new uint       [MaxTextureSlots];
+
+            DefaultView = GLView.GetExists(Owner, 0);
+            TargetView = DefaultView;
+        }
+        
+        // ----------------------------------------------------------------------
+        
+        public readonly Dictionary<uint, GLView     > RegistryView      = new Dictionary<uint, GLView     >();
+        public readonly Dictionary<uint, GLBuffer   > RegistryBuffer    = new Dictionary<uint, GLBuffer   >();
+        public readonly Dictionary<uint, GLProgram  > RegistryProgram   = new Dictionary<uint, GLProgram  >();
+        public readonly Dictionary<uint, GLMesh     > RegistryMesh      = new Dictionary<uint, GLMesh     >();
+        public readonly Dictionary<uint, GLTexture2D> RegistryTexture2D = new Dictionary<uint, GLTexture2D>();
+        
+        // ----------------------------------------------------------------------
+        
+        private GLView TargetView = null!;
+        private uint    BoundView  = 0;
+        
+        public void SetView(GLView? View, bool Immediately = false){
+            View ??= DefaultView;
+            TargetView = View;
+            if(Immediately){ BindView(); }
+        }
+
+        public GLView GetView() => TargetView;
+        public uint GetBoundView() => BoundView;
+        
+        // ----------------------------------------------------------------------
+        
+        private GLBuffer? TargetFBuffer = null;
+        private uint      BoundFBuffer  = 0;
+        
+        public void SetFBuffer(GLBuffer? FBuffer, bool Immediately = false){
+            if(FBuffer != null && FBuffer.Target != BufferTargetARB.ArrayBuffer){ throw new ExceptionWL("todo, not array buff"); }
+            TargetFBuffer = FBuffer;
+            if(Immediately){ BindFBuffer(); }
+        }
+
+        public GLBuffer? GetFBuffer() => TargetFBuffer;
+        
+        // ----------------------------------------------------------------------
+        
+        private GLBuffer? TargetIBuffer = null;
+        private uint      BoundIBuffer  = 0;
+        
+        public void SetIBuffer(GLBuffer? IBuffer, bool Immediately = false){
+            if(IBuffer != null && IBuffer.Target != BufferTargetARB.ElementArrayBuffer){ throw new ExceptionWL("todo, not ELEMENT array buff"); }
+            TargetIBuffer = IBuffer;
+            if(Immediately){ BindIBuffer(); }
+        }
+
+        public GLBuffer? GetIBuffer() => TargetIBuffer;
+        
+        // ----------------------------------------------------------------------
+
+        public void SetBuffer(BufferTargetARB Target, GLBuffer? Buffer, bool Immediately = false){
+            switch(Target){
+                case BufferTargetARB.ArrayBuffer       : SetFBuffer(Buffer, Immediately); break;
+                case BufferTargetARB.ElementArrayBuffer: SetIBuffer(Buffer, Immediately); break;
+                default:
+                    WL.Logger.Warn($"todo, unknown buffer type [{Target}] (setbuffer)");
+                    break;
+            }
+        }
+
+        public GLBuffer? GetBuffer(BufferTargetARB Target){
+            switch (Target) {
+                case BufferTargetARB.ArrayBuffer       : return GetFBuffer();
+                case BufferTargetARB.ElementArrayBuffer: return GetIBuffer();
+                default:
+                    WL.Logger.Warn($"todo, unknown buffer type [{Target}] (getbuffer)");
+                    return null;
+            }
+        }
+        
+        // ----------------------------------------------------------------------
+        
+        private GLProgram? TargetProgram = null;
+        private uint       BoundProgram  = 0;
+        
+        public void SetProgram(GLProgram? Program, bool Immediately = false){
+            TargetProgram = Program;
+            if(Immediately){ BindProgram(); }
+        }
+
+        public GLProgram? GetProgram() => TargetProgram;
+        public uint GetBoundProgram() => BoundProgram;
+        
+        // ----------------------------------------------------------------------
+        
+        private GLMesh? TargetMesh = null;
+        private uint    BoundMesh  = 0;
+
+        public void SetMesh(GLMesh? Mesh, bool Immediately = false){
+            TargetMesh = Mesh;
+            if(Immediately){ BindMesh(); }
+        }
+
+        public GLMesh? GetMesh() => TargetMesh;
+        public uint GetBoundMesh() => BoundMesh;
+        
+        // ----------------------------------------------------------------------
+        
+        private GLTexture2D?[] TargetTexture2D = null!;
+        private uint[]         BoundTexture2D  = null!;
+        
+        public void SetTexture2D(GLTexture2D? Texture2D, uint Slot = 0, bool Immediately = false){
+            if(Slot > MaxTextureSlots){ WL.Logger.Warn($"todo, slot [{Slot}] > maxtextureslots {MaxTextureSlots}!"); return; }
+            TargetTexture2D[Slot] = Texture2D;
+            if(Immediately){ BindTexture2D(Slot); }
+        }
+
+        public GLTexture2D? GetTexture2D(uint Slot = 0) => TargetTexture2D[Slot] ?? null;
+
+        // ----------------------------------------------------------------------
+        
+        public void BindView(){
+            uint ID = TargetView.ID;
+            if(BoundView == ID){ return; }
+            BoundView = ID;
+            Owner.API.BindFramebuffer(FramebufferTarget.Framebuffer, ID);
+        }
+        
+        public void BindFBuffer(){
+            uint ID = TargetFBuffer?.ID ?? 0;
+            if(BoundFBuffer == ID){ return; }
+            BoundFBuffer = ID;
+            Owner.API.BindBuffer(BufferTargetARB.ArrayBuffer, ID);
+        }
+        
+        public void BindIBuffer(){
+            uint ID = TargetIBuffer?.ID ?? 0;
+            if(BoundIBuffer == ID){ return; }
+            BoundIBuffer = ID;
+            Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, ID);
+        }
+        
+        public void BindProgram(){
+            uint ID = TargetProgram?.ID ?? 0;
+            if(BoundProgram == ID){ return; }
+            BoundProgram = ID;
+            Owner.API.UseProgram(ID);
+        }
+        
+        public void BindMesh(){
+            uint ID = TargetMesh?.ID ?? 0;
+            if(BoundMesh == ID){ return; }
+            BoundMesh = ID;
+            Owner.API.BindVertexArray(ID);
+            
+            // todo (СТАРОЕ УТВЕРЖДЕНИЕ), мне ИИ утверждает, что BindVertexArray, изменяет CIBuffer, надо будет проверить!!!
+        }
+
+        private uint ActiveTexture2DSlot = 0;
+        public void BindTexture2D(uint Slot = 0){
+            uint ID = TargetTexture2D[Slot]?.ID ?? 0;
+            if(BoundTexture2D[Slot] == ID){ return; }
+            BoundTexture2D[Slot] = ID;
+
+            if(ActiveTexture2DSlot != Slot){ Owner.API.ActiveTexture((GLEnum)((uint)TextureUnit.Texture0 + Slot)); ActiveTexture2DSlot = Slot; }
+            Owner.API.BindTexture(TextureTarget.Texture2D, ID);
+        }
+        
+        // ----------------------------------------------------------------------
+
+        private bool TargetDepthTest;
+        private bool BoundDepthTest;
+
+        public void SetDepthTest(bool DepthTest, bool Immediately = false){
+            TargetDepthTest = DepthTest;
+            if(Immediately){ ApplyCap(EnableCap.DepthTest, TargetDepthTest, ref BoundDepthTest); }
+        }
+        public bool GetDepthTest() => TargetDepthTest;
+        
+        private bool TargetCullFace;
+        private bool BoundCullFace;
+        
+        // todo, сделать заместо bool, тип CullFace Mode
+        public void SetCullFace(bool CullFace, bool Immediately = false){
+            TargetCullFace = CullFace;
+            if(Immediately){ ApplyCap(EnableCap.CullFace, TargetCullFace, ref BoundCullFace); }
+        }
+        public bool GetCullFace() => TargetCullFace;
+        
+        private bool TargetScissorTest;
+        private bool BoundScissorTest;
+        
+        public void SetScissorTest(bool ScissorTest, bool Immediately = false){
+            TargetScissorTest = ScissorTest;
+            if(Immediately){ ApplyCap(EnableCap.ScissorTest, TargetScissorTest, ref BoundScissorTest); }
+        }
+        public bool GetScissorTest() => TargetScissorTest;
+        
+        private bool TargetStencilTest;
+        private bool BoundStencilTest;
+        
+        public void SetStencilTest(bool StencilTest, bool Immediately = false){
+            TargetStencilTest = StencilTest;
+            if(Immediately){ ApplyCap(EnableCap.StencilTest, TargetStencilTest, ref BoundStencilTest); }
+        }
+        public bool GetStencilTest() => TargetStencilTest;
+        
+        private (BlendingFactor Source, BlendingFactor Destination)? TargetBlend;
+        private (BlendingFactor Source, BlendingFactor Destination)? BoundBlend;
+        
+        public void SetBlend((BlendingFactor Source, BlendingFactor Destination)? Blend, bool Immediately = false){
+            TargetBlend = Blend;
+            if(Immediately){ ApplyBlend(); }
+        }
+        public (BlendingFactor Source, BlendingFactor Destination)? GetBlend() => TargetBlend;
+        
+        private void ApplyCap(EnableCap Cap, bool Target, ref bool Bound){
+            if(Target != Bound){
+                if(Target){
+                    Owner.API.Enable(Cap);   
+                }else{
+                    Owner.API.Disable(Cap);
+                }
+                Bound = Target;
+            }
+        }
+
+        private void ApplyBlend(){
+            if(TargetBlend != BoundBlend){
+                if(TargetBlend == null){
+                    Owner.API.Disable(EnableCap.Blend);
+                }else{
+                    Owner.API.Enable(EnableCap.Blend); // мне лень тут делать микрооптимизацию
+                    Owner.API.BlendFunc(TargetBlend.Value.Source, TargetBlend.Value.Destination);
+                }
+                BoundBlend = TargetBlend;
+            }
+        }
+        
+        public void BindStates(){
+            ApplyCap(EnableCap.DepthTest  , TargetDepthTest  , ref BoundDepthTest  );
+            ApplyCap(EnableCap.CullFace   , TargetCullFace   , ref BoundCullFace   );
+            ApplyCap(EnableCap.ScissorTest, TargetScissorTest, ref BoundScissorTest);
+            ApplyCap(EnableCap.StencilTest, TargetStencilTest, ref BoundStencilTest);
+            
+            ApplyBlend();
+        }
+        
+        // ----------------------------------------------------------------------
+        
+        public void BindForDraw(){
+            BindStates();
+            
+            BindProgram();
+            BindMesh();
+            for(uint i = 0; i < UseTextureSlots; i++){ BindTexture2D(i); }
+        }
+
+        public void BindForView(){
+            BindView();
+            
+            BindForDraw();
+        }
+
+        public bool CanDraw => TargetProgram != null && TargetMesh != null;
+    }
 }

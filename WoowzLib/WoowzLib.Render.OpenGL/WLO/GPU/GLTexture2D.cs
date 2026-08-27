@@ -11,28 +11,29 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
         this.GPUFormat = GPUFormat;
         this.CPUFormat = CPUFormat;
         this.Type = Type;
-        ID = __Owner.API.GenTexture();
+        ID = Owner.API.GenTexture();
+        if(ID == 0){ throw new ExceptionWL("todo, failed create gltexture2d"); }
 
-        WLI.GPU.Texture? OldTexture = __Owner.CTexture2D;
+        GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
 
-        __Owner.CTexture2D = this;
+        Owner.Pool.SetTexture2D(this, 0, true);
 
         unsafe{
-            __Owner.API.TexImage2D(TextureTarget.Texture2D, 0, GPUFormat, (uint)Size.W, (uint)Size.H, 0, CPUFormat, Type, null);
+            Owner.API.TexImage2D(TextureTarget.Texture2D, 0, GPUFormat, (uint)Size.W, (uint)Size.H, 0, CPUFormat, Type, null);
         }
         
-        __Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
-        __Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
-        __Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS    , (int)GLEnum.Repeat);
-        __Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT    , (int)GLEnum.Repeat);
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS    , (int)GLEnum.Repeat);
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT    , (int)GLEnum.Repeat);
         
-        __Owner.CTexture2D = OldTexture;
+        Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
     }
     
     public static GLTexture2D Create(OpenGL Render, Vector2I Size, InternalFormat GPUFormat = InternalFormat.Rgba, PixelFormat CPUFormat = PixelFormat.Rgba, PixelType Type = PixelType.UnsignedByte){
         GLTexture2D Result = new GLTexture2D(Render, Size, GPUFormat, CPUFormat, Type);
         
-        Render.Registry_Texture2D[Result.ID] = Result;
+        Render.Pool.RegistryTexture2D[Result.ID] = Result;
 
         return Result;
     }
@@ -41,36 +42,37 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
         FromID = true;
         ID = TargetID;
 
-        WLI.GPU.Texture Old = __Owner.CTexture2D;
+        GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
 
-        __Owner.API.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth , out int W);
-        __Owner.API.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureHeight, out int H);
+        Owner.API.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth , out int W);
+        Owner.API.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureHeight, out int H);
         Size = new Vector2I(W, H);
         
-        __Owner.API.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureInternalFormat, out int InternalFormat);
+        Owner.API.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureInternalFormat, out int InternalFormat);
         GPUFormat = (InternalFormat)InternalFormat;
         
         //todo получать другие форматы (ЧЕРЕЗ ДОГАДКИ.....)
         
-        __Owner.CTexture2D = Old;
+        Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
     }
 
     public static GLTexture2D GetExists(OpenGL Render, uint TargetID){
         if(TargetID == 0){ return null!; }
         
-        if(Render.Registry_Texture2D.TryGetValue(TargetID, out GLTexture2D Result)){ return Result; }
+        if(Render.Pool.RegistryTexture2D.TryGetValue(TargetID, out GLTexture2D? Result)){ return Result; }
 
         if(!Render.API.IsTexture(TargetID)){ throw new ExceptionWL("Указан несуществующий ID!"); }
 
         Result = new GLTexture2D(Render, TargetID);
-        Render.Registry_Texture2D[TargetID] = Result;
+        Render.Pool.RegistryTexture2D[TargetID] = Result;
 
         return Result;
     }
 
     public override void OnDestroy(){
-        __Owner.Registry_Texture2D.Remove(ID);
-        __Owner.API.DeleteTexture(ID);
+        Owner.Pool.RegistryTexture2D.Remove(ID);
+        for(uint i = 0; i < Owner.Pool.MaxTextureSlots; i++){ if(object.Equals(Owner.Pool.GetTexture2D(i), this)){ Owner.Pool.SetTexture2D(null, i, true); } }
+        Owner.API.DeleteTexture(ID);
     }
     
     // ----------------------------------------------------------------------
@@ -85,14 +87,14 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
         Vector2I Offset = Rect?.Position ?? new Vector2I();
         Vector2I Size   = Rect?.Size ?? this.Size;
 
-        WLI.GPU.Texture? OldTexture = __Owner.CTexture2D;
-        __Owner.CTexture2D = this;
+        GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
+        Owner.Pool.SetTexture2D(this, 0, true);
 
         unsafe{
-            __Owner.API.TexSubImage2D(TextureTarget.Texture2D, 0, Offset.X, Offset.Y, (uint)Size.W, (uint)Size.H, CPUFormat, Type, (void*)Pixels);
+            Owner.API.TexSubImage2D(TextureTarget.Texture2D, 0, Offset.X, Offset.Y, (uint)Size.W, (uint)Size.H, CPUFormat, Type, (void*)Pixels);
         }
         
-        __Owner.CTexture2D = OldTexture;
+        Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
     }
     
     public void SetData<T>(T[] Pixels, Rect2I? Rect = null) where T : unmanaged{

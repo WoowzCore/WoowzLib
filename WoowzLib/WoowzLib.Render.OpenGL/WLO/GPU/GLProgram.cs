@@ -8,17 +8,18 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     public bool IsLinked{ get; } = false;
     
     private GLProgram(OpenGL Render, WLI.GPU.Shader[] Shaders) : base(Render){
-        ID = __Owner.API.CreateProgram();
-
+        ID = Owner.API.CreateProgram();
+        if(ID == 0){ throw new ExceptionWL("todo, failed create glprogram"); }
+        
         foreach(WLI.GPU.Shader Shader in Shaders){
-            __Owner.API.AttachShader(ID, Shader.ID);
+            Owner.API.AttachShader(ID, Shader.ID);
         }
         
-        __Owner.API.LinkProgram(ID);
+        Owner.API.LinkProgram(ID);
 
-        __Owner.API.GetProgram(ID, ProgramPropertyARB.LinkStatus, out int Status);
+        Owner.API.GetProgram(ID, ProgramPropertyARB.LinkStatus, out int Status);
         if(Status == 0){
-            string InfoLog = __Owner.API.GetProgramInfoLog(ID);
+            string InfoLog = Owner.API.GetProgramInfoLog(ID);
             throw new ExceptionWL($"Ошибка линковки программы: {InfoLog}");
         }
 
@@ -28,7 +29,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     public static GLProgram Create(OpenGL Render, WLI.GPU.Shader[] Shaders){
         GLProgram Result = new GLProgram(Render, Shaders);
         
-        Render.Registry_Program[Result.ID] = Result;
+        Render.Pool.RegistryProgram[Result.ID] = Result;
 
         return Result;
     }
@@ -37,26 +38,27 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         FromID = true;
         ID = TargetID;
 
-        __Owner.API.GetProgram(ID, ProgramPropertyARB.LinkStatus, out int Status);
+        Owner.API.GetProgram(ID, ProgramPropertyARB.LinkStatus, out int Status);
         IsLinked = Status != 0;
     }
 
     public static GLProgram GetExists(OpenGL Render, uint TargetID){
         if(TargetID == 0){ return null!; }
         
-        if(Render.Registry_Program.TryGetValue(TargetID, out GLProgram Result)){ return Result; }
+        if(Render.Pool.RegistryProgram.TryGetValue(TargetID, out GLProgram? Result)){ return Result; }
 
         if(!Render.API.IsProgram(TargetID)){ throw new ExceptionWL("Указан несуществующий ID!"); }
 
         Result = new GLProgram(Render, TargetID);
-        Render.Registry_Program[TargetID] = Result;
+        Render.Pool.RegistryProgram[TargetID] = Result;
 
         return Result;
     }
 
     public override void OnDestroy(){
-        __Owner.Registry_Program.Remove(ID);
-        __Owner.API.DeleteProgram(ID);
+        Owner.Pool.RegistryProgram.Remove(ID);
+        if(object.Equals(Owner.Pool.GetProgram(), this)){ Owner.Pool.SetProgram(null, true); }
+        Owner.API.DeleteProgram(ID);
     }
 
     // ----------------------------------------------------------------------
@@ -65,10 +67,10 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     public int GetUniform(string Name){
         if(__Uniforms.TryGetValue(Name, out int Location)){ return Location; }
 
-        Location = __Owner.API.GetUniformLocation(ID, Name);
+        Location = Owner.API.GetUniformLocation(ID, Name);
         __Uniforms[Name] = Location;
 
-        if(Location == -1){ __Owner.Log(__Owner.LogType_Uniform, $"Uniform \"{Name}\" не найден в программе {this}!"); }
+        if(Location == -1){ Owner.Log(Owner.LogType_Uniform, $"Uniform \"{Name}\" не найден в программе {this}!"); }
         
         return Location;
     }
@@ -90,7 +92,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(!UniformCorrect(Uniform)){ return; }
         if(__FValues.TryGetValue(Uniform, out float Old) && Old == Value){ return; }
         
-        __Owner.API.ProgramUniform1(ID, Uniform, Value);
+        Owner.API.ProgramUniform1(ID, Uniform, Value);
         __FValues[Uniform] = Value;
 
     }
@@ -99,7 +101,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(!UniformCorrect(Uniform)){ return; }
         if(__IValues.TryGetValue(Uniform, out int Old) && Old == Value){ return; }
         
-        __Owner.API.ProgramUniform1(ID, Uniform, Value);
+        Owner.API.ProgramUniform1(ID, Uniform, Value);
         __IValues[Uniform] = Value;
         
     }
@@ -109,7 +111,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         int Value__ = Value ? 1 : 0;
         if(__IValues.TryGetValue(Uniform, out int Old) && Old == Value__){ return; }
         
-        __Owner.API.ProgramUniform1(ID, Uniform, Value__);
+        Owner.API.ProgramUniform1(ID, Uniform, Value__);
         __IValues[Uniform] = Value__;
 
     }
@@ -118,7 +120,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(!UniformCorrect(Uniform)){ return; }
         if(__V2FValues.TryGetValue(Uniform, out Vector2F Old) && Old == Value){ return; }
         
-        __Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
+        Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
         __V2FValues[Uniform] = Value;
     }
     
@@ -126,7 +128,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(!UniformCorrect(Uniform)){ return; }
         if(__V2IValues.TryGetValue(Uniform, out Vector2I Old) && Old == Value){ return; }
         
-        __Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
+        Owner.API.ProgramUniform2(ID, Uniform, Value.X, Value.Y);
         __V2IValues[Uniform] = Value;
         
     }
@@ -135,7 +137,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(!UniformCorrect(Uniform)){ return; }
         if(__V3FValues.TryGetValue(Uniform, out Vector3F Old) && Old == Value){ return; }
         
-        __Owner.API.ProgramUniform3(ID, Uniform, Value.X, Value.Y, Value.Z);
+        Owner.API.ProgramUniform3(ID, Uniform, Value.X, Value.Y, Value.Z);
         __V3FValues[Uniform] = Value;
     }
     
@@ -144,7 +146,7 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
         if(__M4FValues.TryGetValue(Uniform, out Matrix4F Old) && Old == Value){ return; }
 
         unsafe{
-            __Owner.API.ProgramUniformMatrix4(ID, Uniform, 1, false, (float*)&Value);
+            Owner.API.ProgramUniformMatrix4(ID, Uniform, 1, false, (float*)&Value);
         }
         __M4FValues[Uniform] = Value;
     }

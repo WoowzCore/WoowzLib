@@ -3,7 +3,7 @@ using WLO.Math;
 
 namespace WLI_Render;
 
-public interface RenderView{
+public interface View{
     Vector2I Viewport{ get; set; }
     
     Color4B[] Get();

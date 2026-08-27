@@ -6,13 +6,14 @@ namespace WLO.GPU;
 
 public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     private GLMesh(OpenGL Render) : base(Render){
-        ID = __Owner.API.GenVertexArray();
+        ID = Owner.API.GenVertexArray();
+        if(ID == 0){ throw new ExceptionWL("todo, failed create glmesh"); }
     }
 
     public static GLMesh Create(OpenGL Render){
         GLMesh Result = new GLMesh(Render);
         
-        Render.Registry_Mesh[Result.ID] = Result;
+        Render.Pool.RegistryMesh[Result.ID] = Result;
 
         return Result;
     }
@@ -27,19 +28,20 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     public static GLMesh GetExists(OpenGL Render, uint TargetID){
         if(TargetID == 0){ return null!; }
         
-        if(Render.Registry_Mesh.TryGetValue(TargetID, out GLMesh Result)){ return Result; }
+        if(Render.Pool.RegistryMesh.TryGetValue(TargetID, out GLMesh? Result)){ return Result; }
 
         if(!Render.API.IsVertexArray(TargetID)){ throw new ExceptionWL("Указан несуществующий ID!"); }
 
         Result = new GLMesh(Render, TargetID);
-        Render.Registry_Mesh[TargetID] = Result;
+        Render.Pool.RegistryMesh[TargetID] = Result;
 
         return Result;
     }
 
     public override void OnDestroy(){
-        __Owner.Registry_Mesh.Remove(ID);
-        __Owner.API.DeleteVertexArray(ID);
+        Owner.Pool.RegistryMesh.Remove(ID);
+        if(object.Equals(Owner.Pool.GetMesh(), this)){ Owner.Pool.SetMesh(null, true); }
+        Owner.API.DeleteVertexArray(ID);
     }
     
     // ----------------------------------------------------------------------
@@ -53,20 +55,20 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     public uint IndexCount{ get; private set; }
     
     public unsafe void AddVertexBuffer(WLI.GPU.Buffer Buffer, WLI.GPU.VertexLayout Layout){
-        WLI.GPU.Mesh?   OldMesh    = __Owner.CMesh;
-        WLI.GPU.Buffer? OldFBuffer = __Owner.CFBuffer;
+        GLMesh?   OldMesh    = Owner.Pool.GetMesh();
+        GLBuffer? OldFBuffer = Owner.Pool.GetFBuffer();
         
-        __Owner.CMesh    = this;
-        __Owner.CFBuffer = Buffer;
+        Owner.Pool.SetMesh(this, true);
+        Owner.Pool.SetFBuffer((GLBuffer)Buffer, true);
 
         uint Offset = 0;
         foreach(VertexAttribute Attribute in Layout.Attributes){
-            __Owner.API.EnableVertexAttribArray(__CurrentAttributeIndex);
+            Owner.API.EnableVertexAttribArray(__CurrentAttributeIndex);
 
             if((Attribute.Type is VertexAttribute.AttributeType.Int or VertexAttribute.AttributeType.UInt) && !Attribute.Normalized){
-                __Owner.API.VertexAttribIPointer(__CurrentAttributeIndex, Attribute.Count, (VertexAttribIType)MapType(Attribute.Type), Layout.Stride, (void*)Offset);
+                Owner.API.VertexAttribIPointer(__CurrentAttributeIndex, Attribute.Count, (VertexAttribIType)MapType(Attribute.Type), Layout.Stride, (void*)Offset);
             }else{
-                __Owner.API.VertexAttribPointer(__CurrentAttributeIndex, Attribute.Count, MapType(Attribute.Type), Attribute.Normalized, Layout.Stride, (void*)Offset);
+                Owner.API.VertexAttribPointer(__CurrentAttributeIndex, Attribute.Count, MapType(Attribute.Type), Attribute.Normalized, Layout.Stride, (void*)Offset);
             }
             
             Offset += (uint)Attribute.Count * VertexAttribute.GetTypeSize(Attribute.Type);
@@ -79,21 +81,21 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
         
         __VBO.Add(Buffer);
 
-        __Owner.CFBuffer = OldFBuffer;
-        __Owner.CMesh    = OldMesh;
+        Owner.Pool.SetFBuffer(OldFBuffer, true);
+        Owner.Pool.SetMesh(OldMesh, true);
     }
     
     // TODO, не изменямый, фикс позже
     public void SetIndexBuffer(WLI.GPU.Buffer? Buffer, uint IndexCount = 0){
-        WLI.GPU.Mesh? OldMesh = __Owner.CMesh;
+        GLMesh? OldMesh = Owner.Pool.GetMesh();
 
-        __Owner.CMesh = this;
+        Owner.Pool.SetMesh(this, true);
         __EBO = Buffer;
         this.IndexCount = IndexCount;
 
-        __Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, Buffer?.ID ?? 0);
+        Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, Buffer?.ID ?? 0);
         
-        __Owner.CMesh = OldMesh;
+        Owner.Pool.SetMesh(OldMesh, true);
     }
     
     // ----------------------------------------------------------------------
