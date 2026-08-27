@@ -2,27 +2,11 @@
 using System.Runtime.InteropServices;
 using Silk.NET.OpenGL;
 using WLI_Render;
+using WLI.Render;
 using WLO.GPU;
 using WLO.Math;
 
 namespace WLO.Render.Hardware;
-
-/*
-
-НЕ ПРАВИЛЬНО Я ДЕЛАЮ, НУЖНО ПРИМЕНЯТЬ ЗНАЧЕНИЯ ВО ВРЕМЯ РЕНДЕРА ИЛИ КАКИХ-ТО ДЕЙСТВИЙ А НЕ СРАЗУ ПРИ ПОЛУЧЕНИИ!
-
-к примеру,
-
-DepthTest = true, (будет просто в памяти лежать что true),
-
-а когда рендер будет типо такого...
-
-api.depthtest = DepthTest;
-render();
-
-что-бы меньше команд к видеокарте бла бла бла
-
- */
 
 public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     #region Значения
@@ -38,6 +22,8 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             public readonly Func<string, IntPtr> API_ProcessLoader;
 
             public bool APIIsReady => API != null!;
+            
+            public RenderPool Pool{ get; private set; } = null!;
             
         #endregion
         
@@ -174,39 +160,37 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     
     // ----------------------------------------------------------------------
     
-    public WLI.GPU.Buffer CreateBuffer(uint Usage, uint Size) => GLBuffer.Create(this, BufferTargetARB.ArrayBuffer, Size);
+    public GLBuffer CreateBuffer(BufferTargetARB Target, uint Size) => GLBuffer.Create(this, Target, Size);
 
-    public WLI.GPU.Shader CreateShader(WLI.GPU.Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
+    public GLShader CreateShader(WLI.GPU.Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
 
-    public WLI.GPU.Program CreateProgram(params WLI.GPU.Shader[] Shaders) => GLProgram.Create(this, Shaders);
+    public GLProgram CreateProgram(params WLI.GPU.Shader[] Shaders) => GLProgram.Create(this, Shaders);
 
-    public unsafe WLI.GPU.Mesh CreateMesh<T>(WLI.GPU.VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
+    public GLMesh CreateMesh<T>(WLI.GPU.VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
         GLMesh Mesh = GLMesh.Create(this);
 
-        uint VSize = (uint)(Vertices.Length * sizeof(T));
-        GLBuffer VBO = (GLBuffer)CreateBuffer((uint)BufferTargetARB.ArrayBuffer, VSize);
-        VBO.Update(Vertices);
+        unsafe{
+            uint VSize = (uint)(Vertices.Length * sizeof(T));
+            GLBuffer VBO = CreateBuffer(BufferTargetARB.ArrayBuffer, VSize);
+            VBO.Update(Vertices);
         
-        Mesh.AddVertexBuffer(VBO, Layout);
+            Mesh.AddVertexBuffer(VBO, Layout);
 
-        if(Indices != null && Indices.Length > 0){
-            uint ISize = (uint)(Indices.Length * sizeof(uint));
-            GLBuffer EBO = (GLBuffer)CreateBuffer((uint)BufferTargetARB.ElementArrayBuffer, ISize);
-            EBO.Update(Indices);
+            if(Indices != null && Indices.Length > 0){
+                uint ISize = (uint)(Indices.Length * sizeof(uint));
+                GLBuffer EBO = CreateBuffer(BufferTargetARB.ElementArrayBuffer, ISize);
+                EBO.Update(Indices);
             
-            Mesh.SetIndexBuffer(EBO, (uint)Indices.Length);
-        }
+                Mesh.SetIndexBuffer(EBO, (uint)Indices.Length);
+            }
 
-        Mesh.VertexCount = (uint)Vertices.Length;
+            Mesh.VertexCount = (uint)Vertices.Length;
+        }
         
         return Mesh;
     }
     
-    public WLI.GPU.Texture CreateTexture(Vector2I Size, uint Format = (uint)InternalFormat.Rgba) => GLTexture2D.Create(this, Size, (InternalFormat)Format);
-    
-    // ----------------------------------------------------------------------
-
-    public RenderPool Pool{ get; private set; } = null!;
+    public GLTexture2D CreateTexture2D(Vector2I Size, uint Format = (uint)InternalFormat.Rgba) => GLTexture2D.Create(this, Size, (InternalFormat)Format);
 
     // ----------------------------------------------------------------------
 
@@ -281,15 +265,6 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
 
         public uint MaxTextureSlots{ get; private set; }
 
-        private uint __UseTextureSlots;
-        public uint UseTextureSlots{
-            get => __UseTextureSlots;
-            set{
-                __UseTextureSlots = value;
-                if(__UseTextureSlots > MaxTextureSlots){ throw new ExceptionWL("todo, usetextureslots > maxtextureslots!"); }
-            }
-        }
-
         public GLView DefaultView{ get; private set; } = null!;
 
         public RenderPool(OpenGL Render){ Owner = Render; }
@@ -297,11 +272,16 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         public void Start(){
             Owner.API.GetInteger(GetPName.MaxCombinedTextureImageUnits, out int MaxTextureSlots__);
             MaxTextureSlots = (uint)MaxTextureSlots__;
-            UseTextureSlots = MaxTextureSlots;
             
             TargetTexture2D = new GLTexture2D[MaxTextureSlots];
             BoundTexture2D  = new uint       [MaxTextureSlots];
-
+            
+            // todo, узнать кол-во?
+            TargetUniformBlock = new UniformBlock[32];
+            BoundUniformBlock  = new uint[32];
+            
+            ForceReset();
+            
             DefaultView = GLView.GetExists(Owner, 0);
             TargetView = DefaultView;
         }
@@ -355,11 +335,25 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         public GLBuffer? GetIBuffer() => TargetIBuffer;
         
         // ----------------------------------------------------------------------
+        
+        private GLBuffer? TargetUBuffer = null;
+        private uint      BoundUBuffer  = 0;
+        
+        public void SetUBuffer(GLBuffer? UBuffer, bool Immediately = false){
+            if(UBuffer != null && UBuffer.Target != BufferTargetARB.UniformBuffer){ throw new ExceptionWL("todo, not uniform buff"); }
+            TargetUBuffer = UBuffer;
+            if(Immediately){ BindUBuffer(); }
+        }
+
+        public GLBuffer? GetUBuffer() => TargetUBuffer;
+        
+        // ----------------------------------------------------------------------
 
         public void SetBuffer(BufferTargetARB Target, GLBuffer? Buffer, bool Immediately = false){
             switch(Target){
                 case BufferTargetARB.ArrayBuffer       : SetFBuffer(Buffer, Immediately); break;
                 case BufferTargetARB.ElementArrayBuffer: SetIBuffer(Buffer, Immediately); break;
+                case BufferTargetARB.UniformBuffer     : SetUBuffer(Buffer, Immediately); break;
                 default:
                     WL.Logger.Warn($"todo, unknown buffer type [{Target}] (setbuffer)");
                     break;
@@ -370,6 +364,7 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             switch (Target) {
                 case BufferTargetARB.ArrayBuffer       : return GetFBuffer();
                 case BufferTargetARB.ElementArrayBuffer: return GetIBuffer();
+                case BufferTargetARB.UniformBuffer     : return GetUBuffer();
                 default:
                     WL.Logger.Warn($"todo, unknown buffer type [{Target}] (getbuffer)");
                     return null;
@@ -428,7 +423,30 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         }
 
         public GLTexture2D? GetTexture2D(uint Slot = 0) => TargetTexture2D[Slot] ?? null;
+        
+        // ----------------------------------------------------------------------
 
+        private WLI.Render.UniformBlock?[] TargetUniformBlock = null!;
+        private uint[]                     BoundUniformBlock  = null!;
+        
+        private ulong __ActiveUniformBlockMask = 0;
+        
+        public void SetUniformBlock<T>(UniformBlock<T>? UniformBlock, uint Slot = 0, bool Immediately = false) where T : unmanaged{
+            if(Slot >= TargetUniformBlock.Length){ return; }
+
+            TargetUniformBlock[Slot] = UniformBlock;
+
+            uint ID = UniformBlock?.ID ?? 0;
+
+            if(ID != 0){
+                __ActiveUniformBlockMask |= (1UL << (int)Slot);
+            }else{
+                __ActiveUniformBlockMask &= ~(1UL << (int)Slot);
+            }
+
+            if(Immediately){ BindUniformBlock(Slot); }
+        }
+        
         // ----------------------------------------------------------------------
         
         public void BindView(){
@@ -452,6 +470,13 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, ID);
         }
         
+        public void BindUBuffer(){
+            uint ID = TargetUBuffer?.ID ?? 0;
+            if(BoundUBuffer == ID){ return; }
+            BoundUBuffer = ID;
+            Owner.API.BindBuffer(BufferTargetARB.UniformBuffer, ID);
+        }
+        
         public void BindProgram(){
             uint ID = TargetProgram?.ID ?? 0;
             if(BoundProgram == ID){ return; }
@@ -460,12 +485,18 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         }
         
         public void BindMesh(){
+            if(TargetMesh != null){
+                if(TargetMesh.Indices is GLBuffer Indexes){
+                    SetIBuffer(Indexes);
+                }
+            }else{
+                SetIBuffer(null);   
+            }
+            
             uint ID = TargetMesh?.ID ?? 0;
             if(BoundMesh == ID){ return; }
             BoundMesh = ID;
             Owner.API.BindVertexArray(ID);
-            
-            // todo (СТАРОЕ УТВЕРЖДЕНИЕ), мне ИИ утверждает, что BindVertexArray, изменяет CIBuffer, надо будет проверить!!!
         }
 
         private uint ActiveTexture2DSlot = 0;
@@ -492,6 +523,25 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
                 for(uint i = 64; i <= __MaxUsedSlots; i++){
                     if(TargetTexture2D[i] != null){ BindTexture2D(i); }
                 }
+            }
+        }
+
+        public void BindUniformBlock(uint Slot){
+            uint ID = TargetUniformBlock[Slot]?.ID ?? 0;
+            if(BoundUniformBlock[Slot] == ID){ return; }
+
+            BoundUniformBlock[Slot] = ID;
+            Owner.API.BindBufferBase(BufferTargetARB.UniformBuffer, Slot, ID);
+        }
+
+        public void BindUniformBlockAll(){
+            if(__ActiveUniformBlockMask == 0){ return; }
+
+            ulong Mask = __ActiveUniformBlockMask;
+            while(Mask != 0){
+                int Slot = BitOperations.TrailingZeroCount(Mask);
+                BindUniformBlock((uint)Slot);
+                Mask &= ~(1UL << Slot);
             }
         }
         
@@ -582,11 +632,27 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             
             BindProgram();
             BindMesh();
+            BindUniformBlockAll();
             BindTexture2DAll();
         }
 
         public void BindForView(){
             BindView();
+        }
+
+        public void ForceReset(){
+            const uint NullState = uint.MaxValue;
+
+            BoundView = NullState;
+            BoundProgram = NullState;
+            BoundMesh = NullState;
+            BoundFBuffer = NullState;
+            BoundIBuffer = NullState;
+            BoundUBuffer = NullState;
+            ActiveTexture2DSlot = NullState;
+            
+            Array.Fill(BoundTexture2D, NullState);
+            Array.Fill(BoundUniformBlock, NullState);
         }
 
         public bool CanDraw => TargetProgram != null && TargetMesh != null;

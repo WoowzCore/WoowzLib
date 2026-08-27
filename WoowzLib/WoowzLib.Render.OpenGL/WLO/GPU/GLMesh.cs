@@ -46,8 +46,9 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     
     // ----------------------------------------------------------------------
     
-    private readonly List<WLI.GPU.Buffer> __VBO = [];
-    private          WLI.GPU.Buffer?      __EBO;
+    private readonly List<WLI.GPU.Buffer> __Vertices = [];
+    public IReadOnlyList<WLI.GPU.Buffer> Vertices => __Vertices;
+    public WLI.GPU.Buffer? Indices{ get; private set; }
 
     private uint __CurrentAttributeIndex = 0;
     
@@ -79,7 +80,7 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
             VertexCount = Buffer.Size / Layout.Stride;
         }
         
-        __VBO.Add(Buffer);
+        __Vertices.Add(Buffer);
 
         Owner.Pool.SetFBuffer(OldFBuffer, true);
         Owner.Pool.SetMesh(OldMesh, true);
@@ -90,12 +91,12 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
         GLMesh? OldMesh = Owner.Pool.GetMesh();
 
         Owner.Pool.SetMesh(this, true);
-        __EBO = Buffer;
+        Indices = Buffer;
         this.IndexCount = IndexCount;
 
-        Owner.API.BindBuffer(BufferTargetARB.ElementArrayBuffer, Buffer?.ID ?? 0);
+        Owner.Pool.SetIBuffer(Buffer as GLBuffer, true);
         
-        Owner.Pool.SetMesh(OldMesh, true);
+        Owner.Pool.SetMesh(OldMesh);
     }
     
     // ----------------------------------------------------------------------

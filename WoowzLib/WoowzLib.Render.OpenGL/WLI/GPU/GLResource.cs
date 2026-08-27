@@ -5,8 +5,8 @@ namespace WLI.GPU;
 public abstract class GLResource : WLI.GPU.Resource, IEquatable<GLResource>{
     public uint ID{ get; protected set; }
     public bool FromID{ get; protected set; }
-    
-    protected readonly OpenGL Owner;
+
+    public OpenGL Owner{ get; }
 
     protected GLResource(OpenGL Render) => Owner = Render;
 

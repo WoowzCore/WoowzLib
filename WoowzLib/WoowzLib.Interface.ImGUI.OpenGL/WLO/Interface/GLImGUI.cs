@@ -25,7 +25,7 @@ public class GLImGUI : WLO.Interface.ImGUI, IDisposable{
             base.Start(); IsStarted = false;
 
             // language=GLSL
-            GLShader VShader = (GLShader)__Owner.CreateShader(Shader.Type.Vertex  , @"
+            GLShader VShader = __Owner.CreateShader(Shader.Type.Vertex  , @"
 #version 430 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aUV;
@@ -42,7 +42,7 @@ void main() {
 }");
             
             // language=GLSL
-            GLShader FShader = (GLShader)__Owner.CreateShader(Shader.Type.Fragment, @"
+            GLShader FShader = __Owner.CreateShader(Shader.Type.Fragment, @"
 #version 430 core
 in vec2 vUV;
 in vec4 vColor;
@@ -53,10 +53,10 @@ out vec4 fColor;
 void main() {
     fColor = vColor * texture(uTex, vUV);
 }");
-            __Program = (GLProgram)__Owner.CreateProgram(VShader, FShader);
+            __Program = __Owner.CreateProgram(VShader, FShader);
 
-            __Uniform_Projection = __Program.GetLocationFromName("uProj");
-            __Uniform_Texture    = __Program.GetLocationFromName("uTex");
+            __Uniform_Projection = __Program.GetLocationFromName("uProj") ?? -1;
+            __Uniform_Texture    = __Program.GetLocationFromName("uTex")  ?? -1;
 
             unsafe{
                 IO.Fonts.GetTexDataAsRGBA32(out byte* Pixels, out int W, out int H);
@@ -69,16 +69,15 @@ void main() {
                 IO.Fonts.SetTexID((IntPtr)__FontTexture.ID);
             }
 
-            __Vertices = GLBuffer.Create(__Owner, BufferTargetARB.ArrayBuffer, 1024 * 512);
+            __Vertices = GLBuffer.Create(__Owner, BufferTargetARB.ArrayBuffer       , 1024 * 512);
             __Indexes  = GLBuffer.Create(__Owner, BufferTargetARB.ElementArrayBuffer, 1024 * 128);
 
             __Mesh = GLMesh.Create(__Owner);
-            VertexLayout Layout = new VertexLayout(
+            __Mesh.AddVertexBuffer(__Vertices, new VertexLayout(
                 new VertexAttribute("aPos", 2, VertexAttribute.AttributeType.Float),
                 new VertexAttribute("aUV", 2, VertexAttribute.AttributeType.Float),
                 new VertexAttribute("aColor", 4, VertexAttribute.AttributeType.UByte, true)
-            );
-            __Mesh.AddVertexBuffer(__Vertices, Layout);
+            ));
             __Mesh.SetIndexBuffer(__Indexes);
             
             IsStarted = true;
@@ -115,9 +114,6 @@ void main() {
             bool OldDepthTest   = __Owner.Pool.GetDepthTest();
             bool OldScissorTest = __Owner.Pool.GetScissorTest();
             (BlendingFactor, BlendingFactor)? OldBlend = __Owner.Pool.GetBlend();
-
-            uint OldUseTextureSlots = __Owner.Pool.UseTextureSlots;
-            __Owner.Pool.UseTextureSlots = __Owner.Pool.MaxTextureSlots;
             
             __Owner.Pool.SetBlend((BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha));
             __Owner.Pool.SetCullFace   (false);
@@ -140,7 +136,7 @@ void main() {
             for(int i = 0; i < DrawData.CmdListsCount; i++){
                 ImDrawListPtr CMDList = DrawData.CmdLists[i];
                 
-                __Owner.Pool.SetMesh(null, true);
+                    //__Owner.Pool.SetMesh(null, true);
                 __Vertices.Update(CMDList.VtxBuffer.Data, (uint)(CMDList.VtxBuffer.Size * sizeof(ImDrawVert)));
                 __Indexes .Update(CMDList.IdxBuffer.Data, (uint)(CMDList.IdxBuffer.Size * sizeof(ushort)));
                 
@@ -169,8 +165,6 @@ void main() {
                     );
                 }
             }
-
-            __Owner.Pool.UseTextureSlots = OldUseTextureSlots;
             
             __Owner.Pool.SetBlend      (OldBlend      );
             __Owner.Pool.SetCullFace   (OldCullFace   );

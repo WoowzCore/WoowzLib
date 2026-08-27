@@ -71,17 +71,26 @@ public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
     
     public uint Size{ get; }
     
+    public void UpdateSingle<T>(T Data, uint Offset = 0) where T : unmanaged{
+        unsafe{
+            uint Size = (uint)sizeof(T);
+
+            if(Offset + Size > this.Size){ throw new ExceptionWL("todo"); }
+            
+            Owner.Pool.SetBuffer(Target, this, true);
+        
+            Owner.API.BufferSubData(Target, (nint)Offset, Size, &Data);
+        }
+    }
+    
     public void Update(IntPtr Data, uint DataSize, uint Offset = 0){
         if(Data == IntPtr.Zero){ throw new ExceptionWL("todo"); }
         
         if(Offset + DataSize > Size){ throw new ExceptionWL("todo"); }
         
-        GLBuffer? OldBuffer = Owner.Pool.GetBuffer(Target);
-        Owner.Pool.SetBuffer(Target, this, true);
-        
-        unsafe{ Owner.API.BufferSubData(Target, (nint)Offset, DataSize, (void*)Data); }
-        
-        Owner.Pool.SetBuffer(Target, OldBuffer, true);
+        Owner.API.BindBuffer(BufferTargetARB.CopyWriteBuffer, ID);
+        unsafe{ Owner.API.BufferSubData(BufferTargetARB.CopyWriteBuffer, (nint)Offset, DataSize, (void*)Data); }
+        Owner.API.BindBuffer(BufferTargetARB.CopyWriteBuffer, 0);
     }
     
     public void Update<T>(ReadOnlySpan<T> Data, uint Offset = 0) where T : unmanaged{
@@ -100,14 +109,9 @@ public class GLBuffer : WLI.GPU.GLResource, WLI.GPU.Buffer{
 
             if(Offset + ReadSize > Size){ throw new ExceptionWL("todo"); }
             
-            GLBuffer? OldBuffer = Owner.Pool.GetBuffer(Target);
-            Owner.Pool.SetBuffer(Target, this, true);
-
-            fixed(void* Ptr = Destination){
-                Owner.API.GetBufferSubData(Target, (nint)Offset, ReadSize, Ptr);
-            }
-            
-            Owner.Pool.SetBuffer(Target, OldBuffer, true);
+            Owner.API.BindBuffer(BufferTargetARB.CopyReadBuffer, ID);
+            fixed(void* Ptr = Destination){ Owner.API.GetBufferSubData(BufferTargetARB.CopyReadBuffer, (nint)Offset, ReadSize, Ptr); }
+            Owner.API.BindBuffer(BufferTargetARB.CopyReadBuffer, 0);
         }
     }
 }

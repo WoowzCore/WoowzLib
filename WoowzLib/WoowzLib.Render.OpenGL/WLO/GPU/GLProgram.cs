@@ -106,18 +106,13 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
     private readonly Dictionary<int, UniformValue> __UniformValues = [];
     private readonly Dictionary<string, int      > __UniformNames  = [];
     
-    public int GetLocationFromName(string Name){
+    public int? GetLocationFromName(string Name){
         if(__UniformNames.TryGetValue(Name, out int Location)){ return Location; }
 
-        Location = Owner.API.GetUniformLocation(ID, Name);
-        __UniformNames[Name] = Location;
-
-        if(Location == -1){ Owner.Log(Owner.LogType_Uniform, $"Uniform ID \"{Name}\" не найден в программе {this}!"); }
-        
-        return Location;
+        return null;
     }
     
-    public void SetUniform(UniformValue NewValue){
+    public void SetUniform(in UniformValue NewValue){
         if(NewValue.Location <= -1){ return; }
 
         if(!__Uniforms.Contains(NewValue.Location)){ return; }
@@ -130,7 +125,11 @@ public class GLProgram : WLI.GPU.GLResource, WLI.GPU.Program{
                 case UniformValue.DataType.Int     : Owner.API.ProgramUniform1(ID, NewValue.Location, (int)NewValue.F1); break;
                 case UniformValue.DataType.Vector2F: Owner.API.ProgramUniform2(ID, NewValue.Location, NewValue.F1, NewValue.F2); break;
                 case UniformValue.DataType.Vector3F: Owner.API.ProgramUniform3(ID, NewValue.Location, NewValue.F1, NewValue.F2, NewValue.F3); break;
-                case UniformValue.DataType.Matrix4F: Owner.API.ProgramUniformMatrix4(ID, NewValue.Location, 1, false, (float*)&NewValue.Matrix); break;
+                case UniformValue.DataType.Matrix4F:
+                    fixed(Matrix4F* PtrMatrix = &NewValue.Matrix){
+                        Owner.API.ProgramUniformMatrix4(ID, NewValue.Location, 1, false, (float*)PtrMatrix);
+                    }
+                    break;
             }
         }
 
