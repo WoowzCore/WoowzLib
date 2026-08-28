@@ -22,7 +22,42 @@ public class GLRenderQueue{
         }
     }
 
-    public void Render(){
+    public void Render(Action<Command, GLProgram>? OnBeforeDraw = null){
+        Sort();
+
+        foreach(Command CMD in __OpaqueCommands){ RenderObject(CMD, null, OnBeforeDraw); }
+        
+        foreach(Command CMD in __TransparentCommands){ RenderObject(CMD, null, OnBeforeDraw); }
+        
+        Clear();
+    }
+
+    public void RenderWithProgram(GLProgram Program, Action<Command, GLProgram>? OnBeforeDraw = null){
+        Sort();
+        
+        foreach(Command CMD in __OpaqueCommands){ RenderObject(CMD, Program, OnBeforeDraw); }
+        
+        foreach(Command CMD in __TransparentCommands){ RenderObject(CMD, Program, OnBeforeDraw); }
+        
+        Clear();
+    }
+
+    private void RenderObject(Command CMD, GLProgram? OverrideProgram, Action<Command, GLProgram>? Callback){
+        GLProgram? ActiveProgram = OverrideProgram ?? CMD.Program;
+        if(ActiveProgram == null){ return; }
+
+        Owner.Pool.SetTexture2D(CMD.Texture2D);
+        
+        if(CMD.Uniforms != null){
+            foreach(UniformValue Uniform in CMD.Uniforms){ ActiveProgram.SetUniform(Uniform); }
+        }
+        
+        Callback?.Invoke(CMD, ActiveProgram);
+        
+        Owner.Draw(CMD.Mesh!, ActiveProgram);
+    }
+    
+    private void Sort(){
         __OpaqueCommands.Sort((A, B) => {
             uint AID = A.Program?.ID ?? 0;
             uint BID = B.Program?.ID ?? 0;
@@ -36,23 +71,11 @@ public class GLRenderQueue{
         });
         
         __TransparentCommands.Sort((A, B) => B.DistanceToCamera.CompareTo(A.DistanceToCamera));
-
-        foreach(Command CMD in __OpaqueCommands){ RenderObject(CMD); }
-        
-        foreach(Command CMD in __TransparentCommands){ RenderObject(CMD); }
-        
-        __OpaqueCommands.Clear();
-        __TransparentCommands.Clear();
     }
 
-    private void RenderObject(Command CMD){
-        Owner.Pool.SetTexture2D(CMD.Texture2D);
-        
-        if(CMD.Uniforms != null && CMD.Program != null){
-            foreach(UniformValue Uniform in CMD.Uniforms){ CMD.Program.SetUniform(Uniform); }
-        }
-        
-        Owner.Draw(CMD.Mesh!, CMD.Program);
+    private void Clear(){
+        __OpaqueCommands.Clear();
+        __TransparentCommands.Clear();
     }
     
     public struct Command{
@@ -64,5 +87,7 @@ public class GLRenderQueue{
 
         public float DistanceToCamera;
         public bool  IsTransparent;
+
+        public uint ObjectID;
     }
 }

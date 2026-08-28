@@ -1,10 +1,11 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WLO.Math;
 
 [StructLayout(LayoutKind.Explicit)]
-public struct Color4B : WLI.Packable{
+public struct Color4B : IEquatable<Color4B>, WLI.Packable{
     [FieldOffset(0)] public byte R;
     [FieldOffset(1)] public byte G;
     [FieldOffset(2)] public byte B;
@@ -44,4 +45,18 @@ public struct Color4B : WLI.Packable{
     public static Color4B Transparent => new Color4B(0, 0, 0, 0);
     public static Color4B White => new Color4B(255, 255, 255);
     public static Color4B Black => new Color4B(0, 0, 0);
+    
+    // ----------------------------------------------------------------------
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(Color4B Other) => R == Other.R && G == Other.G && B == Other.B && A == Other.A;
+
+    public override bool Equals(object? Object) => Object is Color4B Other && Equals(Other);
+
+    public override int GetHashCode() => HashCode.Combine(R, G, B, A);
+
+    public static bool operator ==(Color4B L, Color4B R) =>  L.Equals(R);
+    public static bool operator !=(Color4B L, Color4B R) => !L.Equals(R);
+
+    public override string ToString() => $"Color4B({R}, {G}, {B}, {A})";
 }

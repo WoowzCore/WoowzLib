@@ -630,6 +630,15 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         }
         public (BlendingFactor Source, BlendingFactor Destination)? GetBlend() => TargetBlend;
         
+        private bool TargetFrameSRGB;
+        private bool BoundFrameSRGB;
+
+        public void SetFrameSRGB(bool FrameSRGB, bool Immediately = false){
+            TargetFrameSRGB = FrameSRGB;
+            if(Immediately){ ApplyCap(EnableCap.FramebufferSrgb, TargetFrameSRGB, ref BoundFrameSRGB); }
+        }
+        public bool GetFrameSRGB() => TargetFrameSRGB;
+        
         private void ApplyCap(EnableCap Cap, bool Target, ref bool Bound){
             if(Target != Bound){
                 if(Target){
@@ -654,10 +663,11 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
         }
         
         public void BindStates(){
-            ApplyCap(EnableCap.DepthTest  , TargetDepthTest  , ref BoundDepthTest  );
-            ApplyCap(EnableCap.CullFace   , TargetCullFace   , ref BoundCullFace   );
-            ApplyCap(EnableCap.ScissorTest, TargetScissorTest, ref BoundScissorTest);
-            ApplyCap(EnableCap.StencilTest, TargetStencilTest, ref BoundStencilTest);
+            ApplyCap(EnableCap.DepthTest      , TargetDepthTest  , ref BoundDepthTest  );
+            ApplyCap(EnableCap.CullFace       , TargetCullFace   , ref BoundCullFace   );
+            ApplyCap(EnableCap.ScissorTest    , TargetScissorTest, ref BoundScissorTest);
+            ApplyCap(EnableCap.StencilTest    , TargetStencilTest, ref BoundStencilTest);
+            ApplyCap(EnableCap.FramebufferSrgb, TargetFrameSRGB  , ref BoundFrameSRGB  );
             
             ApplyBlend();
         }
@@ -690,6 +700,19 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             
             Array.Fill(BoundTexture2D, NullState);
             Array.Fill(BoundUniformBlock, NullState);
+            
+            Owner.API.Enable(EnableCap.DepthTest);
+            BoundDepthTest = true;
+            Owner.API.Disable(EnableCap.CullFace);
+            BoundCullFace = false;
+            Owner.API.Disable(EnableCap.ScissorTest);
+            BoundScissorTest = false;
+            Owner.API.Disable(EnableCap.StencilTest);
+            BoundStencilTest = false;
+            Owner.API.Disable(EnableCap.Blend);
+            BoundBlend = null;
+            Owner.API.Disable(EnableCap.FramebufferSrgb);
+            BoundFrameSRGB = false;
         }
 
         public bool CanDraw => TargetProgram != null && TargetMesh != null;

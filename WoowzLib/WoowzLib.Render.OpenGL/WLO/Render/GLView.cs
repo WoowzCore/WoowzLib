@@ -147,15 +147,28 @@ public class GLView : WLI.GPU.GLResource, WLI_Render.View{
     public Texture? TextureDepth  => GetTexture(FramebufferAttachment.DepthAttachment);
     
     public Texture? GetTexture(FramebufferAttachment Attachment) => __Textures.TryGetValue(Attachment, out GLTexture2D? Texture) ? Texture : null;
-    
-    public Color4B[] Get(){
-        Color4B[] Pixels = new Color4B[Viewport.X * Viewport.Y];
+
+    public Color4B[] Get(FramebufferAttachment Attachment = FramebufferAttachment.ColorAttachment0) => GetRect(new Rect2I(0, 0, Viewport.X, Viewport.Y), Attachment);
+
+    public Color4B[] GetRect(Rect2I Rect, FramebufferAttachment Attachment = FramebufferAttachment.ColorAttachment0){
+        if(Rect.W <= 0 || Rect.H <= 0){ return []; }
+
+        Color4B[] Pixels = new Color4B[Rect.W * Rect.H];
+
         GLView OldView = Owner.Pool.GetView();
         Owner.Pool.SetView(this, true);
+        
+        Owner.API.ReadBuffer((ReadBufferMode)Attachment);
 
         unsafe{
             fixed(void* Ptr = Pixels){
-                Owner.API.ReadPixels(0, 0, (uint)Viewport.X, (uint)Viewport.Y, PixelFormat.Rgba, PixelType.UnsignedByte, Ptr);
+                Owner.API.ReadPixels(
+                    Rect.X, Rect.Y,
+                    (uint)Rect.W, (uint)Rect.H,
+                    PixelFormat.Rgba,
+                    PixelType.UnsignedByte,
+                    Ptr
+                );
             }
         }
         

@@ -87,7 +87,7 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3F operator -(Vector3F A) => new Vector3F(-A.X, -A.Y, -A.Z);
+    public static Vector3F operator -(Vector3F A) => A.Negative;
     
     public float Length{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

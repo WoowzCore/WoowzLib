@@ -5,6 +5,4 @@ namespace WLI_Render;
 
 public interface View{
     Vector2I Viewport{ get; set; }
-    
-    Color4B[] Get();
 }
