@@ -145,7 +145,7 @@ public class GLView : WLI.GPU.GLResource, WLI_Render.View{
 
     public Texture? TextureColor0 => GetTexture(FramebufferAttachment.ColorAttachment0);
     public Texture? TextureDepth  => GetTexture(FramebufferAttachment.DepthAttachment);
-
+    
     public Texture? GetTexture(FramebufferAttachment Attachment) => __Textures.TryGetValue(Attachment, out GLTexture2D? Texture) ? Texture : null;
     
     public Color4B[] Get(){
@@ -159,8 +159,33 @@ public class GLView : WLI.GPU.GLResource, WLI_Render.View{
             }
         }
         
-        Owner.Pool.SetView(OldView, true);
+        Owner.Pool.SetView(OldView);
         return Pixels;
+    }
+
+    public void SetTexture(GLTexture2D? Texture, FramebufferAttachment Attachment = FramebufferAttachment.ColorAttachment0){
+        GLView OldView = Owner.Pool.GetView();
+        Owner.Pool.SetView(this, true);
+
+        uint TextureID = Texture?.ID ?? 0;
+
+        unsafe{
+            Owner.API.FramebufferTexture2D(
+                FramebufferTarget.Framebuffer,
+                Attachment,
+                TextureTarget.Texture2D,
+                TextureID,
+                0
+            );
+        }
+
+        if(Texture != null){
+            __Textures[Attachment] = Texture;
+        }else{
+            __Textures.Remove(Attachment);
+        }
+        
+        Owner.Pool.SetView(OldView);
     }
     
     // ----------------------------------------------------------------------

@@ -5,6 +5,9 @@ using WLO.Render.Hardware;
 namespace WLO.GPU;
 
 public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
+    // todo, запретить изменять и вообще сделать тут возможность получить geometry
+    public Bounds Bounds{ get; set; }
+    
     private GLMesh(OpenGL Render) : base(Render){
         ID = Owner.API.GenVertexArray();
         if(ID == 0){ throw new ExceptionWL("todo, failed create glmesh"); }

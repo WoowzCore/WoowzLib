@@ -86,10 +86,16 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
         );
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3F operator -(Vector3F A) => new Vector3F(-A.X, -A.Y, -A.Z);
+    
     public float Length{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => System.MathF.Sqrt(X * X + Y * Y + Z * Z);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Dot(Vector3F A, Vector3F B) => (A.X * B.X) + (A.Y * B.Y) + (A.Z * B.Z);
     
     // ----------------------------------------------------------------------
     

@@ -84,6 +84,23 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         return new Vector3F(Result.GetElement(0), Result.GetElement(1), Result.GetElement(2));
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4F CreateLookAt(Vector3F Eye, Vector3F Target, Vector3F Up) {
+        Vector3F Z = (Eye - Target).Normalized;
+        Vector3F X = Vector3F.Cross(Up, Z).Normalized;
+        Vector3F Y = Vector3F.Cross(Z, X);
+
+        return new Matrix4F(
+            X.X, Y.X, Z.X, 0,
+            X.Y, Y.Y, Z.Y, 0,
+            X.Z, Y.Z, Z.Z, 0,
+            -Vector3F.Dot(X, Eye),
+            -Vector3F.Dot(Y, Eye),
+            -Vector3F.Dot(Z, Eye),
+            1
+        );
+    }
+    
     public static Matrix4F Identity => new Matrix4F(Vector128.Create(1f, 0, 0, 0), Vector128.Create(0, 1f, 0, 0), Vector128.Create(0, 0, 1f, 0), Vector128.Create(0, 0, 0, 1f));
     
     // ----------------------------------------------------------------------

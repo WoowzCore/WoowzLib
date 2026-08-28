@@ -53,7 +53,7 @@ public static partial class Geometry{
     
     // ----------------------------------------------------------------------
     
-    // объеденяет геометрию
+    // объединяет геометрию
     public static WLO.Geometry Union(params WLO.Geometry[] Geometries){
         WLO.Geometry Result = new WLO.Geometry();
         uint VertexOffset = 0;
@@ -93,5 +93,32 @@ public static partial class Geometry{
             Vertex.ID = (uint)i;
             Geometry.Vertices[i] = Vertex;
         }
+    }
+
+    public static void ToCenter(WLO.Geometry Geometry){
+        Bounds Bounds = GetBounds(Geometry);
+        ApplyTransform(Geometry, Matrix4F.CreateTranslation(-Bounds.Center));
+    }
+    
+    // ----------------------------------------------------------------------
+
+    public static Bounds GetBounds(WLO.Geometry Geometry){
+        if(Geometry.Vertices.Count == 0){ return new Bounds(); }
+
+        Vector3F Min = new Vector3F(float.MaxValue, float.MaxValue, float.MaxValue);
+        Vector3F Max = new Vector3F(float.MinValue, float.MinValue, float.MinValue);
+
+        foreach(Vertex Vertex in Geometry.Vertices){
+            Vector3F P = Vertex.Position;
+            if(P.X < Min.X){ Min.X = P.X; }
+            if(P.Y < Min.Y){ Min.Y = P.Y; }
+            if(P.Z < Min.Z){ Min.Z = P.Z; }
+            
+            if(P.X > Max.X){ Max.X = P.X; }
+            if(P.Y > Max.Y){ Max.Y = P.Y; }
+            if(P.Z > Max.Z){ Max.Z = P.Z; }
+        }
+        
+        return new Bounds(Min, Max);
     }
 }
