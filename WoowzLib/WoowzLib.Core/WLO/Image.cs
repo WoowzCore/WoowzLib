@@ -3,13 +3,13 @@ using WLO.Math;
 
 namespace WLO;
 
-public class FrameBuffer{
+public class Image{
     public readonly Vector2I  Size;
     public readonly Color4B[] Pixels;
 
-    public FrameBuffer(Vector2I Size, Color4B StartColor) : this(Size) => Clear(StartColor);
+    public Image(Vector2I Size, Color4B StartColor) : this(Size) => Clear(StartColor);
     
-    public FrameBuffer(Vector2I Size){
+    public Image(Vector2I Size){
         this.Size = Size;
         Pixels = new Color4B[Size.W * Size.H];
     }

@@ -157,7 +157,7 @@ public unsafe class GLFW : WLI.Window{
         Mouse.__UpdateStates();
     }
 
-    public void Present(FrameBuffer Buffer){
+    public void Present(Image Buffer){
         // todo, obsolete
         if(__Handle == null){ return; }
         

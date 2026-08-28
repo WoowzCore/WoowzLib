@@ -3,9 +3,9 @@
 namespace WLO.Render.Software;
 
 public class Simple : WLI_Render.Software{
-    public void DrawPixel(FrameBuffer Buffer, Vector2I Position, Color4B Color) => Buffer.SetPixel(Position, Color);
+    public void DrawPixel(Image Buffer, Vector2I Position, Color4B Color) => Buffer.SetPixel(Position, Color);
     
-    public void DrawRect(FrameBuffer Buffer, Rect2I Rect, Color4B Color){
+    public void DrawRect(Image Buffer, Rect2I Rect, Color4B Color){
         int StartX = System.Math.Max(0, Rect.X);
         int StartY = System.Math.Max(0, Rect.Y);
         int EndX   = System.Math.Min(Buffer.Size.W, Rect.X + Rect.W);
@@ -19,7 +19,7 @@ public class Simple : WLI_Render.Software{
         }
     }
     
-    public void DrawLine(FrameBuffer Buffer, Vector2I Start, Vector2I End, Color4B Color){
+    public void DrawLine(Image Buffer, Vector2I Start, Vector2I End, Color4B Color){
         int X0 = Start.X;
         int Y0 = Start.Y;
         int X1 = End.X;
@@ -52,5 +52,5 @@ public class Simple : WLI_Render.Software{
         }
     }
 
-    public void Clear(FrameBuffer Buffer, Color4B Color) => Buffer.Clear(Color);
+    public void Clear(Image Buffer, Color4B Color) => Buffer.Clear(Color);
 }

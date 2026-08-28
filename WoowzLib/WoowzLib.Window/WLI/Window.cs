@@ -11,7 +11,7 @@ public interface Window{
 
     void PollEvents();
 
-    void Present(FrameBuffer Buffer);
+    void Present(Image Buffer);
     
     Vector2I Size{ get; set; }
     Vector2I Position{ get; set; }

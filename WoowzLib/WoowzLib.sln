@@ -18,6 +18,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Interface.ImGUI", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Interface.ImGUI.OpenGL", "WoowzLib.Interface.ImGUI.OpenGL\WoowzLib.Interface.ImGUI.OpenGL.csproj", "{08AA2C53-81A0-4530-8322-5F71AB7EEF67}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Loader", "WoowzLib.Loader\WoowzLib.Loader.csproj", "{F4FA3A77-2871-426C-9D7F-9701191AD92C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Loader.Geometry", "WoowzLib.Loader.Geometry\WoowzLib.Loader.Geometry.csproj", "{D887DD5A-8885-495C-977F-0DDD50F64B3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Loader.Image", "WoowzLib.Loader.Image\WoowzLib.Loader.Image.csproj", "{8649D689-4C21-4324-9EB7-023ABE9E6191}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +66,17 @@ Global
 		{08AA2C53-81A0-4530-8322-5F71AB7EEF67}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08AA2C53-81A0-4530-8322-5F71AB7EEF67}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08AA2C53-81A0-4530-8322-5F71AB7EEF67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4FA3A77-2871-426C-9D7F-9701191AD92C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4FA3A77-2871-426C-9D7F-9701191AD92C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4FA3A77-2871-426C-9D7F-9701191AD92C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4FA3A77-2871-426C-9D7F-9701191AD92C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D887DD5A-8885-495C-977F-0DDD50F64B3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D887DD5A-8885-495C-977F-0DDD50F64B3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D887DD5A-8885-495C-977F-0DDD50F64B3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D887DD5A-8885-495C-977F-0DDD50F64B3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
