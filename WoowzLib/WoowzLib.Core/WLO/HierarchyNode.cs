@@ -59,18 +59,22 @@ public class HierarchyNode<T> : WLI.Packable where T : class{
     };
 
     public void __Unpack(Dictionary<string, object?> Data){
-        if(ChildFactory == null){ return; }
-
         List<object>? ChildrenData = WL.Packer.Get<List<object>>(Data, "Children");
 
         if(ChildrenData != null){
             foreach(object NodeData in ChildrenData){
-                if(NodeData is Dictionary<string, object> Dictionary){
-                    T Child = ChildFactory(Dictionary);
+                T? Child = null;
 
-                    if(Child is WLI.Hierarchical<T> Hierarchical){
-                        Hierarchical.Node.SetParent(this);
-                    }
+                if(NodeData is T AlreadyUnpacked){
+                    Child = AlreadyUnpacked;
+                }else if(NodeData is Dictionary<string, object> Dictionary && ChildFactory != null){
+                    Child = ChildFactory(Dictionary);
+                }else if(NodeData is Dictionary<string, object?> DictionaryQ && ChildFactory != null){
+                    Child = ChildFactory(DictionaryQ!);
+                }
+
+                if(Child is WLI.Hierarchical<T> Hierarchical){
+                    Hierarchical.Node.SetParent(this);
                 }
             }
         }

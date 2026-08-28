@@ -2,14 +2,14 @@
 
 namespace WLO.Loader;
 
-public class PNG : Format_STB{
-    public const string ID = "PNG";
+public class BMP : Format_STB{
+    public const string ID = "BMP";
     
-    static PNG() => WL.Loader.Register(ID, new PNG());
+    static BMP() => WL.Loader.Register(ID, new BMP());
     
     public override bool __Is(byte[] Data){
-        if(Data.Length < 8){ return false; }
-        return Data[0] == 0x89 && Data[1] == 0x50 && Data[2] == 0x4E && Data[3] == 0x47 && Data[4] == 0x0D && Data[5] == 0x0A && Data[6] == 0x1A && Data[7] == 0x0A;
+        if(Data.Length < 2){ return false; }
+        return Data[0] == 0x42 && Data[1] == 0x4D;
     }
     
     // ----------------------------------------------------------------------
