@@ -64,7 +64,7 @@ void main() {
 
                 byte[] ManagedPixels = new byte[W * H * 4];
                 Marshal.Copy((IntPtr)Pixels, ManagedPixels, 0, ManagedPixels.Length);
-                __FontTexture.SetData((IntPtr)Pixels);
+                __FontTexture.Update((IntPtr)Pixels);
                 
                 IO.Fonts.SetTexID((IntPtr)__FontTexture.ID);
             }

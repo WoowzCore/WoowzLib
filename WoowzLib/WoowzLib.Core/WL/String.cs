@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace WL;
 
-public static class String{
+public static partial class String{
     public static string ToJSON(object? Object){
         return JsonSerializer.Serialize(Tag(Packer.Pack(Object)), new JsonSerializerOptions{ WriteIndented = true });
     }

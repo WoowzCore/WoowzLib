@@ -46,9 +46,6 @@ public class GLRenderQueue{
     }
 
     private void RenderObject(Command CMD){
-        //Owner.Pool.SetProgram(CMD.Program);
-        //Owner.Pool.SetMesh(CMD.Mesh);
-        
         Owner.Pool.SetTexture2D(CMD.Texture2D);
         
         if(CMD.Uniforms != null && CMD.Program != null){

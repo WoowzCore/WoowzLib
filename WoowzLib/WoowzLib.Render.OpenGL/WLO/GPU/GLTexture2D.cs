@@ -22,10 +22,8 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
             Owner.API.TexImage2D(TextureTarget.Texture2D, 0, GPUFormat, (uint)Size.W, (uint)Size.H, 0, CPUFormat, Type, null);
         }
         
-        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
-        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
-        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS    , (int)GLEnum.Repeat);
-        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT    , (int)GLEnum.Repeat);
+        SetFilter(TextureMinFilter.Linear);
+        SetWrap  (TextureWrapMode.Repeat);
         
         Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
     }
@@ -83,7 +81,7 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
     public readonly PixelFormat    CPUFormat;
     public readonly PixelType      Type;
     
-    public void SetData(IntPtr Pixels, Rect2I? Rect = null){
+    public void Update(IntPtr Pixels, Rect2I? Rect = null){
         Vector2I Offset = Rect?.Position ?? new Vector2I();
         Vector2I Size   = Rect?.Size ?? this.Size;
 
@@ -97,11 +95,35 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
         Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
     }
     
-    public void SetData<T>(T[] Pixels, Rect2I? Rect = null) where T : unmanaged{
+    public void Update<T>(T[] Pixels, Rect2I? Rect = null) where T : unmanaged{
         unsafe{
             fixed(void* Ptr = Pixels){
-                SetData((IntPtr)Ptr, Rect);
+                Update((IntPtr)Ptr, Rect);
             }
         }
     }
+
+    public void SetFilter(TextureMinFilter Min, TextureMagFilter Mag){
+        GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
+        Owner.Pool.SetTexture2D(this, 0, true);
+
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)Min);
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)Mag);
+
+        Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
+    }
+
+    public void SetFilter(TextureMinFilter MinMag) => SetFilter(MinMag, (TextureMagFilter)MinMag);
+    
+    public void SetWrap(TextureWrapMode Horizontal, TextureWrapMode Vertical) {
+        GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
+        Owner.Pool.SetTexture2D(this, 0, true);
+
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)Horizontal);
+        Owner.API.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)Vertical);
+
+        Owner.Pool.SetTexture2D(OldTexture2D, 0, true);
+    }
+    
+    public void SetWrap(TextureWrapMode HorizontalVertical) => SetWrap(HorizontalVertical, HorizontalVertical);
 }

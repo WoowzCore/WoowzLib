@@ -4,7 +4,7 @@ using WLI;
 
 namespace WL;
 
-public static class Packer{
+public static partial class Packer{
     public static string PackType = "PackType";
     
     public static object? Pack(object? Object){
