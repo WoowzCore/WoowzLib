@@ -18,8 +18,8 @@ public static class Bootstrap{
                 string Content = File.ReadAllText(ProjectPath);
                 Match Match = VersionRegex.Match(Content);
                 
-                string New;
                 string Old;
+                string New;
 
                 if(!Match.Success){
                     Old = "Не найдено";

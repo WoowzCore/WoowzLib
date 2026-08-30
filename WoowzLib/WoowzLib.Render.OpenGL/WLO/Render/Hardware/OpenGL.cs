@@ -169,8 +169,8 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     public GLMesh CreateMesh<T>(WLI.GPU.VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
         GLMesh Mesh = GLMesh.Create(this);
 
-        Vector3F Min = Vector3F.MinValue;
-        Vector3F Max = Vector3F.MaxValue;
+        Vector3F Min = Vector3F.MaxValue;
+        Vector3F Max = Vector3F.MinValue;
         
         VertexAttribute PositionAttribute = Layout.Attributes.FirstOrDefault(A => A.Name.ToLower().Contains("pos"));
 

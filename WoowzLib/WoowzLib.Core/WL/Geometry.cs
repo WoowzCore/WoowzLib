@@ -56,8 +56,8 @@ public struct Geometry{
     public static Bounds3D GetBounds3D(Span<Vector3F> Positions){
         if(Positions.Length == 0){ return new Bounds3D(); }
 
-        Vector3F Min = Vector3F.MinValue;
-        Vector3F Max = Vector3F.MaxValue;
+        Vector3F Min = Vector3F.MaxValue;
+        Vector3F Max = Vector3F.MinValue;
 
         foreach(Vector3F Position in Positions){ WL.Math.Expand3D(ref Min, ref Max, Position); }
         
@@ -67,8 +67,8 @@ public struct Geometry{
     public static Bounds3D GetBounds3D(Span<Vertex> Vertices){
         if(Vertices.IsEmpty){ return new Bounds3D(); }
 
-        Vector3F Min = Vector3F.MinValue;
-        Vector3F Max = Vector3F.MaxValue;
+        Vector3F Min = Vector3F.MaxValue;
+        Vector3F Max = Vector3F.MinValue;
 
         foreach(Vertex Vertex in Vertices){ WL.Math.Expand3D(ref Min, ref Max, Vertex.Position); }
         
