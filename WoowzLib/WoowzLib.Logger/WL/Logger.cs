@@ -1,6 +1,6 @@
 ﻿namespace WL;
 
-public static partial class Logger{
+public struct Logger{
     public static WLI.Logger? CurrentLogger = new WLO.Logger.Simple();
     
     public static void Log(uint Type, object? Message) => CurrentLogger?.Log(Type, Message);

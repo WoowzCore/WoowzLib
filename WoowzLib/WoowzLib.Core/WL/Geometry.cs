@@ -7,7 +7,7 @@ namespace WL;
 // TODO:  T  O O D D O O
 // TODO:  T  OOO DD  OOO
 
-public static partial class Geometry{
+public struct Geometry{
     public static WLO.Geometry Create(IEnumerable<Vertex> Vertices, IEnumerable<uint> Indices) => new WLO.Geometry(Vertices, Indices);
 
     public static WLO.Geometry CreateTriangle(float Size = 0.5f) => new WLO.Geometry([

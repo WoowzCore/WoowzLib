@@ -4,7 +4,7 @@ using WLO;
 
 namespace WL;
 
-public static partial class Thread{
+public struct Thread{
     public static bool LimitByDeltaTime(double TargetDeltaTime, ref DeltaTimeInfo? DTI){
         if(!DTI.HasValue){
             DTI = new DeltaTimeInfo(Stopwatch.GetTimestamp());

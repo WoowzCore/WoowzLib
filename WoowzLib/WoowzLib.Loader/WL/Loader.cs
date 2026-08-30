@@ -4,7 +4,7 @@ using WLO;
 
 namespace WL;
 
-public partial class Loader{
+public struct Loader{
     private static readonly Dictionary<Type, object> __Registries = [];
 
     private static Dictionary<string, Format<T>> GetRegistry<T>() where T : class{

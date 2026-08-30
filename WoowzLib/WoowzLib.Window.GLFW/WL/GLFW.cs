@@ -3,7 +3,7 @@ using WLO;
 
 namespace WL;
 
-public static partial class GLFW{
+public struct GLFW{
     public static readonly Glfw API = Glfw.GetApi();
     private static         bool __IsInitialized;
 
