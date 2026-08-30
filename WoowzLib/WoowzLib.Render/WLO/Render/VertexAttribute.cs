@@ -1,4 +1,4 @@
-﻿namespace WLI_Render;
+﻿namespace WLO.Render;
 
 public struct VertexAttribute{
     public string        Name;

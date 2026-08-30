@@ -1,6 +1,4 @@
-﻿using WLI_Render;
-
-namespace WLI.GPU;
+﻿namespace WLO.Render;
 
 public class VertexLayout{
     public VertexAttribute[] Attributes{ get; }

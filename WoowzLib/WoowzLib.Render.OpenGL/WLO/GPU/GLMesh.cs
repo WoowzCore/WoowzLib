@@ -1,5 +1,6 @@
 ﻿using Silk.NET.OpenGL;
 using WLI_Render;
+using WLO.Render;
 using WLO.Render.Hardware;
 
 namespace WLO.GPU;
@@ -58,7 +59,7 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     public uint VertexCount{ get; set; }
     public uint IndexCount{ get; private set; }
     
-    public unsafe void AddVertexBuffer(WLI.GPU.Buffer Buffer, WLI.GPU.VertexLayout Layout){
+    public unsafe void AddVertexBuffer(WLI.GPU.Buffer Buffer, VertexLayout Layout){
         GLMesh?   OldMesh    = Owner.Pool.GetMesh();
         GLBuffer? OldFBuffer = Owner.Pool.GetFBuffer();
         
@@ -69,7 +70,7 @@ public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
         foreach(VertexAttribute Attribute in Layout.Attributes){
             Owner.API.EnableVertexAttribArray(__CurrentAttributeIndex);
 
-            if((Attribute.Type is VertexAttribute.AttributeType.Int or VertexAttribute.AttributeType.UInt) && !Attribute.Normalized){
+            if(Attribute.Type is VertexAttribute.AttributeType.Int or VertexAttribute.AttributeType.UInt && !Attribute.Normalized){
                 Owner.API.VertexAttribIPointer(__CurrentAttributeIndex, Attribute.Count, (VertexAttribIType)MapType(Attribute.Type), Layout.Stride, (void*)Offset);
             }else{
                 Owner.API.VertexAttribPointer(__CurrentAttributeIndex, Attribute.Count, MapType(Attribute.Type), Attribute.Normalized, Layout.Stride, (void*)Offset);
