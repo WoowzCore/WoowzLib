@@ -1,5 +1,7 @@
 ﻿namespace WL;
 
+// TODO, перехват сообщений из console нужно сделать
+
 public struct Logger{
     public static WLI.Logger? CurrentLogger = new WLO.Logger.Simple();
     

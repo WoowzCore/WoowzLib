@@ -26,6 +26,36 @@ public struct Color4B : IEquatable<Color4B>, WLI.Packable{
         this.Value = Value;
     }
 
+    // ----------------------------------------------------------------------
+    
+    // todo, добавить offset и возможность разнообразия тута, сиды короче
+    
+    private const uint __IDColor_Mask24     = 0xFFFFFFu;
+    private const uint __IDColor_Multiplier = 0x5BF037u;
+    private const uint __IDColor_Inverse    = 0xA6C587u;
+    
+    public static Color4B FromUInt(uint UInt){
+        if(UInt == 0){ return Color4B.Black; }
+
+        uint X = (UInt * __IDColor_Multiplier) & __IDColor_Mask24;
+
+        byte R = (byte)(X >> 0  & 0xFF);
+        byte G = (byte)(X >> 8  & 0xFF);
+        byte B = (byte)(X >> 16 & 0xFF);
+
+        return new Color4B(R, G, B, 255);
+    }
+
+    public uint ToUInt(){
+        if(R == 0 && G == 0 && B == 0){ return 0; }
+
+        uint X = (uint)R << 0 | (uint)G << 8 | (uint)B << 16;
+
+        return (X * __IDColor_Inverse) & __IDColor_Mask24;
+    }
+
+    // ----------------------------------------------------------------------
+
     public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
         ["RGBA"] = $"{R}|{G}|{B}|{A}"
     };
@@ -42,6 +72,8 @@ public struct Color4B : IEquatable<Color4B>, WLI.Packable{
         }
     }
 
+    // ----------------------------------------------------------------------
+    
     public static Color4B Transparent => new Color4B(0, 0, 0, 0);
     public static Color4B White => new Color4B(255, 255, 255);
     public static Color4B Black => new Color4B(0, 0, 0);

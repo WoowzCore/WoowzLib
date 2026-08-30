@@ -1,12 +1,16 @@
 ﻿using System.Globalization;
 using System.Reflection.Metadata.Ecma335;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace WL;
 
 public struct String{
     public static string ToJSON(object? Object){
-        return JsonSerializer.Serialize(Tag(Packer.Pack(Object)), new JsonSerializerOptions{ WriteIndented = true });
+        string JSON = JsonSerializer.Serialize(Tag(Packer.Pack(Object)), new JsonSerializerOptions{ WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping  });
+        
+        return Regex.Replace(JSON, @"(?m)^(  )+", M => new string('\t', M.Length / 2));
     }
 
     // ВОЗВРАЩАЕТ СЫРЫЕ ДАННЫЕ, ДАЛЕЕ НУЖНО WL.Packabilizer.Unpack()
@@ -43,20 +47,20 @@ public struct String{
         }
 
         return Value switch{
-            int I => "I" + I,
+            int  I => "I" + I,
             uint A => "A" + A,
             
-            byte B => "B" + B,
+            byte  B => "B" + B,
             sbyte E => "E" + E,
             
-            short S => "S" + S,
+            short  S => "S" + S,
             ushort G => "G" + G,
             
-            long L => "L" + L,
+            long  L => "L" + L,
             ulong H => "H" + H,
             
-            float F => "F" + F.ToString(CultureInfo.InvariantCulture),
-            double D => "D" + D.ToString(CultureInfo.InvariantCulture),
+            float   F => "F" + F.ToString(CultureInfo.InvariantCulture),
+            double  D => "D" + D.ToString(CultureInfo.InvariantCulture),
             decimal P => "P" + P.ToString(CultureInfo.InvariantCulture),
             
             bool Z => "Z" + (Z ? 1 : 0),
@@ -65,9 +69,9 @@ public struct String{
             
             char C => "C" + C,
             
-            nint N => "N" + N,
+            nint  N => "N" + N,
             nuint M => "M" + M,
-            var _ => "?" + Value.ToString()
+            var   _ => "?" + Value.ToString()
         };
     }
 
