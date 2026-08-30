@@ -18,6 +18,7 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
         this.Y = Y;
         this.Z = Z;
     }
+    public Vector3F(float XYZ) : this(XYZ, XYZ, XYZ){}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Vector128<float> AsVector128() => Vector128.Create(X, Y, Z, 0);
@@ -96,6 +97,16 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Dot(Vector3F A, Vector3F B) => (A.X * B.X) + (A.Y * B.Y) + (A.Z * B.Z);
+    
+    // ----------------------------------------------------------------------
+
+    public static Vector3F Zero => new Vector3F(0);
+    public static Vector3F One => new Vector3F(1);
+    public static Vector3F Right => new Vector3F(1, 0, 0);
+    public static Vector3F Up => new Vector3F(0, 1, 0);
+    public static Vector3F Front => new Vector3F(0, 0, 1); // todo, НУ ВОТ НУ ВОТ ГОВНО НУ ВОТ ЖЕ, OpenGL шлюха!!! почему +z это на пользователя из монитора??? чё вообще за хуйню они несут? я привык, все привыкли, что +z это вперёд!!!! а не назад!!!
+    public static Vector3F MaxValue => new Vector3F(float.MaxValue);
+    public static Vector3F MinValue => new Vector3F(float.MinValue);
     
     // ----------------------------------------------------------------------
     

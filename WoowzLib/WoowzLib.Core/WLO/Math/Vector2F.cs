@@ -15,6 +15,8 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
         this.Y = Y;
     }
 
+    public Vector3F To3F() => new Vector3F(X, Y, 0);
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Vector128<float> AsVector128() => Vector128.Create(X, Y, 0, 0);
 

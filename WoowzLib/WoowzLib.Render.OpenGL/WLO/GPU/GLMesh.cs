@@ -6,7 +6,7 @@ namespace WLO.GPU;
 
 public class GLMesh : WLI.GPU.GLResource, WLI.GPU.Mesh{
     // todo, запретить изменять и вообще сделать тут возможность получить geometry
-    public Bounds Bounds{ get; set; }
+    public Bounds3D Bounds{ get; set; }
     
     private GLMesh(OpenGL Render) : base(Render){
         ID = Owner.API.GenVertexArray();

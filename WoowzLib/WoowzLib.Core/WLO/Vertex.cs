@@ -16,9 +16,9 @@ public struct Vertex{
     
     public Vertex(Vector3F Position = default, Vector2F UV = default, Vector3F Normal = default, Color4B Color = default, uint ID = 0){
         this.Position = Position;
-        this.UV = UV;
-        this.Normal = Normal;
-        this.Color = Color;
-        this.ID = ID;
+        this.UV       = UV;
+        this.Normal   = Normal;
+        this.Color    = Color;
+        this.ID       = ID;
     }
 }

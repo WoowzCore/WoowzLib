@@ -169,11 +169,9 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     public GLMesh CreateMesh<T>(WLI.GPU.VertexLayout Layout, T[] Vertices, uint[]? Indices = null) where T : unmanaged{
         GLMesh Mesh = GLMesh.Create(this);
 
-        Bounds Bounds = new Bounds {
-            Min = new Vector3F(float.MaxValue, float.MaxValue, float.MaxValue),
-            Max = new Vector3F(float.MinValue, float.MinValue, float.MinValue)
-        };
-
+        Vector3F Min = Vector3F.MinValue;
+        Vector3F Max = Vector3F.MaxValue;
+        
         VertexAttribute PositionAttribute = Layout.Attributes.FirstOrDefault(A => A.Name.ToLower().Contains("pos"));
 
         // todo, le super govno
@@ -190,21 +188,15 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
                     uint Stride = Layout.Stride;
                     
                     for (int i = 0; i < Vertices.Length; i++) {
-                        Vector3F P = *(Vector3F*)(PtrByte + (i * Stride) + PositionOffset);
+                        Vector3F Position = *(Vector3F*)(PtrByte + (i * Stride) + PositionOffset);
 
-                        if(P.X < Bounds.Min.X){ Bounds.Min.X = P.X; }
-                        if(P.Y < Bounds.Min.Y){ Bounds.Min.Y = P.Y; }
-                        if(P.Z < Bounds.Min.Z){ Bounds.Min.Z = P.Z; }
-                        
-                        if(P.X > Bounds.Max.X){ Bounds.Max.X = P.X; }
-                        if(P.Y > Bounds.Max.Y){ Bounds.Max.Y = P.Y; }
-                        if(P.Z > Bounds.Max.Z){ Bounds.Max.Z = P.Z; }
+                        WL.Math.Expand3D(ref Min, ref Max, Position);
                     }
                 }
             }
         }
 
-        Mesh.Bounds = Bounds;
+        Mesh.Bounds = new Bounds3D(Min, Max);
         
         unsafe{
             uint VSize = (uint)(Vertices.Length * sizeof(T));

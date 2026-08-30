@@ -1,6 +1,6 @@
 ﻿namespace WLI.Format;
 
-public interface Format<T> where T : class{
+public interface Format<T>{
     // todo, 😬 его можно изменить, ИСПРАВЬТЕ
     public string LinkedID{ get; set; }
 
