@@ -59,11 +59,11 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
 
 
         /// Записывает доступные Uniform's, уникальное название, тип, уникальный ID, потом в коде пишите так, например: Type = (TODO), Name = "MyTestUniform" то будет: "uniform TODO MyTestUniform;"
-        public static void AddUniform(string Name, ValueType Type, uint Location){
+        public static void AddUniform(string Name, ValueType Type, int Location){
             try{
                 if(!new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$").IsMatch(Name)) { throw new ExceptionWL("Указано недопустимое имя Uniform!"); }
                 
-                if(__Uniforms.TryGetValue(Name, out (ValueType Type, uint Location) ExistingUniform)){ throw new ExceptionWL($"Uniform с таким названием уже есть! Вот же он [\"{Name}\", {ExistingUniform.Type}, {ExistingUniform.Location}]!"); }
+                if(__Uniforms.TryGetValue(Name, out (ValueType Type, int Location) ExistingUniform)){ throw new ExceptionWL($"Uniform с таким названием уже есть! Вот же он [\"{Name}\", {ExistingUniform.Type}, {ExistingUniform.Location}]!"); }
 
                 if(__Uniforms.Values.Any(V => V.Location == Location)){ throw new ExceptionWL("Указанный Location уже занят!"); }
                 
@@ -72,7 +72,7 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                 throw new ExceptionWL($"Произошла ошибка при добавлении Uniform в компилятор шейдеров WL! AddUniform(\"{Name}\", {Type}, {Location})", e);
             }
         }
-        private static readonly Dictionary<string, (ValueType Type, uint Location)> __Uniforms = [];
+        private static readonly Dictionary<string, (ValueType Type, int Location)> __Uniforms = [];
 
         
 
@@ -191,6 +191,8 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                         
                         Dictionary<string, string> TypeMapping = new Dictionary<string, string>{
                             {"int", "int"},
+                            {"uint", "uint"},
+                            
                             {"float", "float"},
                             
                             {"Vector2F", "vec2"},
@@ -207,6 +209,8 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                         // todo, use TypeMapping
                         ValueType StringToValueType(string String) => String switch{
                             "int"      => ValueType.Int,
+                            "uint"     => ValueType.UInt,
+                            
                             "float"    => ValueType.Float,
                             
                             "Vector2F" => ValueType.Vector2F,
@@ -459,7 +463,7 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                                 }
 
                                 try{
-                                    if(!__Uniforms.TryGetValue(Name, out (ValueType Type, uint Location) Registered)){
+                                    if(!__Uniforms.TryGetValue(Name, out (ValueType Type, int Location) Registered)){
                                         if(!IgnoreNotExistUniforms){
                                             throw new ExceptionWL("Указан не зарегистрированный Uniform!");
                                         }
@@ -531,7 +535,7 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                                 Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
                                 
                                 foreach(string AttributeName in AttributeNames){
-                                    if (Regex.IsMatch(__RawFullCode, $@"(?<!{Name}\.)\b{AttributeName}\b")) {
+                                    if (Regex.IsMatch(__RawFullCode, $@"(?<!{Name}\.|in\s+|out\s+|uniform\s+|gl_)\b{AttributeName}\b")) {
                                         throw new ExceptionWL($"Неверное обращение к полю Layout! Нужно писать {Name}.{AttributeName}!");
                                     }
 
@@ -619,6 +623,8 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
         
         public enum ValueType{
             Int,
+            UInt,
+            
             Float,
             
             Vector2F,
