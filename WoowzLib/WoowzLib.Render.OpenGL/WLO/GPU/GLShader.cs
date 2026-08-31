@@ -31,14 +31,8 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
         public const string Version = "430 core";
         // Игнорировать не существующие Uniform's?
         public /*static*/const bool IgnoreNotExistUniforms = false; // todo, говно, потому-что а как указать ID тогда?
-        // Делает уникальные названия у функций
-        public static bool UniqueFunctionNames = true;
-        // Удаляет не используемые функции
-        public static bool ClearUnusedFunctions = true;
         // Удаляет комментарии
         public static bool ClearComments = true;
-        // Входная функция
-        public static string EntryPoint = "Main";
         // Удаляет не используемые Uniform's
         public static bool ClearUnusedUniforms = true;
         // Удаляет не используемые Texture's
@@ -185,204 +179,47 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                     #region Компиляция
 
                         StringBuilder SB = new StringBuilder();
-
-                        // Везде где надо писать "new"
-                        HashSet<string> ConstructorTypes = ["Vector2F", "Vector3F", "Vector4F", "Matrix2F", "Matrix3F", "Matrix4F"];
                         
-                        Dictionary<string, string> TypeMapping = new Dictionary<string, string>{
-                            {"int", "int"},
-                            {"uint", "uint"},
-                            
-                            {"float", "float"},
-                            
-                            {"Vector2F", "vec2"},
-                            {"Vector3F", "vec3"},
-                            {"Vector4F", "vec4"},
-                            
-                            {"Matrix4F", "mat4"},
-                            {"Matrix3F", "mat3"},
-                            {"Matrix2F", "mat2"},
-                            
-                            {"Texture2D", "sampler2D"}
-                        };
-                        
-                        // todo, use TypeMapping
                         ValueType StringToValueType(string String) => String switch{
                             "int"      => ValueType.Int,
                             "uint"     => ValueType.UInt,
                             
                             "float"    => ValueType.Float,
                             
-                            "Vector2F" => ValueType.Vector2F,
-                            "Vector3F" => ValueType.Vector3F,
-                            "Vector4F" => ValueType.Vector4F,
+                            "vec2" => ValueType.Vec2,
+                            "vec3" => ValueType.Vec3,
+                            "vec4" => ValueType.Vec4,
                             
-                            "Matrix4F" => ValueType.Matrix4F,
-                            "Matrix3F" => ValueType.Matrix3F,
-                            "Matrix2F" => ValueType.Matrix2F,
+                            "ivec2" => ValueType.IVec2,
+                            "ivec3" => ValueType.IVec3,
+                            "ivec4" => ValueType.IVec4,
                             
-                            "Texture2D" => ValueType.Texture2D,
+                            "uvec2" => ValueType.UVec2,
+                            "uvec3" => ValueType.UVec3,
+                            "uvec4" => ValueType.UVec4,
+                            
+                            "mat2" => ValueType.Mat2,
+                            "mat3" => ValueType.Mat3,
+                            "mat4" => ValueType.Mat4,
+                            
+                            "sampler2D" => ValueType.Sampler2D,
                             
                             var _ => throw new ArgumentOutOfRangeException(nameof(String), String, null) // todo, тут нужна ошибка норм
                         };
-
-                        HashSet<string> Keywords = ["if", "for", "while", "switch", "return", "else", "discard", "new", "in", "out"];
-                        
-                        Dictionary<string, string> GLSLFunctionMapping = new Dictionary<string, string>{
-                            { "Texture", "texture" },
-                            { "Normalize", "normalize" },
-                            { "Max", "max" },
-                            { "Min", "min" },
-                            { "Dot", "dot" },
-                            { "Cross", "cross" },
-                            { "Mix", "mix" },
-                            { "Clamp", "clamp" },
-                            { "Abs", "abs" },
-                            { "Length", "length" },
-                            { "Distance", "distance" },
-                            { "Sin", "sin" },
-                            { "Cos", "cos" },
-                            { "Tan", "tan" },
-                            { "Pow", "pow" },
-                            { "Exp", "exp" },
-                            { "Log", "log" },
-                            { "Sqrt", "sqrt" },
-                            { "Floor", "floor" },
-                            { "Ceil", "ceil" },
-                            { "Fract", "fract" }
-                        };
-
-                        HashSet<string> AllowedGLSLNames = [
-                            ..TypeMapping.Keys,
-                            ..GLSLFunctionMapping.Values,
-                            ..__UniformBlocks.Keys,
-                            "main", "void", "discard",
-                            "gl_Position", "gl_PointSize", "gl_VertexID", "gl_InstanceID", "gl_FragCoord", "gl_FrontFacing"
-                        ];
-                        
-                        HashSet<string> ReservedNames = [
-                            ..Keywords,
-                            ..TypeMapping.Keys,
-                            "void", "true", "false"
-                        ];
                         
                         // Начало компиляции
                         
                         string Code = RawCode;
-                        
-                        
-                        
-                        // Убирает синтаксис CS
-                        void FixCSharpSyntax(){
-                            foreach(string TypeName in ConstructorTypes){
-                                if(Regex.IsMatch(Code,$@"(?<!new\s+)\b{TypeName}\s*\(")){
-                                    throw new ExceptionWL($"Отсутствует у конструктора [{TypeName}] в начале \"new\"!");
-                                }
-                            }
-                            
-                            foreach(string TypeName in ConstructorTypes){
-                                Code = Regex.Replace(Code, $@"\bnew\s+({TypeName})\b", "$1");
-                            }
 
-                            Code = Regex.Replace(Code, @"(\d+\.\d+)[fF]", "$1");
-                            Code = Regex.Replace(Code, @"(?<!\.)\b(\d+)[fF]\b", "$1.0");
+
+                        
+                        // Добавляет flat полям in, out где нужно
+                        void AddFlatQualifiers() {
+                            Code = Regex.Replace(Code, @"(?<!flat\s+)\b(in|out)\s+\b(u?int|[iu]vec[2-4])\b", "flat $1 $2");
                         }
-                        FixCSharpSyntax();
+                        AddFlatQualifiers();
+                
                         
-                        
-                        
-                        // Заменяет GL.*() на стандартные функции GLSL (GL.Fract() => fract())
-                        void FixGLSLFunctions() {
-                            foreach(KeyValuePair<string, string> KVP in GLSLFunctionMapping) {
-                                Code = Regex.Replace(Code, $@"\bGL\.{KVP.Key}\b", KVP.Value);
-                            }
-                        }
-                        FixGLSLFunctions();
-                        
-                        
-                        
-                        
-                        // Проверка на повторы функций, и удаление не используемых, и делает уникальные названия
-                        void CheckFunctionsRepeats(bool Unique){
-                            MatchCollection InitialMatches = Regex.Matches(Code, @"\b[a-zA-Z_]\w*\s+([a-zA-Z_]\w*)\s*\(");
-                            HashSet<string> AllDefinedFunctions = [];
-
-                            foreach(Match M in InitialMatches){
-                                string Name = M.Groups[1].Value;
-                                if(ReservedNames.Contains(Name)){ throw new ExceptionWL($"Название функции [{Name}] зарезервировано!"); }
-                                if(!AllDefinedFunctions.Add(Name)){ throw new ExceptionWL($"Функция [{Name}] определена больше одного раза!"); }
-                            }
-
-                            if(ClearUnusedFunctions){
-                                bool Changed = true;
-                                while(Changed){
-                                    Changed = false;
-                                    
-                                    MatchCollection CurrentMatches = Regex.Matches(Code, @"\b[a-zA-Z_]\w*\s+([a-zA-Z_]\w*)\s*\(");
-                                    
-                                    foreach(Match M in CurrentMatches){
-                                        string Name = M.Groups[1].Value;
-                                        if(Name == EntryPoint){ continue; }
-
-                                        if(Regex.Matches(Code,  $@"\b{Name}\b").Count <= 1){
-                                            int Start = M.Index;
-                                            int BraceLevel = 0;
-                                            int End = -1;
-                                            for(int i = Start; i < Code.Length; i++){
-                                                if(Code[i] == '{'){ BraceLevel++; }
-                                                else if(Code[i] == '}'){
-                                                    BraceLevel--;
-                                                    if(BraceLevel == 0){ End = i; break; }
-                                                }
-                                            }
-
-                                            if(End != -1){
-                                                Code = Code.Remove(Start, End - Start + 1);
-                                                AllDefinedFunctions.Remove(Name);
-                                                Changed = true;
-                                        
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            MatchCollection AllCalls = Regex.Matches(Code, @"\b([a-zA-Z_]\w*)\s*\(");
-                            HashSet<string> CalledNames = [];
-                            foreach(Match? M in AllCalls){
-                                string Name = M.Groups[1].Value;
-
-                                bool IsUserFunction = AllDefinedFunctions.Contains(Name);
-                                bool IsGLSL         = AllowedGLSLNames.Contains(Name);
-                                bool IsKeyword      = Keywords.Contains(Name);
-                                
-                                if(!IsUserFunction && !IsGLSL && !IsKeyword){
-                                    throw new ExceptionWL($"Вызов не существующей функции [{Name}]!");
-                                }
-
-                                CalledNames.Add(Name);
-                            }
-                            
-                            foreach(string Name in AllDefinedFunctions){
-                                if(Name == EntryPoint){ continue; }
-
-                                Code = Regex.Replace(Code, $@"\b{Name}\b", Unique ? $"__WL_{Guid.NewGuid().ToString("N")[..8]}" : $"WL_{Name}");
-                            }
-                        }
-                        CheckFunctionsRepeats(UniqueFunctionNames);
-                        
-                        
-                        
-                        
-                        // Превращает EntryPoint в "main"
-                        void FixEntryPoint(){
-                            if(!Regex.IsMatch(Code, $@"\bvoid\s+{EntryPoint}\s*\(")){ throw new ExceptionWL($"Не найдена точка входа {EntryPoint}()!"); }
-                            Code = Regex.Replace(Code, $@"\b{EntryPoint}\b", "main");
-                        }
-                        FixEntryPoint();
-
-
                         
 
                         // Переделывает Uniform Block's
@@ -413,12 +250,16 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                                         string GLSLType = Field.FieldType.Name switch{
                                             "Single" or "float" => "float",
                                             "Int32"  or "int"   => "int",
-                                            "Vector2F" => "vec2",
-                                            "Vector3F" => "vec3",
-                                            "Vector4F" => "vec4",
-                                            "Matrix2F" => "mat2",
-                                            "Matrix3F" => "mat3",
-                                            "Matrix4F" => "mat4",
+                                            "UInt32" or "uint"  => "uint",
+                                            "Vector2F"          => "vec2",
+                                            "Vector3F"          => "vec3",
+                                            "Vector4F"          => "vec4",
+                                            "Vector2I"          => "ivec2",
+                                            "Vector3I"          => "ivec3",
+                                            "Vector4I"          => "ivec4",
+                                            "Matrix2F"          => "mat2",
+                                            "Matrix3F"          => "mat3",
+                                            "Matrix4F"          => "mat4",
                                             var _ => throw new ExceptionWL($"todo, Тип {Field.FieldType.Name} в структуре {Registered.StructType.Name} не поддерживается в UniformBlock!")
                                         };
 
@@ -431,11 +272,6 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                                     Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
                                     
                                     foreach(string FieldName in FieldNames){
-                                        string Pattern = $@"(?<!{Name}\.)\b{FieldName}\b";
-                                        if(Regex.IsMatch(__RawFullCode, Pattern)){
-                                            throw new ExceptionWL($"Неверное обращение к полю UniformBlock! Нужно писать {Name}.{FieldName}!");
-                                        }
-
                                         Code = Regex.Replace(Code, $@"\b{Name}\.{FieldName}\b", $"{Name}_{FieldName}");
                                     }
                                 }catch(Exception e){
@@ -515,7 +351,7 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
 
                                     string GLSLType = "";
                                     if(Attribute.Normalized || Attribute.Type == VertexAttribute.AttributeType.Float){
-                                        GLSLType = Attribute.Count switch {
+                                        GLSLType = Attribute.Count switch{
                                             1 => "float",
                                             2 => "vec2",
                                             3 => "vec3",
@@ -535,10 +371,6 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                                 Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
                                 
                                 foreach(string AttributeName in AttributeNames){
-                                    if (Regex.IsMatch(__RawFullCode, $@"(?<!{Name}\.|in\s+|out\s+|uniform\s+|gl_)\b{AttributeName}\b")) {
-                                        throw new ExceptionWL($"Неверное обращение к полю Layout! Нужно писать {Name}.{AttributeName}!");
-                                    }
-
                                     Code = Regex.Replace(Code, $@"\b{Name}\.{AttributeName}\b", $"{Name}_{AttributeName}");
                                 }
                             }
@@ -587,23 +419,6 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
                         
                         
                         
-                        // Заменяет свои типы на GLSL
-                        void ReplaceTypes(){
-                            foreach(KeyValuePair<string, string> KVP in TypeMapping){
-                                Code = Regex.Replace(Code, $@"\b{KVP.Key}\b", KVP.Value);
-                            }
-                        }
-                        ReplaceTypes();
-                        
-                        
-                        
-                        
-                        // Исправляет .RGB -> .rgb
-                        Code = Regex.Replace(Code, @"\.([RGBAXYZW]{1,4})\b", m => m.Value.ToLower());
-                        
-                        
-                        
-                        
                         // Установка нужной версии
                         SB.AppendLine($"#version {Version}");
                         SB.AppendLine();
@@ -615,7 +430,7 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
 
                 return (SB.ToString().Trim(), Metadata);
             }catch(Exception e){
-                throw new ExceptionWL($"Произошла ошибка при WL компиляции GLShader!\nСырой код:\n{RawCode}\nСырой полный код:\n{__RawFullCode}\n", e);
+                throw new ExceptionWL($"Произошла ошибка при WLSL компиляции!\nСырой код:\n{RawCode}\nСырой полный код:\n{__RawFullCode}\n", e);
             }
         }
         
@@ -627,15 +442,23 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
             
             Float,
             
-            Vector2F,
-            Vector3F,
-            Vector4F,
+            Vec2,
+            Vec3,
+            Vec4,
             
-            Matrix2F,
-            Matrix3F,
-            Matrix4F,
+            IVec2,
+            IVec3,
+            IVec4,
             
-            Texture2D
+            UVec2,
+            UVec3,
+            UVec4,
+            
+            Mat2,
+            Mat3,
+            Mat4,
+            
+            Sampler2D
         }
         
         public struct Property{
