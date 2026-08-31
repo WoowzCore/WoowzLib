@@ -38,8 +38,8 @@ public class Simple : WLI.Logger{
         };
     }
     
-    public void Log(uint Type, object? Message){
-        OnRawLog?.Invoke(Type, Message);
+    public void Log(uint Type, object? Message, Exception? e){
+        OnRawLog?.Invoke(Type, Message, e);
         
         if(Type == (uint)WLI.Logger.Type.NoLog){ return; }
 
@@ -48,6 +48,10 @@ public class Simple : WLI.Logger{
         __ChangeConsoleBackground(Type);
 
         string Result = $"{GeneratePrefix(Type)}: {Content}";
+
+        if(e != null){
+            Result += $"\n{e.Message}\n{e.StackTrace}";
+        }
         
         OnLog?.Invoke(Type, Result);
         
@@ -69,6 +73,6 @@ public class Simple : WLI.Logger{
         }
     }
     
-    public event Action<uint, object?>? OnRawLog;
-    public event Action<uint, string >? OnLog;
+    public event Action<uint, object?, Exception?>? OnRawLog;
+    public event Action<uint, string             >? OnLog;
 }

@@ -1,20 +1,20 @@
 ﻿namespace WLI;
 
 public interface Logger{
-    void Log(uint Type, object? Message);
+    void Log(uint Type, object? Message, Exception? e = null);
     
-    void Info (object? Message) => Log((uint)Type.Info   , Message);
-    void Warn (object? Message) => Log((uint)Type.Warning, Message);
-    void Error(object? Message) => Log((uint)Type.Error  , Message);
-    void Debug(object? Message) => Log((uint)Type.Debug  , Message);
-    void Fatal(object? Message) => Log((uint)Type.Fatal  , Message);
-    void Trace(object? Message) => Log((uint)Type.Trace  , Message);
+    void Info (object? Message, Exception? e = null) => Log((uint)Type.Info   , Message, e);
+    void Warn (object? Message, Exception? e = null) => Log((uint)Type.Warning, Message, e);
+    void Error(object? Message, Exception? e = null) => Log((uint)Type.Error  , Message, e);
+    void Debug(object? Message, Exception? e = null) => Log((uint)Type.Debug  , Message, e);
+    void Fatal(object? Message, Exception? e = null) => Log((uint)Type.Fatal  , Message, e);
+    void Trace(object? Message, Exception? e = null) => Log((uint)Type.Trace  , Message, e);
 
     void PrefixPush(object Prefix);
     void PrefixPop (             );
     
-    event Action<uint, object?>? OnRawLog;
-    event Action<uint, string >? OnLog;
+    event Action<uint, object?, Exception?>? OnRawLog;
+    event Action<uint, string             >? OnLog;
     
     public enum Type : uint{
         Debug     = 100,

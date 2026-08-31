@@ -224,7 +224,7 @@ public partial class GLShader : WLI.GPU.GLResource, WLI.GPU.Shader{
 
                         // Переделывает Uniform Block's
                         void ReplaceUniformBlocks(){
-                            Regex BlockRegex = new Regex(@"\buniformblock\s+([a-zA-Z0-9_]+)\s*;", RegexOptions.Compiled);
+                            Regex BlockRegex = new Regex(@"\buniform_block\s+([a-zA-Z0-9_]+)\s*;", RegexOptions.Compiled);
 
                             while(true){
                                 Match M = BlockRegex.Match(Code);
