@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using Silk.NET.OpenGL;
+using WL;
 using WLI_Render;
 using WLI.Render;
 using WLO.GPU;
@@ -213,7 +214,7 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     public GLBuffer CreateBuffer(BufferTargetARB Target, uint Size) => GLBuffer.Create(this, Target, Size);
 
     public GLShader CreateShader(WLI.GPU.Shader.Type Stage, string Source) => new GLShader(this, Stage, Source);
-    public GLShader CreateShader(GLShader.Builder Builder) => new GLShader(this, Builder);
+    public GLShader CreateShader(WLSL.Result WLSL                        ) => new GLShader(this, WLSL         );
 
     public GLProgram CreateProgram(params WLI.GPU.Shader[] Shaders) => GLProgram.Create(this, Shaders);
 
