@@ -205,7 +205,7 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
             return Shader;
         }
         catch(Exception e){
-            throw new ExceptionWL($"Произошла ошибка при компиляции OpenGL шейдера!\nGL: {API}\nТип шейдера: {Stage}\nКод шейдера:\n{Source}", e);
+            throw new ExceptionWL($"Произошла ошибка при компиляции OpenGL шейдера!\nGL: {API}\nТип шейдера: {Stage}\nКод шейдера:\n{Source}\n\n\n{e.Message}", e); //todo
         }
     }
     

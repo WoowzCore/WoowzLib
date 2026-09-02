@@ -245,12 +245,14 @@ public struct WLSL{
 
                                 FieldInfo[] Fields = Registered.StructType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
 
-                                List<string> FieldNames = [];
+                                List<(string Name, bool IsColor)> FieldMeta = [];
                                 
                                 foreach(FieldInfo Field in Fields){
                                     if(Field.Name.StartsWith("__")){ continue; }
 
-                                    string GLSLType = Field.FieldType.Name switch{
+                                    bool IsColor = Field.FieldType.Name == "Color4B";
+                                    
+                                    string GLSLType = IsColor ? "uint" : Field.FieldType.Name switch{
                                         "Single" or "float" => "float",
                                         "Int32"  or "int"   => "int",
                                         "UInt32" or "uint"  => "uint",
@@ -266,7 +268,7 @@ public struct WLSL{
                                         var _ => throw new ExceptionWL($"todo, Тип {Field.FieldType.Name} в структуре {Registered.StructType.Name} не поддерживается в UniformBlock!")
                                     };
 
-                                    FieldNames.Add(Field.Name);
+                                    FieldMeta.Add((Field.Name, IsColor));
                                     SB.AppendLine($"\t{GLSLType} {Name}_{Field.Name};");
                                 }
                                 
@@ -274,8 +276,13 @@ public struct WLSL{
                                 
                                 Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
                                 
-                                foreach(string FieldName in FieldNames){
-                                    Code = Regex.Replace(Code, $@"\b{Name}\.{FieldName}\b", $"{Name}_{FieldName}");
+                                foreach((string Name, bool IsColor) Field in FieldMeta){
+                                    string Pattern = $@"\b{Name}\.{Field.Name}\b";
+                                    if(Field.IsColor){
+                                        Code = Regex.Replace(Code, Pattern, $"unpackUnorm4x8({Name}_{Field.Name})");
+                                    }else{
+                                        Code = Regex.Replace(Code, Pattern, $"{Name}_{Field.Name}");
+                                    }
                                 }
                             }catch(Exception e){
                                 throw new ExceptionWL($"Произошла ошибка при обработке UniformBlock [\"{Name}\"]!", e);
@@ -389,8 +396,7 @@ public struct WLSL{
                                         SB.AppendLine($"layout (location={i}) out {GLSLType} {VariableName};");
 
                                         if(Attribute.Default != null){
-                                            Color4B Default = Attribute.Default.Value;
-                                            ISB.AppendLine($"\t{VariableName} = {GLSLType}({Default.R / 255f}, {Default.G / 255f}, {Default.B / 255f}, {Default.A / 255f});"); //todo, why color4f
+                                            ISB.AppendLine($"\t{VariableName} = {Attribute.Default};");
                                         }
                                     }
                                 }
@@ -447,7 +453,10 @@ public struct WLSL{
                         });
                     }
                     ReplaceTextures();
-                    
+
+
+                    // Заменяет "__" на другое, что-бы OpenGL не ругался
+                    Code = Code.Replace("__", "_WL_");
                     
                     
                     

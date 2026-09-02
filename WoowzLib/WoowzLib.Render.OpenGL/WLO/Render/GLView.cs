@@ -168,6 +168,8 @@ public class GLView : WLI.GPU.GLResource, WLI_Render.View{
     public Vector2I Viewport{ get; set; }
 
     public Texture? TextureColor0 => GetTexture(FramebufferAttachment.ColorAttachment0);
+    public Texture? TextureColor1 => GetTexture(FramebufferAttachment.ColorAttachment1);
+    public Texture? TextureColor2 => GetTexture(FramebufferAttachment.ColorAttachment2);
     public Texture? TextureDepth  => GetTexture(FramebufferAttachment.DepthAttachment);
     
     public Texture? GetTexture(FramebufferAttachment Attachment) => __Textures.TryGetValue(Attachment, out GLTexture2D? Texture) ? Texture : null;

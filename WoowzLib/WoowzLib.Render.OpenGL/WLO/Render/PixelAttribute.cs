@@ -10,9 +10,9 @@ public struct PixelAttribute : IEquatable<PixelAttribute>{
     public int                   Count;
     public InternalFormat        Format;
     public bool                  IsTexture;
-    public Color4B?              Default;
+    public string?               Default;
     
-    public PixelAttribute(string Name, int Count, FramebufferAttachment Attachment, InternalFormat Format = InternalFormat.Rgba8, bool IsTexture = false, Color4B? Default = null){
+    public PixelAttribute(string Name, int Count, FramebufferAttachment Attachment, InternalFormat Format = InternalFormat.Rgba8, bool IsTexture = false, string? Default = null){
         this.Name       = Name;
         this.Count      = Count;
         this.Attachment = Attachment;
@@ -21,7 +21,7 @@ public struct PixelAttribute : IEquatable<PixelAttribute>{
         this.Default    = Default;
     }
 
-    public static PixelAttribute Color(string Name, int Count, int Index = 0, Color4B? Default = null, InternalFormat Format = InternalFormat.Rgba8, bool IsTexture = true) => new PixelAttribute(Name, Count, FramebufferAttachment.ColorAttachment0 + Index, Format, IsTexture, Default);
+    public static PixelAttribute Color(string Name, int Count, int Index = 0, string? Default = null, InternalFormat Format = InternalFormat.Rgba8, bool IsTexture = true) => new PixelAttribute(Name, Count, FramebufferAttachment.ColorAttachment0 + Index, Format, IsTexture, Default);
     public static PixelAttribute Depth(bool IsTexture = false, InternalFormat Format = InternalFormat.DepthComponent24) => new PixelAttribute("gl_FragDepth", 1, FramebufferAttachment.DepthAttachment, Format, IsTexture);
     public static PixelAttribute Stencil(bool IsTexture = false, InternalFormat Format = InternalFormat.StencilIndex8) => new PixelAttribute("gl_Stencil", 1, FramebufferAttachment.StencilAttachment, Format, IsTexture);
     
