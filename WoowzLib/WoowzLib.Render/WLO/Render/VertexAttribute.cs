@@ -7,9 +7,9 @@ public struct VertexAttribute{
     public bool          Normalized;
 
     public VertexAttribute(string Name, int Count, AttributeType Type, bool Normalized = false){
-        this.Name = Name;
-        this.Count = Count;
-        this.Type = Type;
+        this.Name       = Name;
+        this.Count      = Count;
+        this.Type       = Type;
         this.Normalized = Normalized;
     }
     

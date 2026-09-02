@@ -1,8 +1,11 @@
 ﻿using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using Silk.NET.OpenGL;
 using WLO;
+using WLO.Math;
 using WLO.Render;
+using Shader = WLI.GPU.Shader;
 
 namespace WL;
 
@@ -69,18 +72,35 @@ public struct WLSL{
     
 
     // todo, нужно писать "layout NAME;"
-    public static void AddLayout(string Name, VertexLayout Layout){
+    public static void AddVertexLayout(string Name, VertexLayout VertexLayout){
         try{
-            if(!new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$").IsMatch(Name)) { throw new ExceptionWL("Указано недопустимое имя Layout!"); }
+            if(!new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$").IsMatch(Name)) { throw new ExceptionWL("Указано недопустимое имя VertexLayout!"); }
             
-            if(__Layouts.TryGetValue(Name, out VertexLayout? ExistingLayout)){ throw new ExceptionWL($"Layout с таким названием уже есть! Вот же он [\"{Name}\", {ExistingLayout}]!"); }
+            if(__VertexLayouts.TryGetValue(Name, out VertexLayout? ExistingLayout)){ throw new ExceptionWL($"VertexLayout с таким названием уже есть! Вот же он [\"{Name}\", {ExistingLayout}]!"); }
             
-            __Layouts[Name] = Layout;
+            __VertexLayouts[Name] = VertexLayout;
         }catch(Exception e){
-            throw new ExceptionWL($"Произошла ошибка при добавлении Layout в WLSL! AddLayout(\"{Name}\", {Layout})", e);
+            throw new ExceptionWL($"Произошла ошибка при добавлении VertexLayout в WLSL! AddVertexLayout(\"{Name}\", {VertexLayout})", e);
         }
     }
-    private static readonly Dictionary<string, VertexLayout> __Layouts = [];
+    private static readonly Dictionary<string, VertexLayout> __VertexLayouts = [];
+    
+    
+    
+    
+    // todo, нужно писать "layout NAME;"
+    public static void AddPixelLayout(string Name, PixelLayout PixelLayout){
+        try{
+            if(!new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$").IsMatch(Name)) { throw new ExceptionWL("Указано недопустимое имя PixelLayout!"); }
+            
+            if(__PixelLayouts.TryGetValue(Name, out PixelLayout? ExistingLayout)){ throw new ExceptionWL($"PixelLayout с таким названием уже есть! Вот же он [\"{Name}\", {ExistingLayout}]!"); }
+            
+            __PixelLayouts[Name] = PixelLayout;
+        }catch(Exception e){
+            throw new ExceptionWL($"Произошла ошибка при добавлении PixelLayout в WLSL! AddPixelLayout(\"{Name}\", {PixelLayout})", e);
+        }
+    }
+    private static readonly Dictionary<string, PixelLayout> __PixelLayouts = [];
     
     
     
@@ -139,7 +159,22 @@ public struct WLSL{
                     if(ClearComments){
                         WLSL = Regex.Replace(WLSL, @"/\*[\s\S]*?\*/|//.*", "");
                     }
-                
+                    
+                    // Определяет тип шейдера
+                    WLI.GPU.Shader.Type? DetectType(){
+                        Match M = Regex.Match(WLSL, @"^\s*(VERTEX|FRAGMENT)\b", RegexOptions.IgnoreCase);
+                        if(M.Success){
+                            string TypeString = M.Groups[1].Value.ToUpper();
+
+                            WLSL = WLSL.Remove(M.Index, M.Length);
+
+                            return TypeString == "VERTEX" ? Shader.Type.Vertex : Shader.Type.Fragment;
+                        }
+                        return null;
+                    }
+                    Type = DetectType() ?? Type;
+                    if(Type == null){ throw new ExceptionWL("Не указан тип шейдера!"); }
+                    
                     if(string.IsNullOrWhiteSpace(WLSL)){ throw new ExceptionWL("Указан пустой код!"); }
                     
                 #endregion
@@ -290,7 +325,7 @@ public struct WLSL{
                     
 
 
-                    // Переделывает Layout's
+                    // Переделывает VertexLayout's & PixelLayout's
                     void ReplaceLayouts(){
                         Regex LayoutRegex = new Regex(@"\blayout\s+([a-zA-Z0-9_]+)\s*;", RegexOptions.Compiled);
 
@@ -298,40 +333,73 @@ public struct WLSL{
                             Match M = LayoutRegex.Match(Code);
                             if(!M.Success){ break; }
 
-                            if(Type != WLI.GPU.Shader.Type.Vertex){ throw new ExceptionWL("Layout's можно указывать только в Vertex шейдере!"); }
-
                             string Name = M.Groups[1].Value;
-
-                            if(!__Layouts.TryGetValue(Name, out VertexLayout? Registered)){
-                                throw new ExceptionWL("Указан не зарегистрированный Layout!");
-                            }
-
+                            
                             StringBuilder SB = new StringBuilder();
+                            StringBuilder ISB = new StringBuilder(); // todo, сделать default's для vertexlayout
+                            
                             List<string> AttributeNames = [];
-
-                            for(int i = 0; i < Registered.Attributes.Length; i++){
-                                VertexAttribute Attribute = Registered.Attributes[i];
-
-                                string GLSLType = "";
-                                if(Attribute.Normalized || Attribute.Type == VertexAttribute.AttributeType.Float){
-                                    GLSLType = Attribute.Count switch{
-                                        1 => "float",
-                                        2 => "vec2",
-                                        3 => "vec3",
-                                        4 => "vec4",
-                                        var _ => throw new ExceptionWL("todo, Неподдерживаемый размер атрибута")
-                                    };
-                                }else if(Attribute.Type == VertexAttribute.AttributeType.UInt || Attribute.Type == VertexAttribute.AttributeType.UByte){
-                                    GLSLType = Attribute.Count == 1 ? "uint" : $"uvec{Attribute.Count}";
-                                }else{
-                                    GLSLType = Attribute.Count == 1 ? "int" : $"ivec{Attribute.Count}";
+                            
+                            if(Type == Shader.Type.Vertex){
+                                if(!__VertexLayouts.TryGetValue(Name, out VertexLayout? Registered)){
+                                    throw new ExceptionWL("Указан не зарегистрированный VertexLayout!");
                                 }
+
+                                for(int i = 0; i < Registered.Attributes.Length; i++){
+                                    VertexAttribute Attribute = Registered.Attributes[i];
+
+                                    string GLSLType;
+                                    if(Attribute.Normalized || Attribute.Type == VertexAttribute.AttributeType.Float){
+                                        GLSLType = Attribute.Count switch{
+                                            1 => "float",
+                                            2 => "vec2",
+                                            3 => "vec3",
+                                            4 => "vec4",
+                                            var _ => throw new ExceptionWL("todo, Неподдерживаемый размер атрибута")
+                                        };
+                                    }else if(Attribute.Type == VertexAttribute.AttributeType.UInt || Attribute.Type == VertexAttribute.AttributeType.UByte){
+                                        GLSLType = Attribute.Count == 1 ? "uint" : $"uvec{Attribute.Count}";
+                                    }else{
+                                        GLSLType = Attribute.Count == 1 ? "int" : $"ivec{Attribute.Count}";
+                                    }
                                 
-                                AttributeNames.Add(Attribute.Name);
-                                SB.AppendLine($"layout (location={i}) in {GLSLType} {Name}_{Attribute.Name};");
+                                    AttributeNames.Add(Attribute.Name);
+                                    SB.AppendLine($"layout (location={i}) in {GLSLType} {Name}_{Attribute.Name};");
+                                }
+                            }else{
+                                if(!__PixelLayouts.TryGetValue(Name, out PixelLayout? Registered)){
+                                    throw new ExceptionWL("Указан не зарегистрированный PixelLayout!");
+                                }
+
+                                for(int i = 0; i < Registered.Attributes.Length; i++){
+                                    PixelAttribute Attribute = Registered.Attributes[i];
+
+                                    if(Attribute.Attachment >= FramebufferAttachment.ColorAttachment0 && Attribute.Attachment <= FramebufferAttachment.ColorAttachment31){
+                                        string GLSLType =  Attribute.Count switch{
+                                            1 => "float",
+                                            2 => "vec2",
+                                            3 => "vec3",
+                                            4 => "vec4",
+                                            var _ => throw new ExceptionWL("todo, Неподдерживаемый размер атрибута")
+                                        };
+
+                                        string VariableName = $"{Name}_{Attribute.Name}";
+                                        
+                                        AttributeNames.Add(Attribute.Name);
+                                        SB.AppendLine($"layout (location={i}) out {GLSLType} {VariableName};");
+
+                                        if(Attribute.Default != null){
+                                            Color4B Default = Attribute.Default.Value;
+                                            ISB.AppendLine($"\t{VariableName} = {GLSLType}({Default.R / 255f}, {Default.G / 255f}, {Default.B / 255f}, {Default.A / 255f});"); //todo, why color4f
+                                        }
+                                    }
+                                }
                             }
                             
                             Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
+                            
+                            // Добавление в начало main инициализаторов
+                            Code = new Regex(@"void\s+main\s*\(\s*\)\s*\{", RegexOptions.Compiled).Replace(Code, M => $"{M.Value}\n{ISB.ToString()}");
                             
                             foreach(string AttributeName in AttributeNames){
                                 Code = Regex.Replace(Code, $@"\b{Name}\.{AttributeName}\b", $"{Name}_{AttributeName}");
@@ -339,6 +407,7 @@ public struct WLSL{
                         }
                     }
                     ReplaceLayouts();
+                    
                     
                     
                     
