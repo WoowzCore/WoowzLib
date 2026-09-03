@@ -22,6 +22,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Loader.Geometry", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Loader.Image", "WoowzLib.Loader.Image\WoowzLib.Loader.Image.csproj", "{8649D689-4C21-4324-9EB7-023ABE9E6191}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Physic", "WoowzLib.Physic\WoowzLib.Physic.csproj", "{8A504534-3EA0-4B62-AA2F-262176B15607}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Physic3D", "WoowzLib.Physic3D\WoowzLib.Physic3D.csproj", "{61766AEE-8817-404A-AD6A-0F84B4143E56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Physic3D.Bepu", "WoowzLib.Physic3D.Bepu\WoowzLib.Physic3D.Bepu.csproj", "{19169BC3-5FD7-4FC1-BCBF-09C2FA05E66F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +78,17 @@ Global
 		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8649D689-4C21-4324-9EB7-023ABE9E6191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A504534-3EA0-4B62-AA2F-262176B15607}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A504534-3EA0-4B62-AA2F-262176B15607}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A504534-3EA0-4B62-AA2F-262176B15607}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A504534-3EA0-4B62-AA2F-262176B15607}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61766AEE-8817-404A-AD6A-0F84B4143E56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61766AEE-8817-404A-AD6A-0F84B4143E56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61766AEE-8817-404A-AD6A-0F84B4143E56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61766AEE-8817-404A-AD6A-0F84B4143E56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19169BC3-5FD7-4FC1-BCBF-09C2FA05E66F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19169BC3-5FD7-4FC1-BCBF-09C2FA05E66F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19169BC3-5FD7-4FC1-BCBF-09C2FA05E66F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19169BC3-5FD7-4FC1-BCBF-09C2FA05E66F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

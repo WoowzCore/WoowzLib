@@ -46,6 +46,10 @@ public struct String{
             return List.Select(Tag).ToList();
         }
 
+        if(Value.GetType().IsEnum){
+            return "X" + WL.Packer.ToCustomType(Value.GetType()) + ":" + Value.ToString();
+        }
+
         return Value switch{
             int  I => "I" + I,
             uint A => "A" + A,
@@ -94,6 +98,25 @@ public struct String{
             char Prefix = S[0];
             string Body = S.Substring(1);
 
+            object ParseEnum(string Body){
+                try{
+                    int ColonIndex = Body.LastIndexOf(':');
+                    if(ColonIndex == -1){ return Body; }
+
+                    string TypePart = Body.Substring(0, ColonIndex);
+                    string ValuePart = Body.Substring(ColonIndex + 1);
+
+                    Type? EnumType = WL.Packer.FromCustomType(TypePart);
+                    if(EnumType != null && EnumType.IsEnum){
+                        return Enum.Parse(EnumType, ValuePart);
+                    }
+
+                    return ValuePart;
+                }catch{
+                    return Body;
+                }
+            }
+            
             return Prefix switch{
                 'I' => int.Parse(Body),
                 'A' => uint.Parse(Body),
@@ -119,7 +142,9 @@ public struct String{
                 
                 'N' => nint.Parse(Body),
                 'M' => nuint.Parse(Body),
-                    
+                
+                'X' => ParseEnum(Body),
+                
                 '?' => Body,
                 var _ => S
             };
