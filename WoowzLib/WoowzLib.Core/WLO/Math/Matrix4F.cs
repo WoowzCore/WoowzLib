@@ -100,6 +100,11 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
             1
         );
     }
+
+    public Vector3F Translation{
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new Vector3F(__C4.GetElement(0), __C4.GetElement(1), __C4.GetElement(2));
+    }
     
     public static Matrix4F Identity => new Matrix4F(Vector128.Create(1f, 0, 0, 0), Vector128.Create(0, 1f, 0, 0), Vector128.Create(0, 0, 1f, 0), Vector128.Create(0, 0, 0, 1f));
     

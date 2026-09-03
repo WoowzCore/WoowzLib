@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Silk.NET.OpenGL;
@@ -221,7 +222,68 @@ public struct WLSL{
                         Code = Regex.Replace(Code, @"(?<!flat\s+)\b(in|out)\s+\b(u?int|[iu]vec[2-4])\b", "flat $1 $2");
                     }
                     AddFlatQualifiers();
-            
+
+
+
+                    string GetGLSLType(Type Type){
+                        InlineArrayAttribute? Inline = Type.GetCustomAttribute<InlineArrayAttribute>();
+                        if(Inline != null){ return GetGLSLType(Type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)[0].FieldType); }
+
+                        if(Type == typeof(Color4B)){ return "uint"; }
+                        
+                        return Type.Name switch{
+                            "Single" or "float" => "float",
+                            "Int32"  or "int"   => "int",
+                            "UInt32" or "uint"  => "uint",
+                            "Vector2F"          => "vec2",
+                            "Vector3F"          => "vec3",
+                            "Vector4F"          => "vec4",
+                            "Vector2I"          => "ivec2",
+                            "Vector3I"          => "ivec3",
+                            "Vector4I"          => "ivec4",
+                            "Matrix2F"          => "mat2",
+                            "Matrix3F"          => "mat3",
+                            "Matrix4F"          => "mat4",
+                            var _               => Type.Name
+                        };
+                    }
+
+                    string GetArraySuffix(Type Type){
+                        InlineArrayAttribute? Inline = Type.GetCustomAttribute<InlineArrayAttribute>();
+                        if(Inline == null){ return ""; }
+                        return $"[{(int)typeof(InlineArrayAttribute).GetProperty("Length")!.GetValue(Inline)!}]";
+                    }
+                    
+                    
+
+                    // Обработка типов и struct
+                    Dictionary<Type, string> GeneratedStructs = [];
+                    void ProcessType(Type Type){
+                        if(Type.IsPrimitive || Type.IsEnum || Type.Name.Contains("Vector") || Type.Name.Contains("Matrix") || Type.Name == "Color4B"){ return; }
+
+                        InlineArrayAttribute? InlineAttribute = Type.GetCustomAttribute<InlineArrayAttribute>();
+                        if(InlineAttribute != null){
+                            FieldInfo? ElementField = Type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault();
+                            if(ElementField != null){ ProcessType(ElementField.FieldType); }
+                            return;
+                        }
+
+                        if(!GeneratedStructs.ContainsKey(Type)){
+                            FieldInfo[] Fields = Type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+                            foreach(FieldInfo Field in Fields){ ProcessType(Field.FieldType); }
+
+                            StringBuilder SB = new StringBuilder();
+                            SB.AppendLine($"struct {Type.Name} {{");
+
+                            foreach(FieldInfo Field in Fields){
+                                if(Field.Name.StartsWith("__")){ continue; }
+                                SB.AppendLine($"\t{GetGLSLType(Field.FieldType)} {Field.Name}{GetArraySuffix(Field.FieldType)};");
+                            }
+                            
+                            SB.AppendLine("};");
+                            GeneratedStructs[Type] = SB.ToString();
+                        }
+                    }
                     
                     
 
@@ -239,51 +301,30 @@ public struct WLSL{
                                 if(!__UniformBlocks.TryGetValue(Name, out (Type StructType, uint Binding) Registered)){
                                     throw new ExceptionWL("Указан не зарегистрированный UniformBlock!");
                                 }
+                                
+                                ProcessType(Registered.StructType);
 
                                 StringBuilder SB = new StringBuilder();
                                 SB.AppendLine($"layout (std140, binding={Registered.Binding}) uniform {Name}{{");
 
                                 FieldInfo[] Fields = Registered.StructType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-
-                                List<(string Name, bool IsColor)> FieldMeta = [];
                                 
                                 foreach(FieldInfo Field in Fields){
                                     if(Field.Name.StartsWith("__")){ continue; }
 
-                                    bool IsColor = Field.FieldType.Name == "Color4B";
+                                    SB.AppendLine($"\t{GetGLSLType(Field.FieldType)} {Name}_{Field.Name}{GetArraySuffix(Field.FieldType)};");
                                     
-                                    string GLSLType = IsColor ? "uint" : Field.FieldType.Name switch{
-                                        "Single" or "float" => "float",
-                                        "Int32"  or "int"   => "int",
-                                        "UInt32" or "uint"  => "uint",
-                                        "Vector2F"          => "vec2",
-                                        "Vector3F"          => "vec3",
-                                        "Vector4F"          => "vec4",
-                                        "Vector2I"          => "ivec2",
-                                        "Vector3I"          => "ivec3",
-                                        "Vector4I"          => "ivec4",
-                                        "Matrix2F"          => "mat2",
-                                        "Matrix3F"          => "mat3",
-                                        "Matrix4F"          => "mat4",
-                                        var _ => throw new ExceptionWL($"todo, Тип {Field.FieldType.Name} в структуре {Registered.StructType.Name} не поддерживается в UniformBlock!")
-                                    };
-
-                                    FieldMeta.Add((Field.Name, IsColor));
-                                    SB.AppendLine($"\t{GLSLType} {Name}_{Field.Name};");
-                                }
-                                
-                                SB.Append("};");
-                                
-                                Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
-                                
-                                foreach((string Name, bool IsColor) Field in FieldMeta){
                                     string Pattern = $@"\b{Name}\.{Field.Name}\b";
-                                    if(Field.IsColor){
+                                    if(Field.FieldType == typeof(Color4B)){
                                         Code = Regex.Replace(Code, Pattern, $"unpackUnorm4x8({Name}_{Field.Name})");
                                     }else{
                                         Code = Regex.Replace(Code, Pattern, $"{Name}_{Field.Name}");
                                     }
                                 }
+                                
+                                SB.Append("};");
+                                
+                                Code = Code.Remove(M.Index, M.Length).Insert(M.Index, SB.ToString());
                             }catch(Exception e){
                                 throw new ExceptionWL($"Произошла ошибка при обработке UniformBlock [\"{Name}\"]!", e);
                             }
@@ -320,7 +361,6 @@ public struct WLSL{
 
                                 // todo, add metadata uniform
                                 
-                                // todo, учитывай что тут используешь Registration, ХОТЯ НЕ ДОЛЖЕН
                                 return $"layout (location={Registered.Location}) uniform {VType} {Name};";
                             }catch(Exception e){
                                 throw new ExceptionWL($"Произошла ошибка при обработке Uniform [\"{Name}\", {VType}]!", e);
@@ -453,24 +493,29 @@ public struct WLSL{
                         });
                     }
                     ReplaceTextures();
-
-
-                    // Заменяет "__" на другое, что-бы OpenGL не ругался
-                    Code = Code.Replace("__", "_WL_");
-                    
                     
                     
                     // Установка нужной версии
                     SB.AppendLine($"#version {Version}");
                     SB.AppendLine();
+
+                    foreach(string S in GeneratedStructs.Values){ SB.AppendLine(S); SB.AppendLine(); }
+                    
                     SB.AppendLine(Code);
+
+
+                    Code = SB.ToString().Trim();
+                    
+                    
+                    // Заменяет "__" на другое, что-бы OpenGL не ругался
+                    Code = Code.Replace("__", "_WL_");
                     
                 #endregion
                 
             #endregion
 
             return new Result{
-                GLSL = SB.ToString().Trim(),
+                GLSL = Code,
                 Type = Type!.Value
             };
         }catch(Exception e){
