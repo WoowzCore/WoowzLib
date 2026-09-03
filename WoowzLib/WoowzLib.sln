@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Render", "WoowzLib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Input", "WoowzLib.Input\WoowzLib.Input.csproj", "{5A091234-0709-49C8-BE8B-7CF7684A567A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Logger", "WoowzLib.Logger\WoowzLib.Logger.csproj", "{824F455B-E1D6-4FB3-B373-916BEA3B8D40}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Render.OpenGL", "WoowzLib.Render.OpenGL\WoowzLib.Render.OpenGL.csproj", "{5D438C3C-0096-4681-92D1-DAAE7DD562F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Interface.ImGUI", "WoowzLib.Interface.ImGUI\WoowzLib.Interface.ImGUI.csproj", "{912D4BCB-BF8A-4EF5-9DBB-BECDCC938C28}"
@@ -50,10 +48,6 @@ Global
 		{5A091234-0709-49C8-BE8B-7CF7684A567A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A091234-0709-49C8-BE8B-7CF7684A567A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A091234-0709-49C8-BE8B-7CF7684A567A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{824F455B-E1D6-4FB3-B373-916BEA3B8D40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{824F455B-E1D6-4FB3-B373-916BEA3B8D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{824F455B-E1D6-4FB3-B373-916BEA3B8D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{824F455B-E1D6-4FB3-B373-916BEA3B8D40}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5D438C3C-0096-4681-92D1-DAAE7DD562F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5D438C3C-0096-4681-92D1-DAAE7DD562F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D438C3C-0096-4681-92D1-DAAE7DD562F8}.Release|Any CPU.ActiveCfg = Release|Any CPU

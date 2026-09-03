@@ -73,7 +73,7 @@ public struct Packer{
                     Instance.__Unpack(Dictionary);
                     return Instance;
                 }catch (Exception e){
-                    Console.WriteLine($"todo, Ошибка создания экземпляра {Type.Name}: {e.Message}");
+                    WL.Logger.Error($"todo, Ошибка создания экземпляра {Type.Name}: {e.Message}");
                 }
             }
 
@@ -90,7 +90,7 @@ public struct Packer{
                 if(Value != null && ElementType.IsInstanceOfType(Value!)){
                     if(TargetType.IsArray){ Result[i] = Value; }else{ Result.Add(Value); }
                 }else{
-                    Console.WriteLine($"todo, Пропущен элемент списка: не удалось привести {Value?.GetType().Name ?? "null"} к {ElementType.Name}");
+                    WL.Logger.Error($"todo, Пропущен элемент списка: не удалось привести {Value?.GetType().Name ?? "null"} к {ElementType.Name}");
                 }
             }
             return Result;
@@ -112,7 +112,7 @@ public struct Packer{
         object? Result = Unpack(Value, typeof(T));
 
         if(Result != null && !(Result is T)){
-            Console.WriteLine($"todo, Ошибка Get<{typeof(T).Name}>: получено {Result.GetType().Name}");
+            WL.Logger.Error($"todo, Ошибка Get<{typeof(T).Name}>: получено {Result.GetType().Name}");
             return DefaultValue;
         }
 
