@@ -16,7 +16,7 @@ public class Pipeline{
             try{
                 ((dynamic)Stage).Run(Args);
             }catch(Exception e){
-                WL.Logger.Error($"todo, Ошибка при выполнении этапа \"{Name}\": {e.InnerException?.Message ?? e.Message}", e);   
+                WL.Logger.Error($"todo, Ошибка при выполнении этапа \"{Name}\": {e.InnerException?.Message ?? e.Message}\n{e.InnerException?.StackTrace ?? e.StackTrace}", e);   
             }
         }
     }

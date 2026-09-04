@@ -98,6 +98,12 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Dot(Vector3F A, Vector3F B) => (A.X * B.X) + (A.Y * B.Y) + (A.Z * B.Z);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Vector3F(System.Numerics.Vector3 V) => new Vector3F(V.X, V.Y, V.Z);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator System.Numerics.Vector3(Vector3F V) => new System.Numerics.Vector3(V.X, V.Y, V.Z);
+    
     // ----------------------------------------------------------------------
 
     public static Vector3F Zero => new Vector3F(0);

@@ -1,4 +1,6 @@
-﻿namespace WEO;
+﻿using WLO;
+
+namespace WEO;
 
 public class Stage<T> where T : Delegate{
     private readonly List<(string Key, T Action)> __Actions = [];
@@ -22,14 +24,22 @@ public class Stage<T> where T : Delegate{
     public void Clear() => __Actions.Clear();
 
     public void Run(Action<T> Invoker){
-        for(int i = 0; i < __Actions.Count; i++){
-            Invoker(__Actions[i].Action);
+        foreach((string Key, T Action) Action in __Actions){
+            try{
+                Invoker(Action.Action);
+            }catch(Exception e){
+                WL.Logger.Error($"todo, error on stage [\"{Action.Key}\"] INVOKER: {e.InnerException?.Message ?? e.Message}\n{e.InnerException?.StackTrace ?? e.StackTrace}", e);
+            }
         }
     }
 
     public void Run(params object?[] Args){
-        for(int i = 0; i < __Actions.Count; i++){
-            __Actions[i].Action.DynamicInvoke(Args);
+        foreach((string Key, T Action) Action in __Actions){
+            try{
+                Action.Action.DynamicInvoke(Args);
+            }catch(Exception e){
+                WL.Logger.Error($"todo, error on stage [\"{Action.Key}\"]: {e.InnerException?.Message ?? e.Message}\n{e.InnerException?.StackTrace ?? e.StackTrace}", e);
+            }
         }
     }
 }

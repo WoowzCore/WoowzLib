@@ -38,6 +38,8 @@ public class Simple : WLI.Logger{
         };
     }
     
+    // TODO, ВЫВОДИТЬ ПОЛНЫЙ ЛОГ EXCEPTION, + ЕГО ДЕТИ....
+    
     public void Log(uint Type, object? Message, Exception? e){
         OnRawLog?.Invoke(Type, Message, e);
         
