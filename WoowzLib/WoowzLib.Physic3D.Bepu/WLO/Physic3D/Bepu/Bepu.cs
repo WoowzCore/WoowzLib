@@ -48,17 +48,11 @@ namespace WLO.Physic3D.Bepu;
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool AllowContactGeneration(int WorkerIndex, CollidableReference A, CollidableReference B, ref float SpeculativeMargin) => A.Mobility != CollidableMobility.Static || B.Mobility != CollidableMobility.Static;
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool AllowContactGeneration(int WorkerIndex, CollidablePair Pair, int ChildIndexA, int ChildIndexB) => true;
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool ConfigureContactManifold<TManifold>(int WorkerIndex, CollidablePair Pair, ref TManifold Manifold, out PairMaterialProperties RairMaterial) where TManifold : unmanaged, IContactManifold<TManifold>{
-            WL.Logger.Debug($"[{WorkerIndex}] [{Pair}] [{Manifold}]");
-            
-            if (Manifold.Count > 0) {
-                WL.Logger.Debug($"[COL] Hit detected! Points: {Manifold.Count} Objects: {Pair.A.BodyHandle} vs {Pair.B.StaticHandle}");
-            }
-            
             PhysicObject.PhysicMaterial MaterialA = Owner.__GetMaterial(Pair.A);
             PhysicObject.PhysicMaterial MaterialB = Owner.__GetMaterial(Pair.B);
             
             RairMaterial.FrictionCoefficient = MaterialA.Friction * MaterialB.Friction;
-            RairMaterial.MaximumRecoveryVelocity = 2;
+            RairMaterial.MaximumRecoveryVelocity = 3;
             
             RairMaterial.SpringSettings = new SpringSettings(
                 MathF.Max(0.001f, MathF.Min(MaterialA.Frequency, MaterialB.Frequency)),
@@ -90,7 +84,7 @@ public class Bepu : IDisposable, WLI.Engine{
                 Pool,
                 new __NarrowPhaseCallbacks(this),
                 new __PoseIntegratorCallbacks(this),
-                new SolveDescription(8, 1)
+                new SolveDescription(1, 8)
             );
             
             IsStarted = true;

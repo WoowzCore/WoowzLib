@@ -6,12 +6,12 @@ namespace WLO.Math;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Matrix4F : IEquatable<Matrix4F>{
-    private readonly Vector128<float> __C1;
-    private readonly Vector128<float> __C2;
-    private readonly Vector128<float> __C3;
-    private readonly Vector128<float> __C4;
+    private readonly Vector128<float> __Column1;
+    private readonly Vector128<float> __Column2;
+    private readonly Vector128<float> __Column3;
+    private readonly Vector128<float> __Column4;
 
-    public Matrix4F(Vector128<float> C1, Vector128<float> C2, Vector128<float> C3, Vector128<float> C4){ __C1 = C1; __C2 = C2; __C3 = C3; __C4 = C4; }
+    public Matrix4F(Vector128<float> C1, Vector128<float> C2, Vector128<float> C3, Vector128<float> C4){ __Column1 = C1; __Column2 = C2; __Column3 = C3; __Column4 = C4; }
     
     // принимает column-major (для графики самое то)
     public Matrix4F(float C0R0, float C0R1, float C0R2, float C0R3, float C1R0, float C1R1, float C1R2, float C1R3, float C2R0, float C2R1, float C2R2, float C2R3, float C3R0, float C3R1, float C3R2, float C3R3) : this(
@@ -35,10 +35,10 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get{
             return Column switch{
-                0 => __C1.GetElement(Row),
-                1 => __C2.GetElement(Row),
-                2 => __C3.GetElement(Row),
-                3 => __C4.GetElement(Row),
+                0 => __Column1.GetElement(Row),
+                1 => __Column2.GetElement(Row),
+                2 => __Column3.GetElement(Row),
+                3 => __Column4.GetElement(Row),
                 var _ => throw new IndexOutOfRangeException()
             };
         }
@@ -47,29 +47,29 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Matrix4F operator *(Matrix4F A, Matrix4F B){
         return new Matrix4F(
-            MultiplyColumn(A, B.__C1),
-            MultiplyColumn(A, B.__C2),
-            MultiplyColumn(A, B.__C3),
-            MultiplyColumn(A, B.__C4)
+            MultiplyColumn(A, B.__Column1),
+            MultiplyColumn(A, B.__Column2),
+            MultiplyColumn(A, B.__Column3),
+            MultiplyColumn(A, B.__Column4)
         );
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector128<float> MultiplyColumn(Matrix4F Matrix, Vector128<float> Column){
-        Vector128<float> Result = Vector128.Multiply(Matrix.__C1, Vector128.Create(Column.GetElement(0)));
-        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C2, Vector128.Create(Column.GetElement(1))));
-        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C3, Vector128.Create(Column.GetElement(2))));
-        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C4, Vector128.Create(Column.GetElement(3))));
+        Vector128<float> Result = Vector128.Multiply(Matrix.__Column1, Vector128.Create(Column.GetElement(0)));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__Column2, Vector128.Create(Column.GetElement(1))));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__Column3, Vector128.Create(Column.GetElement(2))));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__Column4, Vector128.Create(Column.GetElement(3))));
         return Result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3F operator *(Matrix4F Matrix, Vector3F Vector) {
         Vector128<float> Vector__ = Vector128.Create(Vector.X, Vector.Y, Vector.Z, 1.0f);
-        Vector128<float> Result = Vector128.Multiply(Matrix.__C1, Vector__.GetElement(0));
-        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C2, Vector__.GetElement(1)));
-        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C3, Vector__.GetElement(2)));
-        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__C4, Vector__.GetElement(3)));
+        Vector128<float> Result = Vector128.Multiply(Matrix.__Column1, Vector__.GetElement(0));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__Column2, Vector__.GetElement(1)));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__Column3, Vector__.GetElement(2)));
+        Result = Vector128.Add(Result, Vector128.Multiply(Matrix.__Column4, Vector__.GetElement(3)));
         
         return new Vector3F(Result.GetElement(0), Result.GetElement(1), Result.GetElement(2));
     }
@@ -77,9 +77,9 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3F TransformNormal(Vector3F Vector){
         Vector128<float> Vector__ = Vector128.Create(Vector.X, Vector.Y, Vector.Z, 0.0f);
-        Vector128<float> Result = Vector128.Multiply(__C1, Vector__.GetElement(0));
-        Result = Vector128.Add(Result, Vector128.Multiply(__C2, Vector__.GetElement(1)));
-        Result = Vector128.Add(Result, Vector128.Multiply(__C3, Vector__.GetElement(2)));
+        Vector128<float> Result = Vector128.Multiply(__Column1, Vector__.GetElement(0));
+        Result = Vector128.Add(Result, Vector128.Multiply(__Column2, Vector__.GetElement(1)));
+        Result = Vector128.Add(Result, Vector128.Multiply(__Column3, Vector__.GetElement(2)));
         
         return new Vector3F(Result.GetElement(0), Result.GetElement(1), Result.GetElement(2));
     }
@@ -103,7 +103,7 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
 
     public Vector3F Translation{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new Vector3F(__C4.GetElement(0), __C4.GetElement(1), __C4.GetElement(2));
+        get => new Vector3F(__Column4.GetElement(0), __Column4.GetElement(1), __Column4.GetElement(2));
     }
     
     public static Matrix4F Identity => new Matrix4F(Vector128.Create(1f, 0, 0, 0), Vector128.Create(0, 1f, 0, 0), Vector128.Create(0, 0, 1f, 0), Vector128.Create(0, 0, 0, 1f));
@@ -153,9 +153,12 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         0, 0, Scale.D, 0,
         0, 0, 0, 1
     );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4F CreateRotation(Vector3F Rotation) => CreateRotationPitch(Rotation.Pitch) * CreateRotationYaw(Rotation.Yaw) * CreateRotationRoll(Rotation.Roll);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Matrix4F CreateRotationX(float Radians) {
+    public static Matrix4F CreateRotationPitch(float Radians){
         float Cos = (float)System.Math.Cos(Radians);
         float Sin = (float)System.Math.Sin(Radians);
         return new Matrix4F(
@@ -167,7 +170,7 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Matrix4F CreateRotationY(float Radians) {
+    public static Matrix4F CreateRotationYaw(float Radians){
         float Cos = (float)System.Math.Cos(Radians);
         float Sin = (float)System.Math.Sin(Radians);
         return new Matrix4F(
@@ -179,7 +182,7 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Matrix4F CreateRotationZ(float Radians) {
+    public static Matrix4F CreateRotationRoll(float Radians){
         float Cos = (float)System.Math.Cos(Radians);
         float Sin = (float)System.Math.Sin(Radians);
         return new Matrix4F(
@@ -194,15 +197,15 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(Matrix4F Other){
-        return Vector128.EqualsAll(__C1, Other.__C1) &&
-               Vector128.EqualsAll(__C2, Other.__C2) &&
-               Vector128.EqualsAll(__C3, Other.__C3) &&
-               Vector128.EqualsAll(__C4, Other.__C4);
+        return Vector128.EqualsAll(__Column1, Other.__Column1) &&
+               Vector128.EqualsAll(__Column2, Other.__Column2) &&
+               Vector128.EqualsAll(__Column3, Other.__Column3) &&
+               Vector128.EqualsAll(__Column4, Other.__Column4);
     }
 
     public override bool Equals(object? Object) => Object is Matrix4F Other && Equals(Other);
 
-    public override int GetHashCode() => HashCode.Combine(__C1, __C2, __C3, __C4);
+    public override int GetHashCode() => HashCode.Combine(__Column1, __Column2, __Column3, __Column4);
 
     public static bool operator ==(Matrix4F L, Matrix4F R) =>  L.Equals(R);
     public static bool operator !=(Matrix4F L, Matrix4F R) => !L.Equals(R);

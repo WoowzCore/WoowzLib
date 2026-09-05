@@ -23,9 +23,12 @@ public struct Mesh : WLI.Physic3D.Bepu.Collider.Collider{
 
     public static BepuPhysics.Collidables.Mesh __ToBepu(Vector3F[] Vertices, int[] Indices, Vector3F Scale, BufferPool Pool){
         Pool.Take<Triangle>(Indices.Length / 3, out Buffer<Triangle> Triangles);
+        
         for(int i = 0; i < Indices.Length; i += 3){
             Triangles[i / 3] = new Triangle(Vertices[Indices[i]], Vertices[Indices[i + 1]], Vertices[Indices[i + 2]]);
         }
+        
+        Pool.Return(ref Triangles);
         
         return new BepuPhysics.Collidables.Mesh(Triangles, Scale, Pool);
     }

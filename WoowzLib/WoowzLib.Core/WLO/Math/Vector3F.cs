@@ -9,10 +9,32 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
     public float Y;
     public float Z;
 
-    public float W => X;
-    public float H => Y;
-    public float D => Z;
+    public float W{
+        get => X;
+        set => X = value;
+    }
+    public float H{
+        get => Y;
+        set => Y = value;
+    }
+    public float D{
+        get => Z;
+        set => Z = value;
+    }
 
+    public float Pitch{
+        get => X;
+        set => X = value;
+    }
+    public float Yaw{
+        get => Y;
+        set => Y = value;
+    }
+    public float Roll{
+        get => Z;
+        set => Z = value;
+    }
+    
     public Vector3F(float X, float Y, float Z){
         this.X = X;
         this.Y = Y;
