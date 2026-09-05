@@ -54,6 +54,11 @@ public class HierarchyNode<T> : WLI.Packable where T : class{
         }
     }
 
+    public void MoveChild(HierarchyNode<T> Child, int Index){
+        Children.Remove(Child);
+        Children.Insert(Index, Child);
+    }
+
     public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
         ["Children"] = Children.Select(C => WL.Packer.Pack(C.Owner)).ToList()
     };

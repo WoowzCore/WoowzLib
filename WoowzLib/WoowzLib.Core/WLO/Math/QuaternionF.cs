@@ -26,50 +26,39 @@ public readonly struct QuaternionF : IEquatable<QuaternionF>, WLI.Packable{
     // ----------------------------------------------------------------------
 
     public Vector3F ToEuler(){
-        float xx = X * X, yy = Y * Y, zz = Z * Z, ww = W * W;
+        float XX = X*X, YY = Y*Y, ZZ = Z*Z, WW = W * W;
         
-        // Извлекаем элементы матрицы вращения прямо из кватерниона
-        // M02 (1-я строка, 3-я колонка)
-        float m02 = 2f * (X * Z + Y * W);
+        float M02 = 2 * (X * Z + Y * W);
         
-        Vector3F angles = new Vector3F();
+        Vector3F Angles = new Vector3F();
 
-        // 1. Извлекаем Yaw (Y) из элемента M02
-        if (MathF.Abs(m02) < 0.99999f) {
-            angles.Y = MathF.Asin(m02);
-            
-            // 2. Извлекаем Pitch (X) из M12 и M22
-            // M12 = 2 * (YZ - XW), M22 = WW - XX - YY + ZZ
-            angles.X = MathF.Atan2(-(2f * (Y * Z - X * W)), ww - xx - yy + zz);
-            
-            // 3. Извлекаем Roll (Z) из M01 и M00
-            // M01 = 2 * (XY - ZW), M00 = WW + XX - YY - ZZ
-            angles.Z = MathF.Atan2(-(2f * (X * Y - Z * W)), ww + xx - yy - zz);
-        } else {
-            // Gimbal Lock
-            angles.Y = m02 >= 1f ? MathF.PI / 2f : -MathF.PI / 2f;
-            angles.X = MathF.Atan2(2f * (X * Y + Z * W), ww - xx + yy - zz);
-            angles.Z = 0;
+        if(MathF.Abs(M02) < 0.99999f){
+            Angles.Pitch = MathF.Atan2(-(2 * (Y*Z - X*W)), WW - XX - YY + ZZ);
+            Angles.Yaw   = MathF.Asin(M02);
+            Angles.Roll  = MathF.Atan2(-(2 * (X*Y - Z*W)), WW + XX - YY - ZZ);
+        }else{
+            Angles.Pitch = MathF.Atan2(2 * (X*Y + Z*W), WW - XX + YY - ZZ);
+            Angles.Yaw   = MathF.PI * 0.5f * (M02 >= 1 ? 1 : -1);
+            Angles.Roll  = 0;
         }
 
-        return angles;
+        return Angles;
     }
 
-    public static QuaternionF FromEuler(Vector3F angles) {
-        float halfX = angles.X * 0.5f;
-        float halfY = angles.Y * 0.5f;
-        float halfZ = angles.Z * 0.5f;
+    public static QuaternionF FromEuler(Vector3F Angles) {
+        float HP = Angles.Pitch * 0.5f;
+        float HY = Angles.Yaw   * 0.5f;
+        float HR = Angles.Roll  * 0.5f;
 
-        float cx = MathF.Cos(halfX); float sx = MathF.Sin(halfX);
-        float cy = MathF.Cos(halfY); float sy = MathF.Sin(halfY);
-        float cz = MathF.Cos(halfZ); float sz = MathF.Sin(halfZ);
+        float CP = MathF.Cos(HP); float SP = MathF.Sin(HP);
+        float CY = MathF.Cos(HY); float SY = MathF.Sin(HY);
+        float CR = MathF.Cos(HR); float SR = MathF.Sin(HR);
 
-        // Порядок XYZ: Q = Qx * Qy * Qz
         return new QuaternionF(
-            sx * cy * cz + cx * sy * sz, // X
-            cx * sy * cz - sx * cy * sz, // Y
-            cx * cy * sz + sx * sy * cz, // Z
-            cx * cy * cz - sx * sy * sz  // W
+            SP*CY*CR + CP*SY*SR,
+            CP*SY*CR - SP*CY*SR,
+            CP*CY*SR + SP*SY*CR,
+            CP*CY*CR - SP*SY*SR
         );
     }
     
