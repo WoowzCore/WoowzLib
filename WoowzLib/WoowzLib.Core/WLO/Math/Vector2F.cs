@@ -49,7 +49,13 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
         Vector128<float> Result = Vector128.Multiply(A.AsVector128(), Vector128.Create(B));
         return new Vector2F(Result.GetElement(0), Result.GetElement(1));
     }
-        
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Vector2F(System.Numerics.Vector2 V) => new Vector2F(V.X, V.Y);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator System.Numerics.Vector2(Vector2F V) => new System.Numerics.Vector2(V.X, V.Y);
+    
     // ----------------------------------------------------------------------
     
     public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{

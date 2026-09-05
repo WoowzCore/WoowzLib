@@ -150,13 +150,15 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     #endregion
     // ----------------------------------------------------------------------
 
-    public void FrameStart(){
+    public void Render(Action Content){
         Pool.BindForView();
         API.Viewport(0, 0, (uint)Pool.GetView().Viewport.X, (uint)Pool.GetView().Viewport.Y);
-    }
-    
-    public void FrameStop(){
         
+        try{
+            Content.Invoke();
+        }catch(Exception e){
+            WL.Logger.Error("todo, opengl render error", e);
+        }
     }
     
     // ----------------------------------------------------------------------

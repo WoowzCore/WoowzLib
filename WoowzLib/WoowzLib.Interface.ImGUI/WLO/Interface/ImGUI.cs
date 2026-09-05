@@ -62,6 +62,162 @@ public abstract class ImGUI : WLI.Engine{
     
     // ----------------------------------------------------------------------
 
+    public bool Window(string Title, ImGuiWindowFlags Flags, ref bool Open, Action Content){
+        bool Work = false;
+        if(API.Begin(Title, ref Open, Flags)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui window [{Title}] error", e);
+            }
+            Work = true;
+        }
+        API.End();
+        return Work;
+    }
+    public bool Window(string Title, ref bool Open, Action Content) => Window(Title, ImGuiWindowFlags.None, ref Open, Content);
+    public bool Window(string Title, ImGuiWindowFlags Flags, Action Content){
+        bool Open = false;
+        return Window(Title, Flags, ref Open, Content);
+    }
+    public bool Window(string Title, Action Content) => Window(Title, ImGuiWindowFlags.None, Content);
+
+    
+    
+    public bool Child(string ID, Vector2F Size, ImGuiChildFlags ChildFlags, ImGuiWindowFlags Flags, Action Content){
+        bool Work = false;
+        if(API.BeginChild(ID, Size, ChildFlags, Flags)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui child [{ID}] error", e);
+            }
+            Work = true;
+        }
+        API.EndChild();
+        return Work;
+    }
+    public bool Child(string ID, Vector2F Size, ImGuiChildFlags ChildFlags, Action Content) => Child(ID, Size, ImGuiChildFlags.None, ImGuiWindowFlags.None, Content);
+    public bool Child(string ID, Vector2F Size, Action Content) => Child(ID, Size, ImGuiChildFlags.None, Content);
+    
+    
+    
+    public bool DragDropSource(Action Content){
+        if(API.BeginDragDropSource()){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui dragdropsource error", e);
+            }
+            API.EndDragDropSource();
+            return true;
+        }
+        return false;
+    }
+    
+
+
+    public bool Popup(string ID, ImGuiWindowFlags Flags, Action Content){
+        if(API.BeginPopup(ID, Flags)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui popup [{ID}] error", e);
+            }
+            API.EndPopup();
+            return true;
+        }
+        return false;
+    }
+    public bool Popup(string ID, Action Content) => Popup(ID, ImGuiWindowFlags.None, Content);
+
+
+    
+    public bool PopupContextItem(string ID, Action Content){
+        if(API.BeginPopupContextItem(ID)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui popupcontextitem [{ID}] error", e);
+            }
+            API.EndPopup();
+            return true;
+        }
+        return false;
+    }
+    
+    
+    
+    public bool MainMenuBar(Action Content){
+        if(API.BeginMainMenuBar()){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui mainmenubar error", e);
+            }
+            API.EndMainMenuBar();
+            return true;
+        }
+        return false;
+    }
+    
+    
+    
+    public bool Menu(string Label, bool Enabled, Action Content){
+        if(API.BeginMenu(Label, Enabled)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui menu [{Label}] error", e);
+            }
+            API.EndMenu();
+            return true;
+        }
+        return false;
+    }
+    public bool Menu(string Label, Action Content) => Menu(Label, true, Content);
+    
+    
+
+    public void Group(Action Content){
+        API.BeginGroup();
+    
+        try{
+            Content.Invoke();
+        }catch(Exception e){
+            WL.Logger.Error($"todo, imgui group error", e);
+        }
+    
+        API.EndGroup();
+    }
+    
+    
+    
+    public void CustomID(string ID, Action Content){
+        API.PushID(ID);
+    
+        try{
+            Content.Invoke();
+        }catch(Exception e){
+            WL.Logger.Error($"todo, imgui customid [{ID}] error", e);
+        }
+    
+        API.PopID();
+    }
+    public void CustomID(int ID, Action Content){
+        API.PushID(ID);
+    
+        try{
+            Content.Invoke();
+        }catch(Exception e){
+            WL.Logger.Error($"todo, imgui customid [{ID}] error", e);
+        }
+    
+        API.PopID();
+    }
+    
+    // ----------------------------------------------------------------------
+
     public void MousePosition(Vector2I Position){
         IO.AddMousePosEvent(Position.X, Position.Y);
     }
