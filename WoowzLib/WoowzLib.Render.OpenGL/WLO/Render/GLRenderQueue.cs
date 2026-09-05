@@ -22,22 +22,34 @@ public class GLRenderQueue{
         }
     }
 
-    public void Render(Action<Command, GLProgram>? OnBeforeDraw = null){
+    public void Render(Func<Command, bool>? Filter = null, Action<Command, GLProgram>? OnBeforeDraw = null){
         Sort();
 
-        foreach(Command CMD in __OpaqueCommands){ RenderObject(CMD, null, OnBeforeDraw); }
-        
-        foreach(Command CMD in __TransparentCommands){ RenderObject(CMD, null, OnBeforeDraw); }
+        foreach(Command CMD in __OpaqueCommands){
+            if(Filter != null && !Filter(CMD)){ continue; }
+            RenderObject(CMD, null, OnBeforeDraw);
+        }
+
+        foreach(Command CMD in __TransparentCommands){
+            if(Filter != null && !Filter(CMD)){ continue; }
+            RenderObject(CMD, null, OnBeforeDraw);
+        }
         
         Clear();
     }
 
-    public void RenderWithProgram(GLProgram Program, Action<Command, GLProgram>? OnBeforeDraw = null){
+    public void RenderWithProgram(GLProgram Program, Func<Command, bool>? Filter = null, Action<Command, GLProgram>? OnBeforeDraw = null){
         Sort();
         
-        foreach(Command CMD in __OpaqueCommands){ RenderObject(CMD, Program, OnBeforeDraw); }
-        
-        foreach(Command CMD in __TransparentCommands){ RenderObject(CMD, Program, OnBeforeDraw); }
+        foreach(Command CMD in __OpaqueCommands){
+            if(Filter != null && !Filter(CMD)){ continue; }
+            RenderObject(CMD, Program, OnBeforeDraw);
+        }
+
+        foreach(Command CMD in __TransparentCommands){
+            if(Filter != null && !Filter(CMD)){ continue; }
+            RenderObject(CMD, Program, OnBeforeDraw);
+        }
         
         Clear();
     }
@@ -46,7 +58,7 @@ public class GLRenderQueue{
         GLProgram? ActiveProgram = OverrideProgram ?? CMD.Program;
         if(ActiveProgram == null){ return; }
 
-        Owner.Pool.SetTexture2D(CMD.Texture2D);
+        Owner.Pool.SetTexture2D(CMD.Texture0);
         
         if(CMD.Uniforms != null){
             foreach(UniformValue Uniform in CMD.Uniforms){ ActiveProgram.SetUniform(Uniform); }
@@ -63,8 +75,8 @@ public class GLRenderQueue{
             uint BID = B.Program?.ID ?? 0;
             if(AID != BID){ return AID.CompareTo(BID); }
 
-            AID = A.Texture2D?.ID ?? 0;
-            BID = B.Texture2D?.ID ?? 0;
+            AID = A.Texture0?.ID ?? 0;
+            BID = B.Texture0?.ID ?? 0;
             if(AID != BID){ return AID.CompareTo(BID); }
             
             return A.Mesh!.ID.CompareTo(B.Mesh!.ID);
@@ -81,7 +93,7 @@ public class GLRenderQueue{
     public struct Command{
         public GLProgram?   Program;
         public GLMesh?      Mesh;
-        public GLTexture2D? Texture2D;
+        public GLTexture2D? Texture0;
 
         public List<UniformValue>? Uniforms;
 
