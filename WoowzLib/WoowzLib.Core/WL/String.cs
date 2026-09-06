@@ -107,6 +107,13 @@ public struct String{
                     string ValuePart = Body.Substring(ColonIndex + 1);
 
                     Type? EnumType = WL.Packer.FromCustomType(TypePart);
+
+                    if(EnumType == null && TypePart.Contains('.')){
+                        int LastDot = TypePart.LastIndexOf('.');
+                        string CorrectName = TypePart.Remove(LastDot, 1).Insert(LastDot, "+");
+                        EnumType = WL.Packer.FromCustomType(CorrectName);
+                    }
+                    
                     if(EnumType != null && EnumType.IsEnum){
                         return Enum.Parse(EnumType, ValuePart);
                     }

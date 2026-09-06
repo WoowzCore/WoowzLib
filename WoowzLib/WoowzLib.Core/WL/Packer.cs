@@ -96,7 +96,19 @@ public struct Packer{
             return Result;
         }
 
-        if(TargetType != null && TargetType != Data.GetType()){ try { return Convert.ChangeType(Data, Nullable.GetUnderlyingType(TargetType) ?? TargetType); } catch { return Data; } }
+        if(TargetType != null && TargetType != Data.GetType()){
+            try{
+                Type ActualTargetType = Nullable.GetUnderlyingType(TargetType) ?? TargetType;
+
+                if(ActualTargetType.IsEnum){
+                    if(Data is string String){ return Enum.Parse(ActualTargetType, String); }
+                }
+                
+                return Convert.ChangeType(Data, ActualTargetType);
+            }catch{
+                return Data;
+            }
+        }
 
         return Data;
     }
