@@ -59,6 +59,23 @@ public class HierarchyNode<T> : WLI.Packable where T : class{
         Children.Insert(Index, Child);
     }
 
+    public T? FindChild(Func<T, bool> Match){
+        foreach(HierarchyNode<T> Child in Children){
+            if(Match(Child.Owner)){ return Child.Owner; }
+        }
+        return null;
+    }
+
+    public T? DeepFindChild(Func<T, bool> Match){
+        foreach(HierarchyNode<T> Child in Children){
+            if(Match(Child.Owner)){ return Child.Owner; }
+
+            T? Found = Child.DeepFindChild(Match);
+            if(Found != null){ return Found; }
+        }
+        return null;
+    }
+
     public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
         ["Children"] = Children.Select(C => WL.Packer.Pack(C.Owner)).ToList()
     };

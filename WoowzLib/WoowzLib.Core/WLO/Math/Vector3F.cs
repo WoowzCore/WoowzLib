@@ -111,10 +111,15 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3F operator -(Vector3F A) => A.Negative;
+
+    public float LengthSquared{
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => X*X + Y*Y + Z*Z;
+    }
     
     public float Length{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => System.MathF.Sqrt(X * X + Y * Y + Z * Z);
+        get => System.MathF.Sqrt(LengthSquared);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

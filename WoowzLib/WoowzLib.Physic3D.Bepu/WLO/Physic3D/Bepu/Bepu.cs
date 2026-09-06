@@ -17,56 +17,6 @@ namespace WLO.Physic3D.Bepu;
  * я не знаю надо наверное тоже debug logger придумать, и в opengl тоже решить а то не удобно с ним взаимодействовать
  */
 
- public struct __PoseIntegratorCallbacks : IPoseIntegratorCallbacks{
-    public readonly Bepu Owner;
-    
-    private Vector3Wide __GravityWide;
-
-    public __PoseIntegratorCallbacks(Bepu Physic){
-        Owner = Physic;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void PrepareForIntegration(float DT) => __GravityWide = Vector3Wide.Broadcast(Owner.Gravity);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void IntegrateVelocity(Vector<int> BodyIndices, Vector3Wide Position, QuaternionWide Orientation, BodyInertiaWide LocalInertia, Vector<int> IntegrationMask, int WorkerIndex, Vector<float> DT, ref BodyVelocityWide Velocity){
-        Velocity.Linear += __GravityWide * DT;
-    }
-
-    public AngularIntegrationMode AngularIntegrationMode => AngularIntegrationMode.Nonconserving;
-    public bool AllowSubstepsForUnconstrainedBodies => false;
-    public bool IntegrateVelocityForKinematics => false;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Initialize(Simulation Simulation){}
-}
-
-public struct __NarrowPhaseCallbacks : INarrowPhaseCallbacks{
-    public readonly Bepu Owner;
-    
-    public __NarrowPhaseCallbacks(Bepu Physic){
-        Owner = Physic;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Initialize(Simulation Simulation){}
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool AllowContactGeneration(int WorkerIndex, CollidableReference A, CollidableReference B, ref float SpeculativeMargin) => A.Mobility != CollidableMobility.Static || B.Mobility != CollidableMobility.Static;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool AllowContactGeneration(int WorkerIndex, CollidablePair Pair, int ChildIndexA, int ChildIndexB) => true;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool ConfigureContactManifold<TManifold>(int WorkerIndex, CollidablePair Pair, ref TManifold Manifold, out PairMaterialProperties RairMaterial) where TManifold : unmanaged, IContactManifold<TManifold>{
-        PhysicObject.PhysicMaterial MaterialA = Owner.__GetMaterial(Pair.A);
-        PhysicObject.PhysicMaterial MaterialB = Owner.__GetMaterial(Pair.B);
-        
-        RairMaterial.FrictionCoefficient = MaterialA.Friction * MaterialB.Friction;
-        RairMaterial.MaximumRecoveryVelocity = 3;
-        
-        RairMaterial.SpringSettings = new SpringSettings(
-            MathF.Max(0.001f, MathF.Min(MaterialA.Frequency, MaterialB.Frequency)),
-            MathF.Max(0.001f, MathF.Min(MaterialA.Damping, MaterialB.Damping))
-        );
-        
-        return true;
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ConfigureContactManifold(int WorkerIndex, CollidablePair Pair, int ChildIndexA, int ChildIndexB, ref ConvexContactManifold Manifold) => true;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Dispose(){}
-}
-
 public class Bepu : IDisposable, WLI.Engine{
     public bool IsStarted{ get; private set; }
 
@@ -132,6 +82,22 @@ public class Bepu : IDisposable, WLI.Engine{
     
     // ----------------------------------------------------------------------
 
+    internal byte[] __BodyLocks = new byte[4096];
+
+    internal void __SetBodyLock(int Handle, int Bit, bool Value){
+        if(Handle >= __BodyLocks.Length){
+            Array.Resize(ref __BodyLocks, System.Math.Max(Handle + 1, __BodyLocks.Length * 2));
+        }
+
+        if(Value){
+            __BodyLocks[Handle] |= (byte)(1 << Bit);
+        }else{
+            __BodyLocks[Handle] &= (byte)~(1 << Bit);
+        }
+    }
+    
+    // ----------------------------------------------------------------------
+
     private readonly ConcurrentDictionary<int, PhysicObject> __BHandleToObject = [];
     private readonly ConcurrentDictionary<int, PhysicObject> __SHandleToObject = [];
 
@@ -175,6 +141,72 @@ public class Bepu : IDisposable, WLI.Engine{
     
         World.Timestep(DT, __TDispatcher);
     }
+}
 
-    public PhysicObject CreateObject(Vector3F Position = default, PhysicObject.PhysicType Type = PhysicObject.PhysicType.Dynamic) => new PhysicObject(this, Position, Type);
+public struct __PoseIntegratorCallbacks : IPoseIntegratorCallbacks{
+    public readonly Bepu Owner;
+    
+    private Vector3Wide __GravityWide;
+
+    public __PoseIntegratorCallbacks(Bepu Physic){
+        Owner = Physic;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void PrepareForIntegration(float DT) => __GravityWide = Vector3Wide.Broadcast(Owner.Gravity);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void IntegrateVelocity(Vector<int> BodyIndices, Vector3Wide Position, QuaternionWide Orientation, BodyInertiaWide LocalInertia, Vector<int> IntegrationMask, int WorkerIndex, Vector<float> DT, ref BodyVelocityWide Velocity){
+        Velocity.Linear += __GravityWide * DT;
+
+        for(int i = 0; i < Vector<int>.Count; ++i){
+            if(IntegrationMask[i] == 0){ continue; }
+
+            int BodyIndex = BodyIndices[i];
+            BodyHandle Handle = Owner.World.Bodies.ActiveSet.IndexToHandle[BodyIndex];
+
+            byte Locks = Owner.__BodyLocks[Handle.Value];
+            if(Locks == 0){ continue; }
+
+            if((Locks & (1 << 0)) != 0){ GatherScatter.Get(ref Velocity.Linear.X, i) = 0; }
+            if((Locks & (1 << 1)) != 0){ GatherScatter.Get(ref Velocity.Linear.Y, i) = 0; }
+            if((Locks & (1 << 2)) != 0){ GatherScatter.Get(ref Velocity.Linear.Z, i) = 0; }
+            
+            if((Locks & (1 << 3)) != 0){ GatherScatter.Get(ref Velocity.Angular.X, i) = 0; }
+            if((Locks & (1 << 4)) != 0){ GatherScatter.Get(ref Velocity.Angular.Y, i) = 0; }
+            if((Locks & (1 << 5)) != 0){ GatherScatter.Get(ref Velocity.Angular.Z, i) = 0; }
+        }
+    }
+
+    public AngularIntegrationMode AngularIntegrationMode => AngularIntegrationMode.Nonconserving;
+    public bool AllowSubstepsForUnconstrainedBodies => false;
+    public bool IntegrateVelocityForKinematics => false;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Initialize(Simulation Simulation){}
+}
+
+public struct __NarrowPhaseCallbacks : INarrowPhaseCallbacks{
+    public readonly Bepu Owner;
+    
+    public __NarrowPhaseCallbacks(Bepu Physic){
+        Owner = Physic;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Initialize(Simulation Simulation){}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool AllowContactGeneration(int WorkerIndex, CollidableReference A, CollidableReference B, ref float SpeculativeMargin) => A.Mobility != CollidableMobility.Static || B.Mobility != CollidableMobility.Static;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool AllowContactGeneration(int WorkerIndex, CollidablePair Pair, int ChildIndexA, int ChildIndexB) => true;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool ConfigureContactManifold<TManifold>(int WorkerIndex, CollidablePair Pair, ref TManifold Manifold, out PairMaterialProperties RairMaterial) where TManifold : unmanaged, IContactManifold<TManifold>{
+        PhysicObject.PhysicMaterial MaterialA = Owner.__GetMaterial(Pair.A);
+        PhysicObject.PhysicMaterial MaterialB = Owner.__GetMaterial(Pair.B);
+        
+        RairMaterial.FrictionCoefficient = MaterialA.Friction * MaterialB.Friction;
+        RairMaterial.MaximumRecoveryVelocity = 3;
+        
+        RairMaterial.SpringSettings = new SpringSettings(
+            MathF.Max(0.001f, MathF.Min(MaterialA.Frequency, MaterialB.Frequency)),
+            MathF.Max(0.001f, MathF.Min(MaterialA.Damping, MaterialB.Damping))
+        );
+        
+        return true;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ConfigureContactManifold(int WorkerIndex, CollidablePair Pair, int ChildIndexA, int ChildIndexB, ref ConvexContactManifold Manifold) => true;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Dispose(){}
 }

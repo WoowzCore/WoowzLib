@@ -9,8 +9,9 @@ namespace WLO.Physic3D.Bepu;
 // todo, сохранять инерцию после возврата active?
 
 public class PhysicObject : IDisposable{
-    private readonly Bepu Owner;
-
+    private Bepu? Owner = null;
+    public bool InWorld => Owner != null;
+    
     internal BodyHandle?   __BHandle;
     internal StaticHandle? __SHandle;
 
@@ -20,15 +21,21 @@ public class PhysicObject : IDisposable{
     public bool CanBody   => Active && IsBody;
     public bool CanStatic => Active && IsStatic;
     
-    private Vector3    __LastPosition;
-    private Quaternion __LastRotation = Quaternion.Identity;
-    private Vector3    __LastVelocityLinear;
-    private Vector3F   __LastVelocityAngular;
-    
-    public PhysicObject(Bepu Physic, Vector3F Position = default, PhysicType Type = PhysicType.Dynamic){
-        Owner = Physic;
-        __Type = Type;
-        __LastPosition = Position;
+    public PhysicObject(PhysicType Type = PhysicType.Dynamic, Vector3F Position = default){
+        __Type     = Type;
+        __Position = Position;
+    }
+
+    public void AddToWorld(Bepu Physic){
+        if(InWorld){ return; } Owner = Physic;
+
+        for(int i = 0; i < __Colliders.Count; i++){
+            ColliderEntry Entry = __Colliders[i];
+            Entry.Index = Entry.Source.__AddToPhysic(Owner!.World.Shapes, Owner.Pool, Scale);
+            __Colliders[i] = Entry;
+        }
+        
+        __Rebuild();
     }
     
     // ----------------------------------------------------------------------
@@ -46,25 +53,26 @@ public class PhysicObject : IDisposable{
     private readonly List<ColliderEntry> __Colliders = [];
 
     public void AddCollider(WLI.Physic3D.Bepu.Collider.Collider Collider, Vector3F Offset = default, QuaternionF Rotation = default){
-        TypedIndex Index = Collider.__AddToPhysic(Owner.World.Shapes, Owner.Pool, Scale);
-        BodyInertia Inertia = Collider.__ComputeInertia(Mass, Scale);
-    
+        TypedIndex Index = default;
+
+        if(InWorld){ Index = Collider.__AddToPhysic(Owner!.World.Shapes, Owner.Pool, Scale); }
+
         __Colliders.Add(new ColliderEntry{
             Source = Collider,
             Index = Index,
-            Inertia = Inertia,
             Offset = Offset,
             Rotation = Rotation == default ? Quaternion.Identity : Rotation
         });
-        __Rebuild();
+
+        if(InWorld){ __Rebuild(); }
     }
 
     public void RemoveCollider(WLI.Physic3D.Bepu.Collider.Collider Collider){
         int Index = __Colliders.FindIndex(C => C.Source == Collider);
         if(Index != -1){
-            Owner.World.Shapes.Remove(__Colliders[Index].Index);
+            if(InWorld){ Owner!.World.Shapes.Remove(__Colliders[Index].Index); }
             __Colliders.RemoveAt(Index);
-            __Rebuild();
+            if(InWorld){ __Rebuild(); }
         }
     }
 
@@ -76,12 +84,11 @@ public class PhysicObject : IDisposable{
     
     // ----------------------------------------------------------------------
 
-    public void __Rebuild(Vector3F? Position = null){
+    public void __Rebuild(){
+        if(!InWorld){ throw new Exception("todo, объект не был добавлен в физику!"); }
         if(!Active){ return; }
 
-        RigidPose Pose = Position.HasValue ? new RigidPose(Position.Value, __LastRotation) : GetPose();
         __RemoveBodyAndStatic();
-
         if(__Colliders.Count == 0){ return; }
 
         TypedIndex FinalCollider;
@@ -89,7 +96,7 @@ public class PhysicObject : IDisposable{
         if(__Colliders.Count == 1 && __Colliders[0].Offset == Vector3.Zero && __Colliders[0].Rotation == Quaternion.Identity){
             FinalCollider = __Colliders[0].Index;
         }else{
-            Owner.Pool.Take<CompoundChild>(__Colliders.Count, out Buffer<CompoundChild> Children);
+            Owner!.Pool.Take<CompoundChild>(__Colliders.Count, out Buffer<CompoundChild> Children);
         
             for(int i = 0; i < __Colliders.Count; i++){
                 Children[i] = new CompoundChild{
@@ -103,18 +110,20 @@ public class PhysicObject : IDisposable{
             Owner.Pool.Return(ref Children);
         }
     
-        if(Type == PhysicType.Static){
-            __SHandle = Owner.World.Statics.Add(new StaticDescription(Pose, FinalCollider));
-        }else{
-            BodyInertia Inertia = Type == PhysicType.Dynamic ? __CalculateTotalInertia() : new BodyInertia();
-
-            BodyVelocity Velocity = new BodyVelocity(__LastVelocityLinear, __LastVelocityAngular);
-
-            CollidableDescription Collidable = new CollidableDescription(FinalCollider, 0.2f);
-            BodyActivityDescription Activity = new BodyActivityDescription(AlwaysAwake ? -1 : 0.01f);
+        RigidPose Pose = new RigidPose(__Position, __Rotation);
         
-            BodyDescription Description = BodyDescription.CreateDynamic(Pose, Velocity, Inertia, Collidable, Activity);
-            __BHandle = Owner.World.Bodies.Add(Description);
+        if(Type == PhysicType.Static){
+            __SHandle = Owner!.World.Statics.Add(new StaticDescription(Pose, FinalCollider));
+        }else{
+            __BHandle = Owner!.World.Bodies.Add(BodyDescription.CreateDynamic(
+                Pose,
+                new BodyVelocity(__VelocityLinear, __VelocityAngular),
+                Type == PhysicType.Dynamic ? __CalculateTotalInertia() : new BodyInertia(),
+                new CollidableDescription(FinalCollider, 0.2f),
+                new BodyActivityDescription(AlwaysAwake ? -1 : 0.01f)
+            ));
+            
+            __SyncLocks();
             __UpdateActivity();
         }
         Owner.RegisterObject(this);
@@ -124,14 +133,11 @@ public class PhysicObject : IDisposable{
         if(__Colliders.Count == 0){ return default; }
 
         BodyInertia Inertia = __Colliders[0].Source.__ComputeInertia(Mass, Scale);
-
+        
+        // TODO, ЭТО НУЖНО???????? \/ \/ \/ \/
         if(LockRotationPitch){ Inertia.InverseInertiaTensor.XX = 0; Inertia.InverseInertiaTensor.YX = 0; Inertia.InverseInertiaTensor.ZX = 0; }
         if(LockRotationYaw  ){ Inertia.InverseInertiaTensor.YY = 0; Inertia.InverseInertiaTensor.YX = 0; Inertia.InverseInertiaTensor.ZY = 0; }
         if(LockRotationRoll ){ Inertia.InverseInertiaTensor.ZZ = 0; Inertia.InverseInertiaTensor.ZX = 0; Inertia.InverseInertiaTensor.ZY = 0; }
-
-        if(LockPositionX && LockPositionY && LockPositionZ){
-            Inertia.InverseMass = 0;
-        }
         
         // todo, нейронка говорит складывать инерции с учётом смещения по теореме Штейнера
         return Inertia;
@@ -155,31 +161,32 @@ public class PhysicObject : IDisposable{
         __UpdateActivity(GetBody());
     }
 
-    public void __ApplyPositionLocks(){
+    public void __SyncLocks(){
         if(!CanBody){ return; }
-        if(!LockPositionX && !LockPositionY && !LockPositionZ){ return; }
-
-        BodyReference Body = GetBody();
-        Vector3 Velocity = Body.Velocity.Linear;
-        if(LockPositionX){ Velocity.X = 0; }
-        if(LockPositionY){ Velocity.Y = 0; }
-        if(LockPositionZ){ Velocity.Z = 0; }
-        Body.Velocity.Linear = Velocity;
+        int H = __BHandle!.Value.Value;
+        Owner!.__SetBodyLock(H, 0, LockPositionX);
+        Owner!.__SetBodyLock(H, 1, LockPositionY);
+        Owner!.__SetBodyLock(H, 2, LockPositionZ);
+        Owner!.__SetBodyLock(H, 3, LockRotationPitch);
+        Owner!.__SetBodyLock(H, 4, LockRotationYaw);
+        Owner!.__SetBodyLock(H, 5, LockRotationRoll);
+        
+        __UpdateInertia();
     }
 
     public void __Update(){
         if(!CanBody){ return; }
         
-        __ApplyPositionLocks();
+        // todo, а оно нахрен нужно теперь?
     }
     
-    public BodyReference   GetBody  () => Owner.World.Bodies [__BHandle!.Value];
-    public StaticReference GetStatic() => Owner.World.Statics[__SHandle!.Value];
+    public BodyReference   GetBody  () => Owner!.World.Bodies [__BHandle!.Value];
+    public StaticReference GetStatic() => Owner!.World.Statics[__SHandle!.Value];
 
     public RigidPose GetPose(){
         if(IsBody  ){ return GetBody  ().Pose; }
         if(IsStatic){ return GetStatic().Pose; }
-        return new RigidPose(__LastPosition, __LastRotation);
+        return new RigidPose(__Position, __Rotation);
     }
     
     public void SetPose(RigidPose Pose){
@@ -188,12 +195,12 @@ public class PhysicObject : IDisposable{
             if(IsStatic){ GetStatic().Pose = Pose; }
         }
 
-        __LastPosition = Pose.Position;
-        __LastRotation = Pose.Orientation;
+        __Position = Pose.Position;
+        __Rotation = Pose.Orientation;
     }
 
     public void __RemoveBodyAndStatic(){
-        Owner.UnregisterObject(this);
+        Owner!.UnregisterObject(this);
         
         if(__BHandle.HasValue){ Owner.World.Bodies .Remove(__BHandle.Value); __BHandle = null; }
         if(__SHandle.HasValue){ Owner.World.Statics.Remove(__SHandle.Value); __SHandle = null; }
@@ -205,30 +212,32 @@ public class PhysicObject : IDisposable{
     }
     
     public void Dispose(){
-        foreach(ColliderEntry Entry in __Colliders){
-            Owner.World.Shapes.Remove(Entry.Index);
+        if(InWorld){
+            foreach(ColliderEntry Entry in __Colliders){
+                Owner!.World.Shapes.Remove(Entry.Index);
+            }
+            __RemoveBodyAndStatic();
         }
     
         __Colliders.Clear();
-        __RemoveBodyAndStatic();
     }
     
     // ----------------------------------------------------------------------
 
     public void Impulse(Vector3F Impulse, Vector3F WorldOffset = default){
-        if(CanBody){ GetBody().ApplyImpulse(Impulse, WorldOffset); }
+        if(InWorld && CanBody){ GetBody().ApplyImpulse(Impulse, WorldOffset); }
     }
     
     public void ImpulseLinear(Vector3F Impulse){
-        if(CanBody){ GetBody().ApplyLinearImpulse(Impulse); }
+        if(InWorld && CanBody){ GetBody().ApplyLinearImpulse(Impulse); }
     }
     
     public void ImpulseAngular(Vector3F Impulse){
-        if(CanBody){ GetBody().ApplyAngularImpulse(Impulse); }
+        if(InWorld && CanBody){ GetBody().ApplyAngularImpulse(Impulse); }
     }
 
     public Vector3F GetVelocityAtPoint(Vector3F WorldPoint = default){
-        if(!CanBody){ return Vector3F.Zero; }
+        if(!InWorld || !CanBody){ return Vector3F.Zero; }
         BodyReference Body = GetBody();
         Vector3 Offset = (Vector3)WorldPoint - Body.Pose.Position;
         return Body.Velocity.Linear + Vector3.Cross(Body.Velocity.Angular, Offset);
@@ -239,7 +248,7 @@ public class PhysicObject : IDisposable{
         get => __Type;
         set{
             if(__Type == value){ return; } __Type = value;
-            __Rebuild();
+            if(InWorld){ __Rebuild(); }
         }
     }
 
@@ -249,7 +258,7 @@ public class PhysicObject : IDisposable{
         set{
             if(__Mass == value){ return; } __Mass = value;
             if(__Mass < 0.0001f){ __Mass = 0.0001f; }
-            __UpdateInertia();
+            if(InWorld){ __UpdateInertia(); }
         }
     }
 
@@ -258,19 +267,19 @@ public class PhysicObject : IDisposable{
         get => __AlwaysAwake;
         set{
             if(__AlwaysAwake == value){ return; } __AlwaysAwake = value;
-            __UpdateActivity();
+            if(InWorld){ __UpdateActivity(); }
         }
     }
 
     public bool __IsAwake(BodyReference Body) => Body.Awake;
-    public bool IsAwake => CanBody && __IsAwake(GetBody());
+    public bool IsAwake => InWorld && CanBody && __IsAwake(GetBody());
     public bool IsSleep => !IsAwake;
     
     public void Awake(BodyReference Body){ Body.Awake = true; }
-    public void Awake(){ if(!CanBody){ return; } Awake(GetBody()); }
+    public void Awake(){ if(!InWorld || !CanBody){ return; } Awake(GetBody()); }
     
     public void Sleep(BodyReference Body){ Body.Awake = false; }
-    public void Sleep(){ if(!CanBody){ return; } Sleep(GetBody()); }
+    public void Sleep(){ if(!InWorld || !CanBody){ return; } Sleep(GetBody()); }
     
     private Vector3 __Scale = Vector3.One;
     public Vector3F Scale{
@@ -282,47 +291,71 @@ public class PhysicObject : IDisposable{
             if(__Scale.Y < 0.0001f){ __Scale.Y = 0.0001f; }
             if(__Scale.Z < 0.0001f){ __Scale.Z = 0.0001f; }
 
-            for(int i = 0; i < __Colliders.Count; i++){
-                Owner.World.Shapes.Remove(__Colliders[i].Index);
-                ColliderEntry Entry = __Colliders[i];
-                Entry.Index = Entry.Source.__AddToPhysic(Owner.World.Shapes, Owner.Pool, __Scale);
-                Entry.Inertia = Entry.Source.__ComputeInertia(Mass, __Scale);
-                __Colliders[i] = Entry;
-            }
+            if(InWorld){
+                for(int i = 0; i < __Colliders.Count; i++){
+                    Owner!.World.Shapes.Remove(__Colliders[i].Index);
+                    ColliderEntry Entry = __Colliders[i];
+                    Entry.Index = Entry.Source.__AddToPhysic(Owner.World.Shapes, Owner.Pool, __Scale);
+                    Entry.Inertia = Entry.Source.__ComputeInertia(Mass, __Scale);
+                    __Colliders[i] = Entry;
+                }
             
-            __Rebuild();
-        }
-    }
-    
-    public Vector3F Position{
-        get => GetPose().Position;
-        set{
-            RigidPose Pose = GetPose();
-            Pose.Position = value;
-            SetPose(Pose);
-        }
-    }
-    
-    public QuaternionF Rotation{
-        get => GetPose().Orientation;
-        set{
-            RigidPose Pose = GetPose();
-            Pose.Orientation = value;
-            SetPose(Pose);
+                __Rebuild();
+            }
         }
     }
 
-    public Vector3F VelocityLinear{
-        get => CanBody ? GetBody().Velocity.Linear : Vector3F.Zero;
+    private Vector3F __Position;
+    public Vector3F Position{
+        get => GetPose().Position;
         set{
-            if(CanBody){ GetBody().Velocity.Linear = value; }
+            __Position = value;
+            if(Active && InWorld){
+                RigidPose Pose = GetPose();
+                Pose.Position = value;
+                SetPose(Pose);
+                Awake();
+            }
         }
     }
     
-    public Vector3F VelocityAngular{
-        get => CanBody ? GetBody().Velocity.Angular : Vector3F.Zero;
+    private QuaternionF __Rotation = QuaternionF.Identity;
+    public QuaternionF Rotation{
+        get => GetPose().Orientation;
         set{
-            if(CanBody){ GetBody().Velocity.Angular = value; }
+            __Rotation = value;
+            if(Active && InWorld){
+                RigidPose Pose = GetPose();
+                Pose.Orientation = value;
+                SetPose(Pose);
+                Awake();
+            }
+        }
+    }
+
+    private Vector3F __VelocityLinear;
+    public Vector3F VelocityLinear{
+        get => CanBody ? GetBody().Velocity.Linear : __VelocityLinear;
+        set{
+            __VelocityLinear = value;
+            if(CanBody){
+                BodyReference Body = GetBody();
+                Body.Velocity.Linear = value;
+                Awake(Body);
+            }
+        }
+    }
+
+    private Vector3F __VelocityAngular;
+    public Vector3F VelocityAngular{
+        get => CanBody ? GetBody().Velocity.Angular : __VelocityAngular;
+        set{
+            __VelocityAngular = value;
+            if(CanBody){
+                BodyReference Body = GetBody();
+                Body.Velocity.Angular = value;
+                Awake(Body);
+            }
         }
     }
 
@@ -337,7 +370,7 @@ public class PhysicObject : IDisposable{
         get => __DampingLinear;
         set{
             if(__DampingLinear == value){ return; } __DampingLinear = value;
-            __UpdateInertia();
+            if(InWorld){ __UpdateInertia(); }
         }
     }
     
@@ -346,7 +379,7 @@ public class PhysicObject : IDisposable{
         get => __DampingAngular;
         set{
             if(__DampingAngular == value){ return; } __DampingAngular = value;
-            __UpdateInertia();
+            if(InWorld){ __UpdateInertia(); }
         }
     }
 
@@ -354,25 +387,24 @@ public class PhysicObject : IDisposable{
     public bool Active{
         get => __Active;
         set{
-            if(__Active == value){ return; } __Active = value;
+            if(__Active == value){ return; }
 
-            if(__Active){
-                __Rebuild();
-            }else{
+            if(__Active && InWorld){
                 RigidPose Pose = GetPose();
-                __LastPosition = Pose.Position;
-                __LastRotation = Pose.Orientation;
+                __Position = Pose.Position;
+                __Rotation = Pose.Orientation;
 
                 if(IsBody){
                     BodyReference Body = GetBody();
-                    __LastVelocityLinear  = Body.Velocity.Linear;
-                    __LastVelocityAngular = Body.Velocity.Angular;
-                }else{
-                    __LastVelocityLinear  = default;
-                    __LastVelocityAngular = default;
+                    __VelocityLinear  = Body.Velocity.Linear;
+                    __VelocityAngular = Body.Velocity.Angular;
                 }
-                
-                __RemoveBodyAndStatic();
+            }
+            
+            __Active = value;
+
+            if(InWorld){
+                if(__Active){ __Rebuild(); }else{ __RemoveBodyAndStatic(); }
             }
         }
     }
@@ -382,7 +414,7 @@ public class PhysicObject : IDisposable{
         get => __LockPositionX;
         set{
             if(__LockPositionX == value){ return; } __LockPositionX = value;
-            __UpdateInertia();
+            if(InWorld){ __SyncLocks(); }
         }
     }
     
@@ -391,7 +423,7 @@ public class PhysicObject : IDisposable{
         get => __LockPositionY;
         set{
             if(__LockPositionY == value){ return; } __LockPositionY = value;
-            __UpdateInertia();
+            if(InWorld){ __SyncLocks(); }
         }
     }
     
@@ -400,7 +432,7 @@ public class PhysicObject : IDisposable{
         get => __LockPositionZ;
         set{
             if(__LockPositionZ == value){ return; } __LockPositionZ = value;
-            __UpdateInertia();
+            if(InWorld){ __SyncLocks(); }
         }
     }
     
@@ -409,7 +441,7 @@ public class PhysicObject : IDisposable{
         get => __LockRotationPitch;
         set{
             if(__LockRotationPitch == value){ return; } __LockRotationPitch = value;
-            __UpdateInertia();
+            if(InWorld){ __SyncLocks(); }
         }
     }
     
@@ -418,7 +450,7 @@ public class PhysicObject : IDisposable{
         get => __LockRotationYaw;
         set{
             if(__LockRotationYaw == value){ return; } __LockRotationYaw = value;
-            __UpdateInertia();
+            if(InWorld){ __SyncLocks(); }
         }
     }
     
@@ -427,7 +459,7 @@ public class PhysicObject : IDisposable{
         get => __LockRotationRoll;
         set{
             if(__LockRotationRoll == value){ return; } __LockRotationRoll = value;
-            __UpdateInertia();
+            if(InWorld){ __SyncLocks(); }
         }
     }
     

@@ -101,9 +101,19 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         );
     }
 
-    public Vector3F Translation{
+    public Vector3F Position{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new Vector3F(__Column4.GetElement(0), __Column4.GetElement(1), __Column4.GetElement(2));
+    }
+    
+    public Vector3F Rotation{
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => WL.Math.MatrixToRotation(this);
+    }
+    
+    public Vector3F Scale{
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => WL.Math.MatrixToScale(this);
     }
     
     public static Matrix4F Identity => new Matrix4F(Vector128.Create(1f, 0, 0, 0), Vector128.Create(0, 1f, 0, 0), Vector128.Create(0, 0, 1f, 0), Vector128.Create(0, 0, 0, 1f));
@@ -140,7 +150,7 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
         );
     }
 
-    public static Matrix4F CreateTranslation(Vector3F Position) => new Matrix4F(
+    public static Matrix4F CreatePosition(Vector3F Position) => new Matrix4F(
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
