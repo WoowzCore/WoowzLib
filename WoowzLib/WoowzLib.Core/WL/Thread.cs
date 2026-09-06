@@ -25,4 +25,19 @@ public struct Thread{
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool LimitByFPS(double TargetFPS, ref DeltaTimeInfo? DTI) => LimitByDeltaTime(DeltaTimeInfo.FPSToDT(TargetFPS), ref DTI);
+
+    public static double GetRawDT(ref long LastTicks){
+        long CurrentTicks = System.Diagnostics.Stopwatch.GetTimestamp();
+        double DT = (double)(CurrentTicks - LastTicks) / System.Diagnostics.Stopwatch.Frequency;
+        LastTicks = CurrentTicks;
+        return DT;
+    }
+
+    public static bool NeedFixedUpdate(ref double Accumulator, double Step){
+        if(Accumulator >= Step){
+            Accumulator -= Step;
+            return true;
+        }
+        return false;
+    }
 }

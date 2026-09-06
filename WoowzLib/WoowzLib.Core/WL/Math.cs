@@ -52,6 +52,52 @@ public struct Math{
 
         return new Vector3F(Pitch, Yaw, Roll);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static QuaternionF SlerpSafeQF(QuaternionF A, QuaternionF B, float T){
+        T = ClampF(T, 0, 1);
+        
+        float CosTheta = A.X*B.X + A.Y*B.Y + A.Z*B.Z + A.W*B.W;
+
+        if(CosTheta < 0){
+            B = new QuaternionF(-B.X, -B.Y, -B.Z, -B.W);
+            CosTheta = -CosTheta;
+        }
+
+        if(CosTheta > 0.9995f){
+            return new QuaternionF(
+                LerpF(A.X, B.X, T),
+                LerpF(A.Y, B.Y, T),
+                LerpF(A.Z, B.Z, T),
+                LerpF(A.W, B.W, T)
+            ).Normalized;
+        }
+
+        float Angle = MathF.Acos(CosTheta);
+        float SinTheta = MathF.Sin(Angle);
+
+        float T1 = MathF.Sin((1 - T) * Angle) / SinTheta;
+        float T2 = MathF.Sin(T * Angle) / SinTheta;
+
+        return new QuaternionF(
+            A.X*T1 + B.X*T2,
+            A.Y*T1 + B.Y*T2,
+            A.Z*T1 + B.Z*T2,
+            A.W*T1 + B.W*T2
+        );
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3F SlerpSafeV3F(Vector3F A, Vector3F B, float T){
+        T = ClampF(T, 0, 1);
+        float Dot = Vector3F.Dot(A, B);
+        Dot = ClampF(Dot, -1, 1);
+
+        float Theta = MathF.Acos(Dot);
+        Vector3F RelativeVector = (B - A * Dot).Normalized;
+
+        return (A * MathF.Cos(Theta)) + (RelativeVector * MathF.Sin(Theta));
+    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Expand3D(ref Vector3F Min, ref Vector3F Max, Vector3F Position){
