@@ -27,7 +27,7 @@ public static class Bootstrap{
             
             return 0;
         }catch(Exception e){
-            WL.Logger.Fatal($"Произошла ошибка при работе CSVersionUpdater!\n{e.Message}\n{e.StackTrace}");
+            WL.Logger.Fatal("Произошла ошибка при работе CSVersionUpdater!", e);
             return 1;
         }
     }
@@ -66,7 +66,7 @@ public static class Bootstrap{
             
             return false;
         }catch(Exception e){
-            WL.Logger.Error($"Ошибка при проверке GIT: {e.Message}\n{e.StackTrace}");
+            WL.Logger.Error("Ошибка при проверке GIT", e);
             return true;
         }
     }

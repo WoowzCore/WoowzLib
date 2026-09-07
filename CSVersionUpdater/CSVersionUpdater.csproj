@@ -10,8 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\WoowzLib\WoowzLib.Core\WoowzLib.Core.csproj" />
-        <ProjectReference Include="..\..\WoowzLib\WoowzLib.Logger\WoowzLib.Logger.csproj" />
+        <ProjectReference Include="..\WoowzLib\WoowzLib.Core\WoowzLib.Core.csproj" />
     </ItemGroup>
     
 </Project>

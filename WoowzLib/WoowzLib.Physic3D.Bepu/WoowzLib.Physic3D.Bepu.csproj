@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Version>0.0.46</Version>
+        <Version>0.0.48</Version>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <Exec Command="&quot;$(ProjectDir)..\..\CSVersionUpdater\CSVersionUpdater\bin\Debug\net8.0\CSVersionUpdater.exe&quot; &quot;$(MSBuildProjectFullPath)&quot;" />
+        <Exec Command="&quot;$(ProjectDir)..\..\CSVersionUpdater\bin\Debug\net8.0\CSVersionUpdater.exe&quot; &quot;$(MSBuildProjectFullPath)&quot;" />
     </Target>
 
 </Project>

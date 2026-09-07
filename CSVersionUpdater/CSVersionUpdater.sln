@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVersionUpdater", "CSVersionUpdater\CSVersionUpdater.csproj", "{6722F39E-8FE7-4D7D-AE61-4BA9507B1DCD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVersionUpdater", "CSVersionUpdater.csproj", "{6722F39E-8FE7-4D7D-AE61-4BA9507B1DCD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
