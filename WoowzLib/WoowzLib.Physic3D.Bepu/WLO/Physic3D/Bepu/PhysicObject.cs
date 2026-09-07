@@ -252,12 +252,14 @@ public class PhysicObject : IDisposable{
         }
     }
 
-    private float __Mass = 1;
-    public float Mass{
-        get => __Mass;
+    public float Mass => Density * (Scale.X * Scale.Y * Scale.Z);
+    
+    private float __Density = 1;
+    public float Density{
+        get => __Density;
         set{
-            if(__Mass == value){ return; } __Mass = value;
-            if(__Mass < 0.0001f){ __Mass = 0.0001f; }
+            if(__Density == value){ return; } __Density = value;
+            if(__Density < 0.0001f){ __Density = 0.0001f; }
             if(InWorld){ __UpdateInertia(); }
         }
     }
