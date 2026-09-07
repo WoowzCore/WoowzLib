@@ -4,9 +4,10 @@ using WLO.Math;
 namespace WL;
 
 public struct Math{
-    public const float PiF      = System.MathF.PI;
-    public const float DegToRad = PiF / 180;
-    public const float RadToDeg = 180 / PiF;
+    public const float PiF        = System.MathF.PI;
+    public const float DegToRad   = PiF / 180;
+    public const float RadToDeg   = 180 / PiF;
+    public const float Inverse255 = 1f / 255;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ClampF(float Value, float Min, float Max) => Value < Min ? Min : (Value > Max ? Max : Value);

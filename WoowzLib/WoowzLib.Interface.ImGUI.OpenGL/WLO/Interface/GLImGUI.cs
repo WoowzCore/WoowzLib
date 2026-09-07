@@ -103,7 +103,7 @@ void main() {
     private int __Uniform_Projection;
     private int __Uniform_Texture;
     
-    protected override void OnRender(ImDrawDataPtr DrawData){
+    protected override void OnDraw(ImDrawDataPtr DrawData){
         unsafe{
             if(DrawData.NativePtr == null || DrawData.CmdListsCount == 0){ return; }
 

@@ -115,7 +115,37 @@ public abstract class ImGUI : WLI.Engine{
         return false;
     }
     
+    
+    
+    public bool DragDropTarget(Action Content){
+        if(API.BeginDragDropTarget()){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui dragdroptarget error", e);
+            }
+            API.EndDragDropTarget();
+            return true;
+        }
+        return false;
+    }
+    
 
+    
+    public bool Combo(string Label, string Preview, Action Content){
+        if(API.BeginCombo(Label, Preview)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui combo [{Label}] error", e);
+            }
+            API.EndCombo();
+            return true;
+        }
+        return false;
+    }
+    
+    
 
     public bool Popup(string ID, ImGuiWindowFlags Flags, Action Content){
         if(API.BeginPopup(ID, Flags)){
@@ -252,51 +282,52 @@ public abstract class ImGUI : WLI.Engine{
         
         IO.AddKeyEvent(Key switch{
             Keyboard.Key.Unknown => ImGuiKey.None,
-            Keyboard.Key.A => ImGuiKey.A,
-            Keyboard.Key.B => ImGuiKey.B,
-            Keyboard.Key.C => ImGuiKey.C,
-            Keyboard.Key.D => ImGuiKey.D,
-            Keyboard.Key.E => ImGuiKey.E,
-            Keyboard.Key.F => ImGuiKey.F,
-            Keyboard.Key.G => ImGuiKey.G,
-            Keyboard.Key.H => ImGuiKey.H,
-            Keyboard.Key.I => ImGuiKey.I,
-            Keyboard.Key.J => ImGuiKey.J,
-            Keyboard.Key.K => ImGuiKey.K,
-            Keyboard.Key.L => ImGuiKey.L,
-            Keyboard.Key.M => ImGuiKey.M,
-            Keyboard.Key.N => ImGuiKey.N,
-            Keyboard.Key.O => ImGuiKey.O,
-            Keyboard.Key.P => ImGuiKey.P,
-            Keyboard.Key.Q => ImGuiKey.Q,
-            Keyboard.Key.R => ImGuiKey.R,
-            Keyboard.Key.S => ImGuiKey.S,
-            Keyboard.Key.T => ImGuiKey.T,
-            Keyboard.Key.U => ImGuiKey.U,
-            Keyboard.Key.V => ImGuiKey.V,
-            Keyboard.Key.W => ImGuiKey.W,
-            Keyboard.Key.X => ImGuiKey.X,
-            Keyboard.Key.Y => ImGuiKey.Y,
-            Keyboard.Key.Z => ImGuiKey.Z,
-            Keyboard.Key.D0 => ImGuiKey._0,
-            Keyboard.Key.D1 => ImGuiKey._1,
-            Keyboard.Key.D2 => ImGuiKey._2,
-            Keyboard.Key.D3 => ImGuiKey._3,
-            Keyboard.Key.D4 => ImGuiKey._4,
-            Keyboard.Key.D5 => ImGuiKey._5,
-            Keyboard.Key.D6 => ImGuiKey._6,
-            Keyboard.Key.D7 => ImGuiKey._7,
-            Keyboard.Key.D8 => ImGuiKey._8,
-            Keyboard.Key.D9 => ImGuiKey._9,
-            Keyboard.Key.F1 => ImGuiKey.F1,
-            Keyboard.Key.F2 => ImGuiKey.F2,
-            Keyboard.Key.F3 => ImGuiKey.F3,
-            Keyboard.Key.F4 => ImGuiKey.F4,
-            Keyboard.Key.F5 => ImGuiKey.F5,
-            Keyboard.Key.F6 => ImGuiKey.F6,
-            Keyboard.Key.F7 => ImGuiKey.F7,
-            Keyboard.Key.F8 => ImGuiKey.F8,
-            Keyboard.Key.F9 => ImGuiKey.F9,
+            
+            Keyboard.Key.A   => ImGuiKey.A,
+            Keyboard.Key.B   => ImGuiKey.B,
+            Keyboard.Key.C   => ImGuiKey.C,
+            Keyboard.Key.D   => ImGuiKey.D,
+            Keyboard.Key.E   => ImGuiKey.E,
+            Keyboard.Key.F   => ImGuiKey.F,
+            Keyboard.Key.G   => ImGuiKey.G,
+            Keyboard.Key.H   => ImGuiKey.H,
+            Keyboard.Key.I   => ImGuiKey.I,
+            Keyboard.Key.J   => ImGuiKey.J,
+            Keyboard.Key.K   => ImGuiKey.K,
+            Keyboard.Key.L   => ImGuiKey.L,
+            Keyboard.Key.M   => ImGuiKey.M,
+            Keyboard.Key.N   => ImGuiKey.N,
+            Keyboard.Key.O   => ImGuiKey.O,
+            Keyboard.Key.P   => ImGuiKey.P,
+            Keyboard.Key.Q   => ImGuiKey.Q,
+            Keyboard.Key.R   => ImGuiKey.R,
+            Keyboard.Key.S   => ImGuiKey.S,
+            Keyboard.Key.T   => ImGuiKey.T,
+            Keyboard.Key.U   => ImGuiKey.U,
+            Keyboard.Key.V   => ImGuiKey.V,
+            Keyboard.Key.W   => ImGuiKey.W,
+            Keyboard.Key.X   => ImGuiKey.X,
+            Keyboard.Key.Y   => ImGuiKey.Y,
+            Keyboard.Key.Z   => ImGuiKey.Z,
+            Keyboard.Key.D0  => ImGuiKey._0,
+            Keyboard.Key.D1  => ImGuiKey._1,
+            Keyboard.Key.D2  => ImGuiKey._2,
+            Keyboard.Key.D3  => ImGuiKey._3,
+            Keyboard.Key.D4  => ImGuiKey._4,
+            Keyboard.Key.D5  => ImGuiKey._5,
+            Keyboard.Key.D6  => ImGuiKey._6,
+            Keyboard.Key.D7  => ImGuiKey._7,
+            Keyboard.Key.D8  => ImGuiKey._8,
+            Keyboard.Key.D9  => ImGuiKey._9,
+            Keyboard.Key.F1  => ImGuiKey.F1,
+            Keyboard.Key.F2  => ImGuiKey.F2,
+            Keyboard.Key.F3  => ImGuiKey.F3,
+            Keyboard.Key.F4  => ImGuiKey.F4,
+            Keyboard.Key.F5  => ImGuiKey.F5,
+            Keyboard.Key.F6  => ImGuiKey.F6,
+            Keyboard.Key.F7  => ImGuiKey.F7,
+            Keyboard.Key.F8  => ImGuiKey.F8,
+            Keyboard.Key.F9  => ImGuiKey.F9,
             Keyboard.Key.F10 => ImGuiKey.F10,
             Keyboard.Key.F11 => ImGuiKey.F11,
             Keyboard.Key.F12 => ImGuiKey.F12,
@@ -385,20 +416,24 @@ public abstract class ImGUI : WLI.Engine{
     
     // ----------------------------------------------------------------------
     
-    public void FrameStart(float DT, Vector2I Viewport){
-        IO.DeltaTime = DT;
+    public void Build(float DT, Vector2I Viewport, Action Content){
+        IO.DeltaTime   = DT;
         IO.DisplaySize = new Vector2(Viewport.X, Viewport.Y);
         
         API.NewFrame();
-    }
-
-    public void FrameEnd(){
+        
+        try{
+            Content.Invoke();
+        }catch(Exception e){
+            WL.Logger.Error($"todo, imgui build error", e);
+        }
+        
         API.Render();
     }
 
-    public void Render(){
-        OnRender(API.GetDrawData());
+    public void Draw(){
+        OnDraw(API.GetDrawData());
     }
 
-    protected abstract void OnRender(ImDrawDataPtr DrawData);
+    protected abstract void OnDraw(ImDrawDataPtr DrawData);
 }
