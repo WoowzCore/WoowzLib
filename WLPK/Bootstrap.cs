@@ -15,7 +15,7 @@ public static class Bootstrap{
 
             Stopwatch SW = Stopwatch.StartNew();
 
-            WL.Archive.Pack(TargetFolder, OutputFile);
+            WL.IO.Pack(TargetFolder, OutputFile);
             
             SW.Stop();
 
