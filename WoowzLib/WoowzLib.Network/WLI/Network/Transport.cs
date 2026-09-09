@@ -1,7 +1,7 @@
 ﻿namespace WLI.Network;
 
 public interface Transport{
-    void StartServer(int Port);
+    bool StartServer(int Port);
     void StartClient(string Address, int Port);
     void Stop();
 

@@ -58,15 +58,18 @@ public class LiteNetLib : WLI.Network.Transport{
         __CL.NetworkReceiveEvent += (Peer, Reader, Channel, Method) => OnReceive?.Invoke(Peer.Id, Reader.GetRemainingBytes());
     }
     
-    public void StartServer(int Port){
+    public bool StartServer(int Port){
         if(!__S!.IsRunning){
             WL.Logger.Info($"[LNL] Запуск сервера на порту {Port}...");
             if(__S.Start(Port)){
                 WL.Logger.Info("[LNL] Сервер успешно запущен.");
+                return true;
             }else{
                 WL.Logger.Error("[LNL] Не удалось запустить сервер!");
+                return false;
             }
         }
+        return true;
     }
     public void StartClient(string Address, int Port){
         if(!__C!.IsRunning){
