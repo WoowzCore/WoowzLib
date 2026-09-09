@@ -178,6 +178,22 @@ public abstract class ImGUI : WLI.Engine{
     
     
     
+    public bool Table(string ID, int Columns, ImGuiTableFlags Flags, Action Content){
+        if(API.BeginTable(ID, Columns, Flags)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui table [{ID}] error", e);
+            }
+            API.EndTable();
+            return true;
+        }
+        return false;
+    }
+    public bool Table(string ID, int Columns, Action Content) => Table(ID, Columns, ImGuiTableFlags.None, Content);
+    
+    
+    
     public bool MainMenuBar(Action Content){
         if(API.BeginMainMenuBar()){
             try{
@@ -211,13 +227,11 @@ public abstract class ImGUI : WLI.Engine{
 
     public void Group(Action Content){
         API.BeginGroup();
-    
-        try{
-            Content.Invoke();
-        }catch(Exception e){
-            WL.Logger.Error($"todo, imgui group error", e);
-        }
-    
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui group error", e);
+            }
         API.EndGroup();
     }
     
@@ -225,26 +239,35 @@ public abstract class ImGUI : WLI.Engine{
     
     public void CustomID(string ID, Action Content){
         API.PushID(ID);
-    
-        try{
-            Content.Invoke();
-        }catch(Exception e){
-            WL.Logger.Error($"todo, imgui customid [{ID}] error", e);
-        }
-    
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui customid [{ID}] error", e);
+            }
         API.PopID();
     }
     public void CustomID(int ID, Action Content){
         API.PushID(ID);
-    
-        try{
-            Content.Invoke();
-        }catch(Exception e){
-            WL.Logger.Error($"todo, imgui customid [{ID}] error", e);
-        }
-    
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui customid [{ID}] error", e);
+            }
         API.PopID();
     }
+    
+    
+    
+    public void Disabled(bool Disabled, Action Content){
+        if(Disabled){ API.BeginDisabled(); }
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui disabled error", e);
+            }
+        if(Disabled){ API.EndDisabled(); }
+    }
+    public void Disabled(Action Content) => Disabled(true, Content);
     
     // ----------------------------------------------------------------------
 
