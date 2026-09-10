@@ -14,6 +14,7 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
         this.X = X;
         this.Y = Y;
     }
+    public Vector2F(float XY) : this(XY, XY){}
 
     public Vector3F To3F() => new Vector3F(X, Y, 0);
     
@@ -71,6 +72,15 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
             float.TryParse(Parts[1], out Y);
         }
     }
+    
+    // ----------------------------------------------------------------------
+
+    public static Vector2F Zero => new Vector2F(0);
+    public static Vector2F One => new Vector2F(1);
+    public static Vector2F Right => new Vector2F(1, 0);
+    public static Vector2F Up => new Vector2F(0, 1);
+    public static Vector2F MaxValue => new Vector2F(float.MaxValue);
+    public static Vector2F MinValue => new Vector2F(float.MinValue);
     
     // ----------------------------------------------------------------------
 

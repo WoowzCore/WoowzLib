@@ -38,7 +38,11 @@ public class LiteNetLib : WLI.Network.Transport{
             WL.Logger.Info($"[LNL-Server] Клиент {Peer.Id} отключился. Причина: {Info.Reason}");
             OnDisconnected?.Invoke(Peer.Id);
         };
-        __SL.NetworkReceiveEvent += (Peer, Reader, Channel, Method) => OnReceive?.Invoke(Peer.Id, Reader.GetRemainingBytes());
+        __SL.NetworkReceiveEvent += (Peer, Reader, Channel, Method) => {
+            PacketsReceived++;
+            BytesReceived += (ulong)Reader.AvailableBytes;
+            OnReceive?.Invoke(Peer.Id, Reader.GetRemainingBytes());
+        };
         
         // ----------------------------------------------------------------------
 
@@ -55,7 +59,11 @@ public class LiteNetLib : WLI.Network.Transport{
             WL.Logger.Warn($"[LNL] Отключено. Причина: {Info.Reason}");
             OnDisconnected?.Invoke(Peer.Id);
         };
-        __CL.NetworkReceiveEvent += (Peer, Reader, Channel, Method) => OnReceive?.Invoke(Peer.Id, Reader.GetRemainingBytes());
+        __CL.NetworkReceiveEvent += (Peer, Reader, Channel, Method) => {
+            PacketsReceived++;
+            BytesReceived += (ulong)Reader.AvailableBytes;
+            OnReceive?.Invoke(Peer.Id, Reader.GetRemainingBytes());
+        };
     }
     
     public bool StartServer(int Port){
@@ -93,6 +101,9 @@ public class LiteNetLib : WLI.Network.Transport{
     }
     
     public void Send(byte[] Data, int TargetID = Transport.ServerID, bool Matter = false){
+        PacketsSent++;
+        BytesSent += (ulong)Data.Length;
+        
         DeliveryMethod Method = Matter ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Sequenced;
 
         if(TargetID == Transport.ServerID){
@@ -108,6 +119,20 @@ public class LiteNetLib : WLI.Network.Transport{
     public Action<int, byte[]> OnReceive{ get; set; } = null!;
     public Action<int        > OnConnected{ get; set; } = null!;
     public Action<int        > OnDisconnected{ get; set; } = null!;
+    
+    public ulong PacketsSent    { get; private set; }
+    public ulong PacketsReceived{ get; private set; }
+    public ulong BytesSent      { get; private set; }
+    public ulong BytesReceived  { get; private set; }
+
+    public void Disconnect(int Peer){
+        if(__S != null && __S.IsRunning){
+            if(__S.GetPeerById(Peer) is NetPeer Peer__){
+                __S.DisconnectPeer(Peer__);
+                WL.Logger.Info($"[LNL-Server] Peer {Peer} принудительно отключен.");
+            }
+        }
+    }
     
     // ----------------------------------------------------------------------
     

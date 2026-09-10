@@ -52,7 +52,7 @@ public struct Vector2I : IEquatable<Vector2I>, WLI.Packable{
     // ----------------------------------------------------------------------
 
     public float Aspect => (float)X / Y;
-
+    
     // ----------------------------------------------------------------------
     
     public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{

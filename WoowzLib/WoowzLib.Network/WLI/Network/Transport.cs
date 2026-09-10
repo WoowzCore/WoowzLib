@@ -14,4 +14,11 @@ public interface Transport{
     Action<int, byte[]> OnReceive{ get; set; }
     Action<int        > OnConnected{ get; set; }
     Action<int        > OnDisconnected{ get; set; }
+
+    ulong PacketsSent    { get; }
+    ulong PacketsReceived{ get; }
+    ulong BytesSent      { get; }
+    ulong BytesReceived  { get; }
+
+    void Disconnect(int Peer);
 }

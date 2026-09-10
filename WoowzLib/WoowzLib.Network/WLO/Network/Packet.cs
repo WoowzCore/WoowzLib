@@ -12,6 +12,11 @@ public struct Packet{
         return Result;
     }
 
+    public Packet(byte Type){
+        this.Type = Type;
+             Data = [];
+    }
+    
     public Packet(byte Type, byte[] Data){
         this.Type = Type;
         this.Data = Data;

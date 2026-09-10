@@ -63,6 +63,7 @@ public abstract class ImGUI : WLI.Engine{
     // ----------------------------------------------------------------------
 
     public bool Window(string Title, ImGuiWindowFlags Flags, ref bool Open, Action Content){
+        if(!Open){ return false; }
         bool Work = false;
         if(API.Begin(Title, ref Open, Flags)){
             try{
@@ -77,7 +78,7 @@ public abstract class ImGUI : WLI.Engine{
     }
     public bool Window(string Title, ref bool Open, Action Content) => Window(Title, ImGuiWindowFlags.None, ref Open, Content);
     public bool Window(string Title, ImGuiWindowFlags Flags, Action Content){
-        bool Open = false;
+        bool Open = true;
         return Window(Title, Flags, ref Open, Content);
     }
     public bool Window(string Title, Action Content) => Window(Title, ImGuiWindowFlags.None, Content);
@@ -99,6 +100,7 @@ public abstract class ImGUI : WLI.Engine{
     }
     public bool Child(string ID, Vector2F Size, ImGuiChildFlags ChildFlags, Action Content) => Child(ID, Size, ImGuiChildFlags.None, ImGuiWindowFlags.None, Content);
     public bool Child(string ID, Vector2F Size, Action Content) => Child(ID, Size, ImGuiChildFlags.None, Content);
+    public bool Child(string ID, Action Content) => Child(ID, Vector2F.Zero, ImGuiChildFlags.None, Content);
     
     
     
@@ -175,6 +177,34 @@ public abstract class ImGUI : WLI.Engine{
         }
         return false;
     }
+    public bool PopupContextItem(Action Content){
+        if(API.BeginPopupContextItem()){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui popupcontextitem error", e);
+            }
+            API.EndPopup();
+            return true;
+        }
+        return false;
+    }
+    
+    
+    
+    public bool PopupContextWindow(string ID, ImGuiPopupFlags Flags, Action Content){
+        if(API.BeginPopupContextWindow(ID, Flags)){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui popupcontextwindow [{ID}] error", e);
+            }
+            API.EndPopup();
+            return true;
+        }
+        return false;
+    }
+    public bool PopupContextWindow(string ID, Action Content) => PopupContextWindow(ID, ImGuiPopupFlags.None, Content);
     
     
     
