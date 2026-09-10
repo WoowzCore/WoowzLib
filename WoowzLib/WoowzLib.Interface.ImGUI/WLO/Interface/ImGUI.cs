@@ -16,7 +16,8 @@ public abstract class ImGUI : WLI.Engine{
         try{
             if(IsStarted){ throw new ExceptionWL("ImGUI уже и так был запущен!"); }
             
-            API.CreateContext();
+            IntPtr Context = API.CreateContext();
+            API.SetCurrentContext(Context); // todo, добавил из-за бага, но проблема не в нём была, хз убирать или оставить
             IO = API.GetIO();
 
             unsafe{
@@ -62,10 +63,27 @@ public abstract class ImGUI : WLI.Engine{
     
     // ----------------------------------------------------------------------
 
-    public bool Window(string Title, ImGuiWindowFlags Flags, ref bool Open, Action Content){
+    public bool Window(string Title, ref bool Open, ImGuiWindowFlags Flags, Action Content){
         if(!Open){ return false; }
+        if(string.IsNullOrWhiteSpace(Title)){ throw new ExceptionWL("todo, window name empty"); }
         bool Work = false;
-        if(API.Begin(Title, ref Open, Flags)){
+        bool Shown = API.Begin(Title, ref Open, Flags);
+        if(Shown && Open){
+            try{
+                Content.Invoke();
+            }catch(Exception e){
+                WL.Logger.Error($"todo, imgui window (has close button) [{Title}] error", e);
+            }
+            Work = true;
+        }
+        API.End();
+        return Work;
+    }
+    public bool Window(string Title, ref bool Open, Action Content) => Window(Title, ref Open, ImGuiWindowFlags.None, Content);
+    public bool Window(string Title, ImGuiWindowFlags Flags, Action Content){
+        if(string.IsNullOrWhiteSpace(Title)){ throw new ExceptionWL("todo, window name empty"); }
+        bool Work = false;
+        if(API.Begin(Title, Flags)){
             try{
                 Content.Invoke();
             }catch(Exception e){
@@ -75,11 +93,6 @@ public abstract class ImGUI : WLI.Engine{
         }
         API.End();
         return Work;
-    }
-    public bool Window(string Title, ref bool Open, Action Content) => Window(Title, ImGuiWindowFlags.None, ref Open, Content);
-    public bool Window(string Title, ImGuiWindowFlags Flags, Action Content){
-        bool Open = true;
-        return Window(Title, Flags, ref Open, Content);
     }
     public bool Window(string Title, Action Content) => Window(Title, ImGuiWindowFlags.None, Content);
 
