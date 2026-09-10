@@ -13,6 +13,8 @@ public class LiteNetLib : WLI.Network.Transport{
     
     private NetPeer? __ServerPeer;
     private const string ConnectionKey = "WoowzLib.Network";
+
+    public int ServerPort => __S?.LocalPort ?? 0;
     
     public LiteNetLib(){
         NetDebug.Logger = new InternalLogger();
