@@ -1,12 +1,51 @@
 ﻿using System.Globalization;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace WL;
 
+// TODO, насрал кода, нужно норм сделать тут всё
+
 public struct String{
+    /// todo, ОБЪЕДЕНЯЕТ ЗНАЧЕНИЯ В СТРОКУ, РАЗДЕЛЯЯ ИХ МЕЖДУ СОБОЙ SEPARATOR, (["a","b","c"], ", ") => "a, b, c"
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string Join<T>(IEnumerable<T> Items, string Separator = ", ") => string.Join(Separator, Items);
+
+    /// todo, ОБЪЕДЕНЯЕТ ЗНАЧЕНИЯ В СТРОКУ, (["a","b","c"]) => "abc"
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string Concat<T>(IEnumerable<T> Items) => string.Concat(Items);
+
+    /// todo, ПОВТОРЯЕТ СТРОКУ, ("a", 5, "+") => "a+a+a+a+a"
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string Repeat(string Value, int Count, string Separator = "") => Join(Enumerable.Repeat(Value, Count), Separator);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string[] FormatAll<T>(IEnumerable<T> Items, string Format) => Items.Select(X => string.Format(Format, X)).ToArray();
+
+    /// todo, ДОБАВЛЯЕТ SEPARATOR МЕЖДУ ЭЛЕМЕНТАМИ
+    public static T[] InterLeave<T>(IEnumerable<T> Items, T Separator){
+        List<T> Result = [];
+        foreach(T Item in Items){
+            if(Result.Count > 0){ Result.Add(Separator); }
+            Result.Add(Item);
+        }
+        return Result.ToArray();
+    }
+
+    /// todo, ОБЪЕДЕНЯЕТ 2 МАССИВА (["a","b"], ["1","2"]) => ["a","1","b","2"]
+    public static string[] ZipPairwise(IEnumerable<string> First, IEnumerable<string> Second) => First.Zip(Second, (A, B) => new[]{ A, B }).SelectMany(X => X).ToArray();
+
+    /// todo, ДИАПАЗОН ОТ From ДО To
+    public static IEnumerable<int> Range(int From, int To) => Enumerable.Range(From, To - From + 1);
+
+    /// todo, ПРОЕКЦИЯ ДИАПАЗОНА (1, 3, i => $"P{i}") => ["P1","P2","P3"]
+    public static string[] RangeMap(int From, int To, Func<int, string> Selector) => Range(From, To).Select(Selector).ToArray();
+    
+    // ----------------------------------------------------------------------
+    
     public static string ToJSON(object? Object){
         string JSON = JsonSerializer.Serialize(Tag(Packer.Pack(Object)), new JsonSerializerOptions{ WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping  });
         

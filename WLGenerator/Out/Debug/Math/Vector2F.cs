@@ -1,0 +1,1 @@
+namespace WLO.Math;/* __CSG_SPACE__ */public class Vector2F : IEquatable<Vector2F>, WLI.Packable{public float X;public float Y;/* __CSG_SPACE__ */public float W{ get => X; set => X = value; }public float H{ get => Y; set => Y = value; }/* __CSG_SPACE__ */public Vector2F(float X, float Y){ this.X = X;this.Y = Y; }public Vector2F(float XY) : this(XY, XY){}}

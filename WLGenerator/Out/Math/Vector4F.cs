@@ -1,0 +1,16 @@
+namespace WLO.Math;
+
+public class Vector4F : IEquatable<Vector4F>, WLI.Packable{
+	public float X;
+	public float Y;
+	public float Z;
+	public float W;
+
+	public Vector4F(float X, float Y, float Z, float W){
+		this.X = X;
+		this.Y = Y;
+		this.Z = Z;
+		this.W = W;
+	}
+	public Vector4F(float XYZW) : this(XYZW, XYZW, XYZW, XYZW){}
+}

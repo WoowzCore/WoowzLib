@@ -1,4 +1,6 @@
-﻿namespace WLO.Logger;
+﻿using System.Text;
+
+namespace WLO.Logger;
 
 public class Simple : WLI.Logger{
     public string[] GetActivePrefixes(){
@@ -38,7 +40,32 @@ public class Simple : WLI.Logger{
         };
     }
     
-    // TODO, ВЫВОДИТЬ ПОЛНЫЙ ЛОГ EXCEPTION, + ЕГО ДЕТИ....
+    public static string ExceptionLog(Exception e){
+        StringBuilder SB = new StringBuilder();
+        SB.AppendLine("[=== EXCEPTION ===]");
+
+        int Depth = 0;
+        Exception? Current = e;
+
+        while(Current != null){
+            SB.AppendLine($"[{Depth}] ({Current.GetType().Name}): {Current.Message}");
+
+            if(Current is AggregateException ae){
+                foreach(Exception Inner in ae.InnerExceptions){
+                    SB.AppendLine($"\t-> Aggregated: {Inner.Message}");
+                }
+            }
+            
+            Current = Current.InnerException;
+            Depth++;
+        }
+        
+        SB.AppendLine("[===== STACK =====]");
+        SB.AppendLine(e.StackTrace);
+        SB.AppendLine("[=================]");
+        
+        return SB.ToString();
+    }
     
     public void Log(uint Type, object? Message, Exception? e){
         OnRawLog?.Invoke(Type, Message, e);
@@ -52,7 +79,7 @@ public class Simple : WLI.Logger{
         string Result = $"{GeneratePrefix(Type)}: {Content}";
 
         if(e != null){
-            Result += $"\n{e.Message}\n{e.StackTrace}";
+            Result += $"\n{ExceptionLog(e)}";
         }
         
         OnLog?.Invoke(Type, Result);

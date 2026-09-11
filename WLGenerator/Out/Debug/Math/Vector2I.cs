@@ -1,0 +1,1 @@
+namespace WLO.Math;/* __CSG_SPACE__ */public class Vector2I : IEquatable<Vector2I>, WLI.Packable{public int X;public int Y;/* __CSG_SPACE__ */public int W{ get => X; set => X = value; }public int H{ get => Y; set => Y = value; }/* __CSG_SPACE__ */public Vector2I(int X, int Y){ this.X = X;this.Y = Y; }public Vector2I(int XY) : this(XY, XY){}}
