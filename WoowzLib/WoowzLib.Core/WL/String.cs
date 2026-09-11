@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 namespace WL;
 
 // TODO, насрал кода, нужно норм сделать тут всё
+// ХУЛИ РАБОТА С МАССИВАМИ В СТРОКАХ, НЕ ДЕЛО!
 
 public struct String{
     /// todo, ОБЪЕДЕНЯЕТ ЗНАЧЕНИЯ В СТРОКУ, РАЗДЕЛЯЯ ИХ МЕЖДУ СОБОЙ SEPARATOR, (["a","b","c"], ", ") => "a, b, c"
@@ -23,7 +24,7 @@ public struct String{
     public static string Repeat(string Value, int Count, string Separator = "") => Join(Enumerable.Repeat(Value, Count), Separator);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string[] FormatAll<T>(IEnumerable<T> Items, string Format) => Items.Select(X => string.Format(Format, X)).ToArray();
+    public static string[] FormatAll<T>(IEnumerable<T> Items, string Format) => Items.Select((X, I) => string.Format(Format, X, I)).ToArray();
 
     /// todo, ДОБАВЛЯЕТ SEPARATOR МЕЖДУ ЭЛЕМЕНТАМИ
     public static T[] InterLeave<T>(IEnumerable<T> Items, T Separator){
@@ -36,13 +37,44 @@ public struct String{
     }
 
     /// todo, ОБЪЕДЕНЯЕТ 2 МАССИВА (["a","b"], ["1","2"]) => ["a","1","b","2"]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string[] ZipPairwise(IEnumerable<string> First, IEnumerable<string> Second) => First.Zip(Second, (A, B) => new[]{ A, B }).SelectMany(X => X).ToArray();
 
     /// todo, ДИАПАЗОН ОТ From ДО To
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<int> Range(int From, int To) => Enumerable.Range(From, To - From + 1);
 
     /// todo, ПРОЕКЦИЯ ДИАПАЗОНА (1, 3, i => $"P{i}") => ["P1","P2","P3"]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string[] RangeMap(int From, int To, Func<int, string> Selector) => Range(From, To).Select(Selector).ToArray();
+
+    /// todo, ДОПОЛНЯЕТ МАССИВ ДО ДЛИНЫ TOTAL (["a","b"], 4, "0") => ["a","b","0","0"]
+    public static string[] PadRight(string[] Items, int Total, string Fill){
+        if(Items.Length >= Total){ return Items; }
+
+        string[] Result = new string[Total];
+        Array.Copy(Items, Result, Items.Length);
+        for(int i = Items.Length; i < Total; i++){
+            Result[i] = Fill;
+        }
+        return Result;
+    }
+
+    /// TODO, Обрезает массив (["a","b","c","d","f"], 3) => ["a","b","c"]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] Take<T>(T[] Items, int Count) => Items.Take(Count).ToArray();
+
+    // todo, хз что за функция
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string[] Skip(string[] Items, int Count) => Items.Skip(Count).ToArray();
+    
+    /// todo, СОЗДАЁТ МАССИВ С ОДНИМ ЗНАЧЕНИЕМ ОПРЕДЕЛЁННОГО КОЛ-ВО
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] RepeatArray<T>(T Value, int Count) => Enumerable.Repeat(Value, Count).ToArray();
+
+    /// todo, ОБЪЕДЕНЯЕТ МАССИВЫ (["a","b"], ["1","2"]) => ["a","b","1","2"]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string[] ConcatArrays(params string[][] Arrays) => Arrays.SelectMany(X => X).ToArray();
     
     // ----------------------------------------------------------------------
     

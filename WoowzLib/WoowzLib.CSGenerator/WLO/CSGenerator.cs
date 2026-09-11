@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
-using Microsoft.VisualBasic.FileIO;
 
 namespace WLO;
 
@@ -11,41 +10,40 @@ public class CSGenerator{
     public CSGenerator(){ Clear(); }
     public CSGenerator Clear(){
         SB.Clear();
+        Usings.Clear();
+        CurrentDeclaration = "";
         return this;
     }
 
-    public override string ToString() => SB.ToString();
+    public string Build(){
+        StringBuilder Final = new StringBuilder();
 
+        foreach(string Using in Usings.OrderBy(S => S)){
+            Final.Append($"using {Using};");
+        }
+
+        if(Usings.Count > 0){ Final.Append(CSG_Space); }
+
+        Final.Append(SB);
+        
+        return Final.ToString();
+    }
+    
     public static string Refract(string Code){
         SyntaxTree Tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(Code);
 
         string Formatted = Tree.GetRoot().NormalizeWhitespace(indentation: "\t", eol: "\n").ToFullString();
-
+        
         Formatted = Regex.Replace(Formatted, @"\r?\n\s*\{", "{");
-
+        
         Formatted = Regex.Replace(Formatted, @"\{\s*\}", "{}");
 
-        string[] Lines = Formatted.Split('\n');
-        StringBuilder SB = new StringBuilder();
-
-        foreach(string Line in Lines){
-            string CurrentLine = Line;
-            bool HasSpaceMarker = CurrentLine.Contains("/* __CSG_SPACE__ */");
-
-            if(HasSpaceMarker){
-                CurrentLine = CurrentLine.Replace("/* __CSG_SPACE__ */", "").TrimEnd();
-            }
-
-            if(!string.IsNullOrWhiteSpace(CurrentLine)){
-                SB.AppendLine(CurrentLine);
-            }
-
-            if(HasSpaceMarker){
-                SB.AppendLine();
-            }
-        }
+        Formatted = Regex.Replace(Formatted, @"\n[ \t]*\n", "\n");
         
-        return SB.ToString().Trim();
+        Formatted = Formatted.Replace(CSG_Space, "\n");
+        Formatted = Formatted.Replace("/* __CSG_SEPARATOR__ */", "\n\n\t// ----------------------------------------------------------------------\n");
+
+        return Formatted.Trim();
     }
 
     // ----------------------------------------------------------------------
@@ -68,16 +66,18 @@ public class CSGenerator{
         E_AM_Declaration.Internal  => "internal",
     };
     
-    public enum E_AM{ Public, PublicStatic, PublicConst, Private, PrivateStatic, Protected, Internal, Const }
+    public enum E_AM{ Public, PublicStatic, PublicConst, PublicOverride, Private, PrivateStatic, PrivateOverride, Protected, Internal, Const }
     public static string ToString_AM(E_AM E) => E switch{
-        E_AM.Public        => "public",
-        E_AM.PublicStatic  => "public static",
-        E_AM.Private       => "private",
-        E_AM.PrivateStatic => "private static",
-        E_AM.Protected     => "protected",
-        E_AM.Internal      => "internal",
-        E_AM.Const         => "const",
-        E_AM.PublicConst   => "public const"
+        E_AM.Public          => "public",
+        E_AM.PublicStatic    => "public static",
+        E_AM.Private         => "private",
+        E_AM.PrivateStatic   => "private static",
+        E_AM.Protected       => "protected",
+        E_AM.Internal        => "internal",
+        E_AM.Const           => "const",
+        E_AM.PublicConst     => "public const",
+        E_AM.PublicOverride  => "public override",
+        E_AM.PrivateOverride => "private override"
     };
 
     public static string FormatParams(string[] Params){
@@ -94,11 +94,15 @@ public class CSGenerator{
     
     // ----------------------------------------------------------------------
 
-    public string CurrentDeclaration = "";
+    public          string          CurrentDeclaration = "";
+    public readonly HashSet<string> Usings             = []; 
     
     // ----------------------------------------------------------------------
 
-    public void Space() => SB.Append("/* __CSG_SPACE__ */");
+    public const string CSG_Space = "/* __CSG_SPACE__ */";
+    public string GetSpace() => CSG_Space;
+    public void Space(int Count = 1) => SB.Append(WL.String.Repeat(GetSpace(), Count));
+    public void Separator() => SB.Append("/* __CSG_SEPARATOR__ */");
 
 
 
@@ -137,25 +141,40 @@ public class CSGenerator{
 
     public void Class(E_AM_Declaration AM, string Name, string Inheritance, Action Content) => Declaration(AM, E_Declaration.Class, Name, Inheritance, Content);
     public void Class(E_AM_Declaration AM, string Name, Action Content) => Class(AM, Name, "", Content);
+    
+    
+    
+    public void Struct(E_AM_Declaration AM, string Name, string Inheritance, Action Content) => Declaration(AM, E_Declaration.Struct, Name, Inheritance, Content);
+    public void Struct(E_AM_Declaration AM, string Name, Action Content) => Struct(AM, Name, "", Content);
 
 
 
-    public void AddField(E_AM AM, string ValueType, string Name, string Default){
-        SB.Append($"{ToString_AM(AM)} {ValueType} {Name}{(string.IsNullOrEmpty(Default) ? "" : $" = {Default}")};");
-    }
+    public void AddField(E_AM AM, string ValueType, string Name, string Default) => SB.Append($"{ToString_AM(AM)} {ValueType} {Name}{(string.IsNullOrEmpty(Default) ? "" : $" = {Default}")};");
     public void AddField(E_AM AM, string ValueType, string Name) => AddField(AM, ValueType, Name, "");
 
 
 
-    public void AddProperty(E_AM AM, string ValueType, string Name, string Logic, string Default){
-        SB.Append($"{ToString_AM(AM)} {ValueType} {Name}{Logic}{(string.IsNullOrEmpty(Default) ? "" : $" = {Default}")}{(Logic.StartsWith("=>") ? ";" : "")}");
-    }
+    public void AddProperty(E_AM AM, string ValueType, string Name, string Logic, string Default) => SB.Append($"{ToString_AM(AM)} {ValueType} {Name}{Logic}{(string.IsNullOrEmpty(Default) ? "" : $" = {Default}")}{(Logic.StartsWith("=>") ? ";" : "")}");
     public void AddProperty(E_AM AM, string ValueType, string Name, string Logic) => AddProperty(AM, ValueType, Name, Logic, "");
 
 
 
-    public void AddConstructor(E_AM AM, string[] Params, string Base, string Logic){
-        SB.Append($"{ToString_AM(AM)} {CurrentDeclaration}({FormatParams(Params)}){(string.IsNullOrEmpty(Base) ? "" : " : " + Base)}{Logic}");
-    }
+    public void AddConstructor(E_AM AM, string[] Params, string Base, string Logic) => SB.Append($"{ToString_AM(AM)} {CurrentDeclaration}({FormatParams(Params)}){(string.IsNullOrEmpty(Base) ? "" : " : " + Base)}{Logic}");
     public void AddConstructor(E_AM AM, string[] Params, string Logic) => AddConstructor(AM, Params, "", Logic);
+
+
+
+    public void AddFunction(E_AM AM, string Return, string Name, string[] Params, string Logic) => SB.Append($"{ToString_AM(AM)} {Return} {Name}({FormatParams(Params)}){(Logic.StartsWith("=>") ? Logic + ";" : Logic)}");
+    public void AddFunction(E_AM AM, string Name, string[] Params, string Logic) => AddFunction(AM, "void", Name, Params, Logic);
+
+
+
+    public string GetAttribute(string Attribute) => $"[{Attribute}]";
+    public string GetAttributeAggressiveInlining() => GetAttribute("MethodImpl(MethodImplOptions.AggressiveInlining)");
+    public void AddAttribute(string Attribute) => SB.Append(GetAttribute(Attribute));
+    public void AddAttributeAggressiveInlining(){ AddUsing("System.Runtime.CompilerServices"); SB.Append(GetAttributeAggressiveInlining()); }
+
+
+
+    public void AddUsing(string Name) => Usings.Add(Name);
 }

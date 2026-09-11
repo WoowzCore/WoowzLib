@@ -1,15 +1,234 @@
-namespace WLO.Math;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics; 
+ 
+ /* 
+	Класс Vector2F сгенерирован с помощью WLGenerator
+	Сгенерирован: 2026.09.12 00:22:18
+ */ 
 
-public class Vector2F : IEquatable<Vector2F>, WLI.Packable{
+namespace WLO.Math; 
+
+public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
 	public float X;
-	public float Y;
+	public float Y; 
+ 
 
 	public float W { get => X; set => X = value; }
-	public float H { get => Y; set => Y = value; }
+	public float H { get => Y; set => Y = value; } 
+ 
+
+	public float R { get => X; set => X = value; }
+	public float G { get => Y; set => Y = value; } 
+ 
+
+	public Vector2F YX => new Vector2F(Y, X);
+	public Vector2F XX => new Vector2F(X, X);
+	public Vector2F YY => new Vector2F(Y, Y);
+	public Vector2F GR => new Vector2F(G, R);
+	public Vector2F RR => new Vector2F(R, R);
+	public Vector2F GG => new Vector2F(G, G); 
+ 
 
 	public Vector2F(float X, float Y){
 		this.X = X;
 		this.Y = Y;
 	}
-	public Vector2F(float XY) : this(XY, XY){}
+	public Vector2F(float XY) : this(XY, XY){} 
+ 
+
+	public Vector3F To3F() => new Vector3F(X, Y, 0);
+	public Vector4F To4F() => new Vector4F(X, Y, 0, 0); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector128<float> ToSIMD() => Vector128.Create(X, Y, 0, 0); 
+ 
+
+	public static Vector2F Zero => new Vector2F(0, 0);
+	public static Vector2F One => new Vector2F(1, 1);
+	public static Vector2F MOne => new Vector2F(-1, -1);
+	public static Vector2F Half => new Vector2F(0.5f, 0.5f);
+	public static Vector2F MHalf => new Vector2F(-0.5f, -0.5f);
+	public static Vector2F Right => new Vector2F(1, 0);
+	public static Vector2F Left => new Vector2F(-1, 0);
+	public static Vector2F AxisX => new Vector2F(1, 0);
+	public static Vector2F AxisMX => new Vector2F(-1, 0);
+	public static Vector2F Up => new Vector2F(0, 1);
+	public static Vector2F Down => new Vector2F(0, -1);
+	public static Vector2F AxisY => new Vector2F(0, 1);
+	public static Vector2F AxisMY => new Vector2F(0, -1);
+	public static Vector2F MaxValue => new Vector2F(WL.Math.MaxValueF, WL.Math.MaxValueF);
+	public static Vector2F MinValue => new Vector2F(WL.Math.MinValueF, WL.Math.MinValueF);
+	public static Vector2F NAN => new Vector2F(WL.Math.NANF, WL.Math.NANF); 
+
+	// ----------------------------------------------------------------------
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Add(Vector2F B){{
+			this = this + B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Add(float B){{
+			this = this + B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator +(Vector2F A, Vector2F B) => new Vector2F(A.X + B.X, A.Y + B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator +(Vector2F A, float B) => new Vector2F(A.X + B, A.Y + B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Sub(Vector2F B){{
+			this = this - B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Sub(float B){{
+			this = this - B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator -(Vector2F A, Vector2F B) => new Vector2F(A.X - B.X, A.Y - B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator -(Vector2F A, float B) => new Vector2F(A.X - B, A.Y - B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Mul(Vector2F B){{
+			this = this * B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Mul(float B){{
+			this = this * B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator *(Vector2F A, Vector2F B) => new Vector2F(A.X * B.X, A.Y * B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator *(Vector2F A, float B) => new Vector2F(A.X * B, A.Y * B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Div(Vector2F B){{
+			this = this / B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Div(float B){{
+			this = this / B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator /(Vector2F A, Vector2F B) => new Vector2F(A.X / B.X, A.Y / B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator /(Vector2F A, float B) => new Vector2F(A.X / B, A.Y / B); 
+ 
+
+	public float this[int Index]{
+		get => Index switch{
+			0 => X,
+			1 => Y,
+			var _ => throw new IndexOutOfRangeException()};
+		set{
+			switch (Index){
+				case 0:
+					X = value;
+					break;
+				case 1:
+					Y = value;
+					break;
+				default:
+					throw new IndexOutOfRangeException();
+			}
+		}
+	} 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Deconstruct(out float X, out float Y){
+		X = this.X;
+		Y = this.Y;
+	} 
+
+	// ----------------------------------------------------------------------
+
+	public float LengthSquared {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => WL.Math.LengthSquared2F(X, Y); }
+	public float Length {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => WL.Math.Length2F(X, Y); } 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Normalize(){{
+			this = Normalized;
+			return this;
+		}
+	}
+	public Vector2F Normalized{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get{
+			float L = Length;
+			return L > WL.Math.EpsilonF ? this / L : Vector2F.Zero;
+		}
+	} 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float DistanceSquared(Vector2F B) => WL.Math.DistanceSquared2F(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float Distance(Vector2F B) => WL.Math.Distance2F(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float DistanceSquared(Vector2F A, Vector2F B) => A.DistanceSquared(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float Distance(Vector2F A, Vector2F B) => A.Distance(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Lerp(Vector2F B, float T) => new Vector2F(WL.Math.LerpF(X, B.X, T), WL.Math.LerpF(Y, B.Y, T));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F LerpSafe(Vector2F B, float T) => new Vector2F(WL.Math.LerpSafeF(X, B.X, T), WL.Math.LerpSafeF(Y, B.Y, T));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Lerp(Vector2F A, Vector2F B, float T) => A.Lerp(B, T);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F LerpSafe(Vector2F A, Vector2F B, float T) => A.LerpSafe(B, T); 
+
+	// ----------------------------------------------------------------------
+
+	public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
+		["XY"] = $"{X}|{Y}"}; 
+
+	public void __Unpack(Dictionary<string, object?> Data){
+		string XY = WL.Packer.Get<string>(Data, "XY", "0|0")!; 
+
+		string[] Parts = XY.Split('|');
+		if (Parts.Length >= 2){
+			float.TryParse(Parts[0], out X);
+			float.TryParse(Parts[1], out Y);
+		}
+	} 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Equals(Vector2F Other) => X == Other.X && Y == Other.Y;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override bool Equals(object? Object) => Object is Vector2F Other && Equals(Other); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool operator ==(Vector2F Left, Vector2F Right) => Left.Equals(Right);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool operator !=(Vector2F Left, Vector2F Right) => !(Left == Right); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public string ToShortString() => $"{X}, {Y}";
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override string ToString() => $"Vector2F({ToShortString()})"; 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override int GetHashCode() => HashCode.Combine(X, Y);
 }

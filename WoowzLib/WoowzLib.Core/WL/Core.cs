@@ -1,4 +1,5 @@
-﻿using WLO;
+﻿using System.Globalization;
+using WLO;
 
 namespace WL;
 
@@ -11,4 +12,11 @@ public struct Core{
     public static string PathToEXE => Environment.ProcessPath!;
     public static string PathToFolderEXE => Path.GetDirectoryName(PathToEXE)!;
     public static string PathToTempFolderEXE => AppContext.BaseDirectory;
+
+    public static void Start(string[] Arguments){
+        WL.Core.Arguments = Arguments;
+        
+        CultureInfo.DefaultThreadCurrentCulture   = CultureInfo.InvariantCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+    }
 }

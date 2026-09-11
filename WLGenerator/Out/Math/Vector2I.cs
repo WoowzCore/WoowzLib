@@ -1,15 +1,218 @@
-namespace WLO.Math;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics; 
+ 
+ /* 
+	Класс Vector2I сгенерирован с помощью WLGenerator
+	Сгенерирован: 2026.09.12 00:22:17
+ */ 
 
-public class Vector2I : IEquatable<Vector2I>, WLI.Packable{
+namespace WLO.Math; 
+
+public struct Vector2I : IEquatable<Vector2I>, WLI.Packable{
 	public int X;
-	public int Y;
+	public int Y; 
+ 
 
 	public int W { get => X; set => X = value; }
-	public int H { get => Y; set => Y = value; }
+	public int H { get => Y; set => Y = value; } 
+ 
+
+	public int R { get => X; set => X = value; }
+	public int G { get => Y; set => Y = value; } 
+ 
+
+	public Vector2I YX => new Vector2I(Y, X);
+	public Vector2I XX => new Vector2I(X, X);
+	public Vector2I YY => new Vector2I(Y, Y);
+	public Vector2I GR => new Vector2I(G, R);
+	public Vector2I RR => new Vector2I(R, R);
+	public Vector2I GG => new Vector2I(G, G); 
+ 
 
 	public Vector2I(int X, int Y){
 		this.X = X;
 		this.Y = Y;
 	}
-	public Vector2I(int XY) : this(XY, XY){}
+	public Vector2I(int XY) : this(XY, XY){} 
+ 
+
+	public Vector3I To3I() => new Vector3I(X, Y, 0);
+	public Vector4I To4I() => new Vector4I(X, Y, 0, 0); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector128<int> ToSIMD() => Vector128.Create(X, Y, 0, 0); 
+ 
+
+	public static Vector2I Zero => new Vector2I(0, 0);
+	public static Vector2I One => new Vector2I(1, 1);
+	public static Vector2I MOne => new Vector2I(-1, -1);
+	public static Vector2I Right => new Vector2I(1, 0);
+	public static Vector2I Left => new Vector2I(-1, 0);
+	public static Vector2I AxisX => new Vector2I(1, 0);
+	public static Vector2I AxisMX => new Vector2I(-1, 0);
+	public static Vector2I Up => new Vector2I(0, 1);
+	public static Vector2I Down => new Vector2I(0, -1);
+	public static Vector2I AxisY => new Vector2I(0, 1);
+	public static Vector2I AxisMY => new Vector2I(0, -1);
+	public static Vector2I MaxValue => new Vector2I(WL.Math.MaxValueI, WL.Math.MaxValueI);
+	public static Vector2I MinValue => new Vector2I(WL.Math.MinValueI, WL.Math.MinValueI); 
+
+	// ----------------------------------------------------------------------
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Add(Vector2I B){{
+			this = this + B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Add(int B){{
+			this = this + B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator +(Vector2I A, Vector2I B) => new Vector2I(A.X + B.X, A.Y + B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator +(Vector2I A, int B) => new Vector2I(A.X + B, A.Y + B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Sub(Vector2I B){{
+			this = this - B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Sub(int B){{
+			this = this - B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator -(Vector2I A, Vector2I B) => new Vector2I(A.X - B.X, A.Y - B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator -(Vector2I A, int B) => new Vector2I(A.X - B, A.Y - B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Mul(Vector2I B){{
+			this = this * B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Mul(int B){{
+			this = this * B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator *(Vector2I A, Vector2I B) => new Vector2I(A.X * B.X, A.Y * B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator *(Vector2I A, int B) => new Vector2I(A.X * B, A.Y * B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Div(Vector2I B){{
+			this = this / B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Div(int B){{
+			this = this / B;
+			return this;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator /(Vector2I A, Vector2I B) => new Vector2I(A.X / B.X, A.Y / B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I operator /(Vector2I A, int B) => new Vector2I(A.X / B, A.Y / B); 
+ 
+
+	public int this[int Index]{
+		get => Index switch{
+			0 => X,
+			1 => Y,
+			var _ => throw new IndexOutOfRangeException()};
+		set{
+			switch (Index){
+				case 0:
+					X = value;
+					break;
+				case 1:
+					Y = value;
+					break;
+				default:
+					throw new IndexOutOfRangeException();
+			}
+		}
+	} 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Deconstruct(out int X, out int Y){
+		X = this.X;
+		Y = this.Y;
+	} 
+
+	// ----------------------------------------------------------------------
+
+	public float LengthSquared {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => WL.Math.LengthSquared2I(X, Y); }
+	public float Length {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => WL.Math.Length2I(X, Y); } 
+ 
+ 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float DistanceSquared(Vector2I B) => WL.Math.DistanceSquared2I(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float Distance(Vector2I B) => WL.Math.Distance2I(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float DistanceSquared(Vector2I A, Vector2I B) => A.DistanceSquared(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float Distance(Vector2I A, Vector2I B) => A.Distance(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I Lerp(Vector2I B, float T) => new Vector2I(WL.Math.LerpI(X, B.X, T), WL.Math.LerpI(Y, B.Y, T));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2I LerpSafe(Vector2I B, float T) => new Vector2I(WL.Math.LerpSafeI(X, B.X, T), WL.Math.LerpSafeI(Y, B.Y, T));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I Lerp(Vector2I A, Vector2I B, float T) => A.Lerp(B, T);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I LerpSafe(Vector2I A, Vector2I B, float T) => A.LerpSafe(B, T); 
+
+	// ----------------------------------------------------------------------
+
+	public Dictionary<string, object?> __Pack() => new Dictionary<string, object?>{
+		["XY"] = $"{X}|{Y}"}; 
+
+	public void __Unpack(Dictionary<string, object?> Data){
+		string XY = WL.Packer.Get<string>(Data, "XY", "0|0")!; 
+
+		string[] Parts = XY.Split('|');
+		if (Parts.Length >= 2){
+			int.TryParse(Parts[0], out X);
+			int.TryParse(Parts[1], out Y);
+		}
+	} 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Equals(Vector2I Other) => X == Other.X && Y == Other.Y;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override bool Equals(object? Object) => Object is Vector2I Other && Equals(Other); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool operator ==(Vector2I Left, Vector2I Right) => Left.Equals(Right);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool operator !=(Vector2I Left, Vector2I Right) => !(Left == Right); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public string ToShortString() => $"{X}, {Y}";
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override string ToString() => $"Vector2I({ToShortString()})"; 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override int GetHashCode() => HashCode.Combine(X, Y);
 }

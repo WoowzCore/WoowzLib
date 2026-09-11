@@ -5,6 +5,8 @@ namespace WLGenerator;
 public static class Bootstrap{
     public static int Main(string[] Args){
         try{
+            WL.Core.Start(Args);
+            
             const string ResultPath = "W:\\Other\\WoowzLib\\WLGenerator\\Out";
             const string DebugPath  = "W:\\Other\\WoowzLib\\WLGenerator\\Out\\Debug";
             
@@ -16,4 +18,6 @@ public static class Bootstrap{
             return 1;
         }
     }
+
+    public static string GenerateComment(string Name) => $"\n\tКласс {Name} сгенерирован с помощью WLGenerator\n\tСгенерирован: {DateTime.Now:yyyy.MM.dd HH:mm:ss}\n";
 }
