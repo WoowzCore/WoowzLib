@@ -3,11 +3,12 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector2D сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 00:22:18
+	Сгенерирован: 2026.09.12 03:04:37
  */ 
 
 namespace WLO.Math; 
 
+[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public struct Vector2D : IEquatable<Vector2D>, WLI.Packable{
 	public double X;
 	public double Y; 
@@ -21,12 +22,18 @@ public struct Vector2D : IEquatable<Vector2D>, WLI.Packable{
 	public double G { get => Y; set => Y = value; } 
  
 
-	public Vector2D YX => new Vector2D(Y, X);
-	public Vector2D XX => new Vector2D(X, X);
-	public Vector2D YY => new Vector2D(Y, Y);
-	public Vector2D GR => new Vector2D(G, R);
-	public Vector2D RR => new Vector2D(R, R);
-	public Vector2D GG => new Vector2D(G, G); 
+	public Vector2D YX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Y, X); }
+	public Vector2D XX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(X, X); }
+	public Vector2D YY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Y, Y); }
+	public Vector2D GR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(G, R); }
+	public Vector2D RR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(R, R); }
+	public Vector2D GG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(G, G); } 
  
 
 	public Vector2D(double X, double Y){
@@ -36,90 +43,67 @@ public struct Vector2D : IEquatable<Vector2D>, WLI.Packable{
 	public Vector2D(double XY) : this(XY, XY){} 
  
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector3D To3D() => new Vector3D(X, Y, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector4D To4D() => new Vector4D(X, Y, 0, 0); 
- 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector256<double> ToSIMD() => Vector256.Create(X, Y, 0, 0); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector2D(System.Numerics.Vector2 A) => new Vector2D(A.X, A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator System.Numerics.Vector2(Vector2D A) => new System.Numerics.Vector2((float)A.X, (float)A.Y); 
  
 
-	public static Vector2D Zero => new Vector2D(0, 0);
-	public static Vector2D One => new Vector2D(1, 1);
-	public static Vector2D MOne => new Vector2D(-1, -1);
-	public static Vector2D Half => new Vector2D(0.5, 0.5);
-	public static Vector2D MHalf => new Vector2D(-0.5, -0.5);
-	public static Vector2D Right => new Vector2D(1, 0);
-	public static Vector2D Left => new Vector2D(-1, 0);
-	public static Vector2D AxisX => new Vector2D(1, 0);
-	public static Vector2D AxisMX => new Vector2D(-1, 0);
-	public static Vector2D Up => new Vector2D(0, 1);
-	public static Vector2D Down => new Vector2D(0, -1);
-	public static Vector2D AxisY => new Vector2D(0, 1);
-	public static Vector2D AxisMY => new Vector2D(0, -1);
-	public static Vector2D MaxValue => new Vector2D(WL.Math.MaxValueD, WL.Math.MaxValueD);
-	public static Vector2D MinValue => new Vector2D(WL.Math.MinValueD, WL.Math.MinValueD);
-	public static Vector2D NAN => new Vector2D(WL.Math.NAND, WL.Math.NAND); 
+	public static Vector2D Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(0, 0); }
+	public static Vector2D One {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(1, 1); }
+	public static Vector2D MOne {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(-1, -1); }
+	public static Vector2D Half {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(0.5, 0.5); }
+	public static Vector2D MHalf {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(-0.5, -0.5); }
+	public static Vector2D Right {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(1, 0); }
+	public static Vector2D Left {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(-1, 0); }
+	public static Vector2D AxisX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(1, 0); }
+	public static Vector2D AxisMX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(-1, 0); }
+	public static Vector2D Up {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(0, 1); }
+	public static Vector2D Down {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(0, -1); }
+	public static Vector2D AxisY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(0, 1); }
+	public static Vector2D AxisMY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(0, -1); }
+	public static Vector2D MaxValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(WL.Math.MaxValueD, WL.Math.MaxValueD); }
+	public static Vector2D MinValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(WL.Math.MinValueD, WL.Math.MinValueD); }
+	public static Vector2D NAN {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(WL.Math.NAND, WL.Math.NAND); } 
 
 	// ----------------------------------------------------------------------
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Add(Vector2D B){{
-			this = this + B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Add(double B){{
-			this = this + B;
-			return this;
-		}
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator +(Vector2D A, Vector2D B) => new Vector2D(A.X + B.X, A.Y + B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator +(Vector2D A, double B) => new Vector2D(A.X + B, A.Y + B);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Sub(Vector2D B){{
-			this = this - B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Sub(double B){{
-			this = this - B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator -(Vector2D A, Vector2D B) => new Vector2D(A.X - B.X, A.Y - B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator -(Vector2D A, double B) => new Vector2D(A.X - B, A.Y - B);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Mul(Vector2D B){{
-			this = this * B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Mul(double B){{
-			this = this * B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator *(Vector2D A, Vector2D B) => new Vector2D(A.X * B.X, A.Y * B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator *(Vector2D A, double B) => new Vector2D(A.X * B, A.Y * B);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Div(Vector2D B){{
-			this = this / B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Div(double B){{
-			this = this / B;
-			return this;
-		}
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D operator /(Vector2D A, Vector2D B) => new Vector2D(A.X / B.X, A.Y / B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -160,19 +144,19 @@ public struct Vector2D : IEquatable<Vector2D>, WLI.Packable{
 		get => WL.Math.Length2D(X, Y); } 
  
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D Normalize(){{
-			this = Normalized;
-			return this;
-		}
-	}
-	public Vector2D Normalized{
+	public Vector2D Normalize{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get{
 			double L = Length;
 			return L > WL.Math.EpsilonD ? this / L : Vector2D.Zero;
 		}
 	} 
+ 
+
+	public Vector2D Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this * -1; }
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D operator -(Vector2D A) => A.Negative; 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -186,13 +170,71 @@ public struct Vector2D : IEquatable<Vector2D>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public double Dot(Vector2D B) => WL.Math.Dot2D(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static double Dot(Vector2D A, Vector2D B) => A.Dot(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public double Cross(Vector2D B) => WL.Math.CrossD(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static double Cross(Vector2D A, Vector2D B) => A.Cross(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector2D Lerp(Vector2D B, double T) => new Vector2D(WL.Math.LerpD(X, B.X, T), WL.Math.LerpD(Y, B.Y, T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2D LerpSafe(Vector2D B, double T) => new Vector2D(WL.Math.LerpSafeD(X, B.X, T), WL.Math.LerpSafeD(Y, B.Y, T));
+	public Vector2D LerpSafe(Vector2D B, double T) => Lerp(B, WL.Math.Clamp01D(T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D Lerp(Vector2D A, Vector2D B, double T) => A.Lerp(B, T);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2D LerpSafe(Vector2D A, Vector2D B, double T) => A.LerpSafe(B, T); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Min(Vector2D B) => new Vector2D(WL.Math.MinD(X, B.X), WL.Math.MinD(Y, B.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Min(double B) => new Vector2D(WL.Math.MinD(X, B), WL.Math.MinD(Y, B));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D Min(Vector2D A, Vector2D B) => A.Min(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D Min(Vector2D A, double B) => A.Min(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Max(Vector2D B) => new Vector2D(WL.Math.MaxD(X, B.X), WL.Math.MaxD(Y, B.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Max(double B) => new Vector2D(WL.Math.MaxD(X, B), WL.Math.MaxD(Y, B));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D Max(Vector2D A, Vector2D B) => A.Max(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D Max(Vector2D A, double B) => A.Max(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Clamp(Vector2D Min, Vector2D Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Clamp(double Min, double Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D Clamp(Vector2D A, Vector2D Min, Vector2D Max) => A.Clamp(Min, Max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2D Clamp(Vector2D A, double Min, double Max) => A.Clamp(Min, Max); 
+ 
+
+	public double Aspect {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => WL.Math.AspectD(W, H); } 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Floor() => new Vector2D(WL.Math.FloorD(X), WL.Math.FloorD(Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Round() => new Vector2D(WL.Math.RoundD(X), WL.Math.RoundD(Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Ceil() => new Vector2D(WL.Math.CeilD(X), WL.Math.CeilD(Y)); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D Abs() => new Vector2D(WL.Math.AbsD(X), WL.Math.AbsD(Y)); 
 
 	// ----------------------------------------------------------------------
 

@@ -3,11 +3,12 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector2F сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 00:22:18
+	Сгенерирован: 2026.09.12 03:04:37
  */ 
 
 namespace WLO.Math; 
 
+[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
 	public float X;
 	public float Y; 
@@ -21,12 +22,18 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
 	public float G { get => Y; set => Y = value; } 
  
 
-	public Vector2F YX => new Vector2F(Y, X);
-	public Vector2F XX => new Vector2F(X, X);
-	public Vector2F YY => new Vector2F(Y, Y);
-	public Vector2F GR => new Vector2F(G, R);
-	public Vector2F RR => new Vector2F(R, R);
-	public Vector2F GG => new Vector2F(G, G); 
+	public Vector2F YX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(Y, X); }
+	public Vector2F XX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(X, X); }
+	public Vector2F YY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(Y, Y); }
+	public Vector2F GR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(G, R); }
+	public Vector2F RR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(R, R); }
+	public Vector2F GG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(G, G); } 
  
 
 	public Vector2F(float X, float Y){
@@ -36,92 +43,67 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
 	public Vector2F(float XY) : this(XY, XY){} 
  
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector3F To3F() => new Vector3F(X, Y, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector4F To4F() => new Vector4F(X, Y, 0, 0); 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector128<float> ToSIMD() => Vector128.Create(X, Y, 0, 0); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector2F(System.Numerics.Vector2 A) => new Vector2F(A.X, A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator System.Numerics.Vector2(Vector2F A) => new System.Numerics.Vector2(A.X, A.Y); 
  
 
-	public static Vector2F Zero => new Vector2F(0, 0);
-	public static Vector2F One => new Vector2F(1, 1);
-	public static Vector2F MOne => new Vector2F(-1, -1);
-	public static Vector2F Half => new Vector2F(0.5f, 0.5f);
-	public static Vector2F MHalf => new Vector2F(-0.5f, -0.5f);
-	public static Vector2F Right => new Vector2F(1, 0);
-	public static Vector2F Left => new Vector2F(-1, 0);
-	public static Vector2F AxisX => new Vector2F(1, 0);
-	public static Vector2F AxisMX => new Vector2F(-1, 0);
-	public static Vector2F Up => new Vector2F(0, 1);
-	public static Vector2F Down => new Vector2F(0, -1);
-	public static Vector2F AxisY => new Vector2F(0, 1);
-	public static Vector2F AxisMY => new Vector2F(0, -1);
-	public static Vector2F MaxValue => new Vector2F(WL.Math.MaxValueF, WL.Math.MaxValueF);
-	public static Vector2F MinValue => new Vector2F(WL.Math.MinValueF, WL.Math.MinValueF);
-	public static Vector2F NAN => new Vector2F(WL.Math.NANF, WL.Math.NANF); 
+	public static Vector2F Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(0, 0); }
+	public static Vector2F One {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(1, 1); }
+	public static Vector2F MOne {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(-1, -1); }
+	public static Vector2F Half {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(0.5f, 0.5f); }
+	public static Vector2F MHalf {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(-0.5f, -0.5f); }
+	public static Vector2F Right {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(1, 0); }
+	public static Vector2F Left {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(-1, 0); }
+	public static Vector2F AxisX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(1, 0); }
+	public static Vector2F AxisMX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(-1, 0); }
+	public static Vector2F Up {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(0, 1); }
+	public static Vector2F Down {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(0, -1); }
+	public static Vector2F AxisY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(0, 1); }
+	public static Vector2F AxisMY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(0, -1); }
+	public static Vector2F MaxValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(WL.Math.MaxValueF, WL.Math.MaxValueF); }
+	public static Vector2F MinValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(WL.Math.MinValueF, WL.Math.MinValueF); }
+	public static Vector2F NAN {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2F(WL.Math.NANF, WL.Math.NANF); } 
 
 	// ----------------------------------------------------------------------
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Add(Vector2F B){{
-			this = this + B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Add(float B){{
-			this = this + B;
-			return this;
-		}
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator +(Vector2F A, Vector2F B) => new Vector2F(A.X + B.X, A.Y + B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator +(Vector2F A, float B) => new Vector2F(A.X + B, A.Y + B);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Sub(Vector2F B){{
-			this = this - B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Sub(float B){{
-			this = this - B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator -(Vector2F A, Vector2F B) => new Vector2F(A.X - B.X, A.Y - B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator -(Vector2F A, float B) => new Vector2F(A.X - B, A.Y - B);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Mul(Vector2F B){{
-			this = this * B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Mul(float B){{
-			this = this * B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator *(Vector2F A, Vector2F B) => new Vector2F(A.X * B.X, A.Y * B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator *(Vector2F A, float B) => new Vector2F(A.X * B, A.Y * B);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Div(Vector2F B){{
-			this = this / B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Div(float B){{
-			this = this / B;
-			return this;
-		}
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F operator /(Vector2F A, Vector2F B) => new Vector2F(A.X / B.X, A.Y / B.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -162,19 +144,19 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
 		get => WL.Math.Length2F(X, Y); } 
  
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F Normalize(){{
-			this = Normalized;
-			return this;
-		}
-	}
-	public Vector2F Normalized{
+	public Vector2F Normalize{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get{
 			float L = Length;
 			return L > WL.Math.EpsilonF ? this / L : Vector2F.Zero;
 		}
 	} 
+ 
+
+	public Vector2F Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this * -1; }
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F operator -(Vector2F A) => A.Negative; 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -188,13 +170,71 @@ public struct Vector2F : IEquatable<Vector2F>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float Dot(Vector2F B) => WL.Math.Dot2F(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float Dot(Vector2F A, Vector2F B) => A.Dot(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float Cross(Vector2F B) => WL.Math.CrossF(X, Y, B.X, B.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float Cross(Vector2F A, Vector2F B) => A.Cross(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector2F Lerp(Vector2F B, float T) => new Vector2F(WL.Math.LerpF(X, B.X, T), WL.Math.LerpF(Y, B.Y, T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F LerpSafe(Vector2F B, float T) => new Vector2F(WL.Math.LerpSafeF(X, B.X, T), WL.Math.LerpSafeF(Y, B.Y, T));
+	public Vector2F LerpSafe(Vector2F B, float T) => Lerp(B, WL.Math.Clamp01F(T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F Lerp(Vector2F A, Vector2F B, float T) => A.Lerp(B, T);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector2F LerpSafe(Vector2F A, Vector2F B, float T) => A.LerpSafe(B, T); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Min(Vector2F B) => new Vector2F(WL.Math.MinF(X, B.X), WL.Math.MinF(Y, B.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Min(float B) => new Vector2F(WL.Math.MinF(X, B), WL.Math.MinF(Y, B));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Min(Vector2F A, Vector2F B) => A.Min(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Min(Vector2F A, float B) => A.Min(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Max(Vector2F B) => new Vector2F(WL.Math.MaxF(X, B.X), WL.Math.MaxF(Y, B.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Max(float B) => new Vector2F(WL.Math.MaxF(X, B), WL.Math.MaxF(Y, B));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Max(Vector2F A, Vector2F B) => A.Max(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Max(Vector2F A, float B) => A.Max(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Clamp(Vector2F Min, Vector2F Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Clamp(float Min, float Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Clamp(Vector2F A, Vector2F Min, Vector2F Max) => A.Clamp(Min, Max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F Clamp(Vector2F A, float Min, float Max) => A.Clamp(Min, Max); 
+ 
+
+	public float Aspect {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => WL.Math.AspectF(W, H); } 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Floor() => new Vector2F(WL.Math.FloorF(X), WL.Math.FloorF(Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Round() => new Vector2F(WL.Math.RoundF(X), WL.Math.RoundF(Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Ceil() => new Vector2F(WL.Math.CeilF(X), WL.Math.CeilF(Y)); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2F Abs() => new Vector2F(WL.Math.AbsF(X), WL.Math.AbsF(Y)); 
 
 	// ----------------------------------------------------------------------
 

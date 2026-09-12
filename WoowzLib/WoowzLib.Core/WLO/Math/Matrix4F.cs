@@ -86,8 +86,8 @@ public readonly struct Matrix4F : IEquatable<Matrix4F>{
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Matrix4F CreateLookAt(Vector3F Eye, Vector3F Target, Vector3F Up) {
-        Vector3F Z = (Eye - Target).Normalized;
-        Vector3F X = Vector3F.Cross(Up, Z).Normalized;
+        Vector3F Z = (Eye - Target).Normalize;
+        Vector3F X = Vector3F.Cross(Up, Z).Normalize;
         Vector3F Y = Vector3F.Cross(Z, X);
 
         return new Matrix4F(

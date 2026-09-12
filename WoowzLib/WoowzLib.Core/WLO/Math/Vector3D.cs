@@ -3,11 +3,12 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector3D сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 00:22:18
+	Сгенерирован: 2026.09.12 03:04:37
  */ 
 
 namespace WLO.Math; 
 
+[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public struct Vector3D : IEquatable<Vector3D>, WLI.Packable{
 	public double X;
 	public double Y;
@@ -24,28 +25,55 @@ public struct Vector3D : IEquatable<Vector3D>, WLI.Packable{
 	public double B { get => Z; set => Z = value; } 
  
 
-	public Vector2D XY => new Vector2D(X, Y);
-	public Vector2D YZ => new Vector2D(Y, Z);
-	public Vector2D ZX => new Vector2D(Z, X);
-	public Vector3D YZX => new Vector3D(Y, Z, X);
-	public Vector3D ZXY => new Vector3D(Z, X, Y);
-	public Vector2D XX => new Vector2D(X, X);
-	public Vector3D XXX => new Vector3D(X, X, X);
-	public Vector2D YY => new Vector2D(Y, Y);
-	public Vector3D YYY => new Vector3D(Y, Y, Y);
-	public Vector2D ZZ => new Vector2D(Z, Z);
-	public Vector3D ZZZ => new Vector3D(Z, Z, Z);
-	public Vector2D RG => new Vector2D(R, G);
-	public Vector2D GB => new Vector2D(G, B);
-	public Vector2D BR => new Vector2D(B, R);
-	public Vector3D GBR => new Vector3D(G, B, R);
-	public Vector3D BRG => new Vector3D(B, R, G);
-	public Vector2D RR => new Vector2D(R, R);
-	public Vector3D RRR => new Vector3D(R, R, R);
-	public Vector2D GG => new Vector2D(G, G);
-	public Vector3D GGG => new Vector3D(G, G, G);
-	public Vector2D BB => new Vector2D(B, B);
-	public Vector3D BBB => new Vector3D(B, B, B); 
+	public double Pitch { get => X; set => X = value; }
+	public double Yaw { get => Y; set => Y = value; }
+	public double Roll { get => Z; set => Z = value; } 
+ 
+
+	public Vector2D XY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(X, Y); }
+	public Vector2D YZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Y, Z); }
+	public Vector2D ZX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Z, X); }
+	public Vector3D YZX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Y, Z, X); }
+	public Vector3D ZXY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Z, X, Y); }
+	public Vector2D XX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(X, X); }
+	public Vector3D XXX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(X, X, X); }
+	public Vector2D YY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Y, Y); }
+	public Vector3D YYY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Y, Y, Y); }
+	public Vector2D ZZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Z, Z); }
+	public Vector3D ZZZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Z, Z, Z); }
+	public Vector2D RG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(R, G); }
+	public Vector2D GB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(G, B); }
+	public Vector2D BR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(B, R); }
+	public Vector3D GBR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(G, B, R); }
+	public Vector3D BRG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(B, R, G); }
+	public Vector2D RR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(R, R); }
+	public Vector3D RRR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(R, R, R); }
+	public Vector2D GG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(G, G); }
+	public Vector3D GGG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(G, G, G); }
+	public Vector2D BB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(B, B); }
+	public Vector3D BBB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(B, B, B); } 
  
 
 	public Vector3D(double X, double Y, double Z){
@@ -57,95 +85,77 @@ public struct Vector3D : IEquatable<Vector3D>, WLI.Packable{
 	public Vector3D(Vector2D Vector, double Z) : this(Vector.X, Vector.Y, Z){} 
  
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector2D To2D() => new Vector2D(X, Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector4D To4D() => new Vector4D(X, Y, Z, 0); 
- 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector256<double> ToSIMD() => Vector256.Create(X, Y, Z, 0); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector3D(System.Numerics.Vector3 A) => new Vector3D(A.X, A.Y, A.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator System.Numerics.Vector3(Vector3D A) => new System.Numerics.Vector3((float)A.X, (float)A.Y, (float)A.Z); 
  
 
-	public static Vector3D Zero => new Vector3D(0, 0, 0);
-	public static Vector3D One => new Vector3D(1, 1, 1);
-	public static Vector3D MOne => new Vector3D(-1, -1, -1);
-	public static Vector3D Half => new Vector3D(0.5, 0.5, 0.5);
-	public static Vector3D MHalf => new Vector3D(-0.5, -0.5, -0.5);
-	public static Vector3D Right => new Vector3D(1, 0, 0);
-	public static Vector3D Left => new Vector3D(-1, 0, 0);
-	public static Vector3D AxisX => new Vector3D(1, 0, 0);
-	public static Vector3D AxisMX => new Vector3D(-1, 0, 0);
-	public static Vector3D Up => new Vector3D(0, 1, 0);
-	public static Vector3D Down => new Vector3D(0, -1, 0);
-	public static Vector3D AxisY => new Vector3D(0, 1, 0);
-	public static Vector3D AxisMY => new Vector3D(0, -1, 0);
-	public static Vector3D Front => new Vector3D(0, 0, 1);
-	public static Vector3D Back => new Vector3D(0, 0, -1);
-	public static Vector3D FrontGL => new Vector3D(0, 0, -1);
-	public static Vector3D AxisZ => new Vector3D(0, 0, 1);
-	public static Vector3D AxisMZ => new Vector3D(0, 0, -1);
-	public static Vector3D MaxValue => new Vector3D(WL.Math.MaxValueD, WL.Math.MaxValueD, WL.Math.MaxValueD);
-	public static Vector3D MinValue => new Vector3D(WL.Math.MinValueD, WL.Math.MinValueD, WL.Math.MinValueD);
-	public static Vector3D NAN => new Vector3D(WL.Math.NAND, WL.Math.NAND, WL.Math.NAND); 
+	public static Vector3D Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 0, 0); }
+	public static Vector3D One {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(1, 1, 1); }
+	public static Vector3D MOne {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(-1, -1, -1); }
+	public static Vector3D Half {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0.5, 0.5, 0.5); }
+	public static Vector3D MHalf {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(-0.5, -0.5, -0.5); }
+	public static Vector3D Right {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(1, 0, 0); }
+	public static Vector3D Left {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(-1, 0, 0); }
+	public static Vector3D AxisX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(1, 0, 0); }
+	public static Vector3D AxisMX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(-1, 0, 0); }
+	public static Vector3D Up {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 1, 0); }
+	public static Vector3D Down {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, -1, 0); }
+	public static Vector3D AxisY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 1, 0); }
+	public static Vector3D AxisMY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, -1, 0); }
+	public static Vector3D Front {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 0, 1); }
+	public static Vector3D Back {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 0, -1); }
+	public static Vector3D FrontGL {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 0, -1); }
+	public static Vector3D AxisZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 0, 1); }
+	public static Vector3D AxisMZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(0, 0, -1); }
+	public static Vector3D MaxValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(WL.Math.MaxValueD, WL.Math.MaxValueD, WL.Math.MaxValueD); }
+	public static Vector3D MinValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(WL.Math.MinValueD, WL.Math.MinValueD, WL.Math.MinValueD); }
+	public static Vector3D NAN {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(WL.Math.NAND, WL.Math.NAND, WL.Math.NAND); } 
 
 	// ----------------------------------------------------------------------
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Add(Vector3D B){{
-			this = this + B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Add(double B){{
-			this = this + B;
-			return this;
-		}
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator +(Vector3D A, Vector3D B) => new Vector3D(A.X + B.X, A.Y + B.Y, A.Z + B.Z);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator +(Vector3D A, double B) => new Vector3D(A.X + B, A.Y + B, A.Z + B);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Sub(Vector3D B){{
-			this = this - B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Sub(double B){{
-			this = this - B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator -(Vector3D A, Vector3D B) => new Vector3D(A.X - B.X, A.Y - B.Y, A.Z - B.Z);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator -(Vector3D A, double B) => new Vector3D(A.X - B, A.Y - B, A.Z - B);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Mul(Vector3D B){{
-			this = this * B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Mul(double B){{
-			this = this * B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator *(Vector3D A, Vector3D B) => new Vector3D(A.X * B.X, A.Y * B.Y, A.Z * B.Z);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator *(Vector3D A, double B) => new Vector3D(A.X * B, A.Y * B, A.Z * B);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Div(Vector3D B){{
-			this = this / B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Div(double B){{
-			this = this / B;
-			return this;
-		}
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D operator /(Vector3D A, Vector3D B) => new Vector3D(A.X / B.X, A.Y / B.Y, A.Z / B.Z);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -196,19 +206,19 @@ public struct Vector3D : IEquatable<Vector3D>, WLI.Packable{
 		get => WL.Math.Length3D(X, Y, Z); } 
  
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D Normalize(){{
-			this = Normalized;
-			return this;
-		}
-	}
-	public Vector3D Normalized{
+	public Vector3D Normalize{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get{
 			double L = Length;
 			return L > WL.Math.EpsilonD ? this / L : Vector3D.Zero;
 		}
 	} 
+ 
+
+	public Vector3D Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this * -1; }
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D operator -(Vector3D A) => A.Negative; 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,13 +232,67 @@ public struct Vector3D : IEquatable<Vector3D>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public double Dot(Vector3D B) => WL.Math.Dot3D(X, Y, Z, B.X, B.Y, B.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static double Dot(Vector3D A, Vector3D B) => A.Dot(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Cross(Vector3D B) => new Vector3D((Y * B.Z) - (Z * B.Y), (Z * B.X) - (X * B.Z), (X * B.Y) - (Y * B.X));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Cross(Vector3D A, Vector3D B) => A.Cross(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector3D Lerp(Vector3D B, double T) => new Vector3D(WL.Math.LerpD(X, B.X, T), WL.Math.LerpD(Y, B.Y, T), WL.Math.LerpD(Z, B.Z, T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3D LerpSafe(Vector3D B, double T) => new Vector3D(WL.Math.LerpSafeD(X, B.X, T), WL.Math.LerpSafeD(Y, B.Y, T), WL.Math.LerpSafeD(Z, B.Z, T));
+	public Vector3D LerpSafe(Vector3D B, double T) => Lerp(B, WL.Math.Clamp01D(T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D Lerp(Vector3D A, Vector3D B, double T) => A.Lerp(B, T);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector3D LerpSafe(Vector3D A, Vector3D B, double T) => A.LerpSafe(B, T); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Min(Vector3D B) => new Vector3D(WL.Math.MinD(X, B.X), WL.Math.MinD(Y, B.Y), WL.Math.MinD(Z, B.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Min(double B) => new Vector3D(WL.Math.MinD(X, B), WL.Math.MinD(Y, B), WL.Math.MinD(Z, B));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Min(Vector3D A, Vector3D B) => A.Min(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Min(Vector3D A, double B) => A.Min(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Max(Vector3D B) => new Vector3D(WL.Math.MaxD(X, B.X), WL.Math.MaxD(Y, B.Y), WL.Math.MaxD(Z, B.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Max(double B) => new Vector3D(WL.Math.MaxD(X, B), WL.Math.MaxD(Y, B), WL.Math.MaxD(Z, B));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Max(Vector3D A, Vector3D B) => A.Max(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Max(Vector3D A, double B) => A.Max(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Clamp(Vector3D Min, Vector3D Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Clamp(double Min, double Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Clamp(Vector3D A, Vector3D Min, Vector3D Max) => A.Clamp(Min, Max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3D Clamp(Vector3D A, double Min, double Max) => A.Clamp(Min, Max); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Floor() => new Vector3D(WL.Math.FloorD(X), WL.Math.FloorD(Y), WL.Math.FloorD(Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Round() => new Vector3D(WL.Math.RoundD(X), WL.Math.RoundD(Y), WL.Math.RoundD(Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Ceil() => new Vector3D(WL.Math.CeilD(X), WL.Math.CeilD(Y), WL.Math.CeilD(Z)); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D Abs() => new Vector3D(WL.Math.AbsD(X), WL.Math.AbsD(Y), WL.Math.AbsD(Z)); 
 
 	// ----------------------------------------------------------------------
 

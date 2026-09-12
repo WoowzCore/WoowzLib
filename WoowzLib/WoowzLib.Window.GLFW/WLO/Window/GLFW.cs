@@ -10,29 +10,29 @@ public unsafe class GLFW : WLI.Window{
     // убрать этот мусор с глаз моих долой
 
     #region МУСОР
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetDC(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetDC(IntPtr hWnd);
 
-    [DllImport("user32.dll")]
-    private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+        [DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
-    [DllImport("gdi32.dll")]
-    private static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int startScan, int scanLines, void* pixels, void* bmi, uint colorUse);
+        [DllImport("gdi32.dll")]
+        private static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int startScan, int scanLines, void* pixels, void* bmi, uint colorUse);
 
-    [StructLayout(LayoutKind.Sequential)]
-    struct BITMAPINFOHEADER{
-        public uint   biSize;
-        public int    biWidth;
-        public int    biHeight;
-        public ushort biPlanes;
-        public ushort biBitCount;
-        public uint   biCompression;
-        public uint   biSizeImage;
-        public int    biXPelsPerMeter;
-        public int    biYPelsPerMeter;
-        public uint   biClrUsed;
-        public uint   biClrImportant;
-    }
+        [StructLayout(LayoutKind.Sequential)]
+        struct BITMAPINFOHEADER{
+            public uint   biSize;
+            public int    biWidth;
+            public int    biHeight;
+            public ushort biPlanes;
+            public ushort biBitCount;
+            public uint   biCompression;
+            public uint   biSizeImage;
+            public int    biXPelsPerMeter;
+            public int    biYPelsPerMeter;
+            public uint   biClrUsed;
+            public uint   biClrImportant;
+        }
     #endregion
     
     private WindowHandle*    __Handle;

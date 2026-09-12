@@ -142,8 +142,8 @@ public struct Geometry{
 
         for(int i = 0; i < Vertices.Length; i++){
             ref Vertex Vertex = ref Vertices[i];
-            if(UpdatePositions){ Vertex.Position = Matrix * Vertex.Position;                         }
-            if(UpdateNormals  ){ Vertex.Normal   = Matrix.TransformNormal(Vertex.Normal).Normalized; }
+            if(UpdatePositions){ Vertex.Position = Matrix * Vertex.Position;                        }
+            if(UpdateNormals  ){ Vertex.Normal   = Matrix.TransformNormal(Vertex.Normal).Normalize; }
         }
     }
     /// <inheritdoc cref="ApplyTransform(Span{Vertex},Matrix4F,bool,bool)"/>

@@ -154,7 +154,7 @@ public class CSGenerator{
 
 
 
-    public void AddProperty(E_AM AM, string ValueType, string Name, string Logic, string Default) => SB.Append($"{ToString_AM(AM)} {ValueType} {Name}{Logic}{(string.IsNullOrEmpty(Default) ? "" : $" = {Default}")}{(Logic.StartsWith("=>") ? ";" : "")}");
+    public void AddProperty(E_AM AM, string ValueType, string Name, string Logic, string Default) => SB.Append($"{ToString_AM(AM)} {ValueType} {Name}{(Logic.EndsWith(';') ? Logic[..^1] : Logic)}{(string.IsNullOrEmpty(Default) ? "" : $" = {Default}")}{(Logic.EndsWith(';') ? ";" : "")}");
     public void AddProperty(E_AM AM, string ValueType, string Name, string Logic) => AddProperty(AM, ValueType, Name, Logic, "");
 
 
@@ -164,7 +164,7 @@ public class CSGenerator{
 
 
 
-    public void AddFunction(E_AM AM, string Return, string Name, string[] Params, string Logic) => SB.Append($"{ToString_AM(AM)} {Return} {Name}({FormatParams(Params)}){(Logic.StartsWith("=>") ? Logic + ";" : Logic)}");
+    public void AddFunction(E_AM AM, string Return, string Name, string[] Params, string Logic) => SB.Append($"{ToString_AM(AM)} {Return} {Name}({FormatParams(Params)}){Logic}");
     public void AddFunction(E_AM AM, string Name, string[] Params, string Logic) => AddFunction(AM, "void", Name, Params, Logic);
 
 

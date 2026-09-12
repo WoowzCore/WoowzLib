@@ -10,9 +10,9 @@ public struct Math{
     public const float  MaxValueF = float.MaxValue;
     public const int    MaxValueI = int.MaxValue;
     public const double MaxValueD = double.MaxValue;
-    public const float  MinValueF = float.MaxValue;
-    public const int    MinValueI = int.MaxValue;
-    public const double MinValueD = double.MaxValue;
+    public const float  MinValueF = float.MinValue;
+    public const int    MinValueI = int.MinValue;
+    public const double MinValueD = double.MinValue;
 
     public const float  NANF = float .NaN;
     public const double NAND = double.NaN;
@@ -22,50 +22,8 @@ public struct Math{
     public const double DegToRadD = PiD / 180;
     public const double RadToDegD = 180 / PiD;
 
-    public const float  EpsilonF = Epsilon00000001F;
-    public const double EpsilonD = Epsilon00000001D;
-    
-    public const float  EpsilonMinF = 1e-45f;
-    public const double EpsilonMinD = 1e-45;
-    
-    public const float  Epsilon01F                   = 1e-1f;
-    public const double Epsilon01D                   = 1e-1;
-    public const float  Epsilon001F                  = 1e-1f;
-    public const double Epsilon001D                  = 1e-1;
-    public const float  Epsilon0001F                 = 1e-2f;
-    public const double Epsilon0001D                 = 1e-2;
-    public const float  Epsilon00001F                = 1e-3f;
-    public const double Epsilon00001D                = 1e-3;
-    public const float  Epsilon000001F               = 1e-4f;
-    public const double Epsilon000001D               = 1e-4;
-    public const float  Epsilon0000001F              = 1e-5f;
-    public const double Epsilon0000001D              = 1e-5;
-    public const float  Epsilon00000001F             = 1e-6f;
-    public const double Epsilon00000001D             = 1e-6;
-    public const float  Epsilon000000001F            = 1e-7f;
-    public const double Epsilon000000001D            = 1e-7;
-    public const float  Epsilon0000000001F           = 1e-8f;
-    public const double Epsilon0000000001D           = 1e-8;
-    public const float  Epsilon00000000001F          = 1e-9f;
-    public const double Epsilon00000000001D          = 1e-9;
-    public const float  Epsilon000000000001F         = 1e-10f;
-    public const double Epsilon000000000001D         = 1e-10;
-    public const float  Epsilon0000000000001F        = 1e-11f;
-    public const double Epsilon0000000000001D        = 1e-11;
-    public const float  Epsilon00000000000001F       = 1e-12f;
-    public const double Epsilon00000000000001D       = 1e-12;
-    public const float  Epsilon000000000000001F      = 1e-13f;
-    public const double Epsilon000000000000001D      = 1e-13;
-    public const float  Epsilon0000000000000001F     = 1e-14f;
-    public const double Epsilon0000000000000001D     = 1e-14;
-    public const float  Epsilon00000000000000001F    = 1e-15f;
-    public const double Epsilon00000000000000001D    = 1e-15;
-    public const float  Epsilon000000000000000001F   = 1e-16f;
-    public const double Epsilon000000000000000001D   = 1e-16;
-    public const float  Epsilon0000000000000000001F  = 1e-17f;
-    public const double Epsilon0000000000000000001D  = 1e-17;
-    public const float  Epsilon00000000000000000001F = 1e-18f;
-    public const double Epsilon00000000000000000001D = 1e-18;
+    public const float  EpsilonF = 1e-6f;
+    public const double EpsilonD = 1e-6;
     
     public const float  Inverse255 = 1f / 255;
     
@@ -95,10 +53,20 @@ public struct Math{
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    LerpSafeI(int    A, int    B, float  T) => LerpI(A, B, Clamp01F(T));
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double LerpSafeD(double A, double B, double T) => LerpD(A, B, Clamp01D(T));
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  FloorF(float  A) => System.MathF.Floor(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    FloorI(float  A) => (int)FloorF(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    FloorI(double A) => (int)FloorD(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double FloorD(double A) => System.Math.Floor(A);
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  RoundF(float  A) => System.MathF.Round(A);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    RoundI(float  A) => (int)RoundF(A);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    RoundI(double A) => (int)RoundD(A);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double RoundD(double A) => System.Math.Round(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  CeilF(float  A) => System.MathF.Ceiling(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    CeilI(float  A) => (int)CeilF(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    CeilI(double A) => (int)CeilD(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double CeilD(double A) => System.Math.Ceiling(A);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  AbsF(float  A) => System.Math.Abs(A);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    AbsI(int    A) => System.Math.Abs(A);
@@ -107,6 +75,10 @@ public struct Math{
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  SqrtF(float  A) => System.MathF.Sqrt(A);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  SqrtI(int    A) => System.MathF.Sqrt(A);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double SqrtD(double A) => System.Math .Sqrt(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  AspectF(float  W, float  H) => H > 0 ? W/H : 1;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  AspectI(int    W, int    H) => AspectF(W, H);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double AspectD(double W, double H) => H > 0 ? W/H : 1;
     
     // ----------------------------------------------------------------------
     
@@ -139,6 +111,10 @@ public struct Math{
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  Dot4F(float  AX, float  AY, float  AZ, float  AW, float  BX, float  BY, float  BZ, float  BW) => (AX*BX) + (AY*BY) + (AZ*BZ) + (AW*BW);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    Dot4I(int    AX, int    AY, int    AZ, int    AW, int    BX, int    BY, int    BZ, int    BW) => (AX*BX) + (AY*BY) + (AZ*BZ) + (AW*BW);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double Dot4D(double AX, double AY, double AZ, double AW, double BX, double BY, double BZ, double BW) => (AX*BX) + (AY*BY) + (AZ*BZ) + (AW*BW);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  CrossF(float  AX, float  AY, float  BX, float  BY) => (AX*BY) - (AY*BX);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    CrossI(int    AX, int    AY, int    BX, int    BY) => (AX*BY) - (AY*BX);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double CrossD(double AX, double AY, double BX, double BY) => (AX*BY) - (AY*BX);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  DistanceSquared2F(float  AX, float  AY, float  BX, float  BY) => LengthSquared2F(AX-BX, AY-BY);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    DistanceSquared2I(int    AX, int    AY, int    BX, int    BY) => LengthSquared2I(AX-BX, AY-BY);
@@ -233,7 +209,7 @@ public struct Math{
         Dot = ClampF(Dot, -1, 1);
 
         float Theta = MathF.Acos(Dot);
-        Vector3F RelativeVector = (B - A * Dot).Normalized;
+        Vector3F RelativeVector = (B - A * Dot).Normalize;
 
         return (A * MathF.Cos(Theta)) + (RelativeVector * MathF.Sin(Theta));
     }

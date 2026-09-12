@@ -3,11 +3,12 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector4D сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 00:22:18
+	Сгенерирован: 2026.09.12 03:04:37
  */ 
 
 namespace WLO.Math; 
 
+[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public struct Vector4D : IEquatable<Vector4D>, WLI.Packable{
 	public double X;
 	public double Y;
@@ -21,52 +22,98 @@ public struct Vector4D : IEquatable<Vector4D>, WLI.Packable{
 	public double A { get => W; set => W = value; } 
  
 
-	public Vector2D XY => new Vector2D(X, Y);
-	public Vector2D YZ => new Vector2D(Y, Z);
-	public Vector2D ZW => new Vector2D(Z, W);
-	public Vector2D WX => new Vector2D(W, X);
-	public Vector3D XYZ => new Vector3D(X, Y, Z);
-	public Vector3D YZW => new Vector3D(Y, Z, W);
-	public Vector3D ZWX => new Vector3D(Z, W, X);
-	public Vector3D WXY => new Vector3D(W, X, Y);
-	public Vector4D YZWX => new Vector4D(Y, Z, W, X);
-	public Vector4D ZWXY => new Vector4D(Z, W, X, Y);
-	public Vector4D WXYZ => new Vector4D(W, X, Y, Z);
-	public Vector2D XX => new Vector2D(X, X);
-	public Vector3D XXX => new Vector3D(X, X, X);
-	public Vector4D XXXX => new Vector4D(X, X, X, X);
-	public Vector2D YY => new Vector2D(Y, Y);
-	public Vector3D YYY => new Vector3D(Y, Y, Y);
-	public Vector4D YYYY => new Vector4D(Y, Y, Y, Y);
-	public Vector2D ZZ => new Vector2D(Z, Z);
-	public Vector3D ZZZ => new Vector3D(Z, Z, Z);
-	public Vector4D ZZZZ => new Vector4D(Z, Z, Z, Z);
-	public Vector2D WW => new Vector2D(W, W);
-	public Vector3D WWW => new Vector3D(W, W, W);
-	public Vector4D WWWW => new Vector4D(W, W, W, W);
-	public Vector2D RG => new Vector2D(R, G);
-	public Vector2D GB => new Vector2D(G, B);
-	public Vector2D BA => new Vector2D(B, A);
-	public Vector2D AR => new Vector2D(A, R);
-	public Vector3D RGB => new Vector3D(R, G, B);
-	public Vector3D GBA => new Vector3D(G, B, A);
-	public Vector3D BAR => new Vector3D(B, A, R);
-	public Vector3D ARG => new Vector3D(A, R, G);
-	public Vector4D GBAR => new Vector4D(G, B, A, R);
-	public Vector4D BARG => new Vector4D(B, A, R, G);
-	public Vector4D ARGB => new Vector4D(A, R, G, B);
-	public Vector2D RR => new Vector2D(R, R);
-	public Vector3D RRR => new Vector3D(R, R, R);
-	public Vector4D RRRR => new Vector4D(R, R, R, R);
-	public Vector2D GG => new Vector2D(G, G);
-	public Vector3D GGG => new Vector3D(G, G, G);
-	public Vector4D GGGG => new Vector4D(G, G, G, G);
-	public Vector2D BB => new Vector2D(B, B);
-	public Vector3D BBB => new Vector3D(B, B, B);
-	public Vector4D BBBB => new Vector4D(B, B, B, B);
-	public Vector2D AA => new Vector2D(A, A);
-	public Vector3D AAA => new Vector3D(A, A, A);
-	public Vector4D AAAA => new Vector4D(A, A, A, A); 
+	public Vector2D XY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(X, Y); }
+	public Vector2D YZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Y, Z); }
+	public Vector2D ZW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Z, W); }
+	public Vector2D WX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(W, X); }
+	public Vector3D XYZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(X, Y, Z); }
+	public Vector3D YZW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Y, Z, W); }
+	public Vector3D ZWX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Z, W, X); }
+	public Vector3D WXY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(W, X, Y); }
+	public Vector4D YZWX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(Y, Z, W, X); }
+	public Vector4D ZWXY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(Z, W, X, Y); }
+	public Vector4D WXYZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(W, X, Y, Z); }
+	public Vector2D XX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(X, X); }
+	public Vector3D XXX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(X, X, X); }
+	public Vector4D XXXX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(X, X, X, X); }
+	public Vector2D YY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Y, Y); }
+	public Vector3D YYY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Y, Y, Y); }
+	public Vector4D YYYY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(Y, Y, Y, Y); }
+	public Vector2D ZZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(Z, Z); }
+	public Vector3D ZZZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(Z, Z, Z); }
+	public Vector4D ZZZZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(Z, Z, Z, Z); }
+	public Vector2D WW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(W, W); }
+	public Vector3D WWW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(W, W, W); }
+	public Vector4D WWWW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(W, W, W, W); }
+	public Vector2D RG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(R, G); }
+	public Vector2D GB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(G, B); }
+	public Vector2D BA {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(B, A); }
+	public Vector2D AR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(A, R); }
+	public Vector3D RGB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(R, G, B); }
+	public Vector3D GBA {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(G, B, A); }
+	public Vector3D BAR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(B, A, R); }
+	public Vector3D ARG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(A, R, G); }
+	public Vector4D GBAR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(G, B, A, R); }
+	public Vector4D BARG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(B, A, R, G); }
+	public Vector4D ARGB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(A, R, G, B); }
+	public Vector2D RR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(R, R); }
+	public Vector3D RRR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(R, R, R); }
+	public Vector4D RRRR {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(R, R, R, R); }
+	public Vector2D GG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(G, G); }
+	public Vector3D GGG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(G, G, G); }
+	public Vector4D GGGG {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(G, G, G, G); }
+	public Vector2D BB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(B, B); }
+	public Vector3D BBB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(B, B, B); }
+	public Vector4D BBBB {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(B, B, B, B); }
+	public Vector2D AA {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector2D(A, A); }
+	public Vector3D AAA {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector3D(A, A, A); }
+	public Vector4D AAAA {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(A, A, A, A); } 
  
 
 	public Vector4D(double X, double Y, double Z, double W){
@@ -81,103 +128,113 @@ public struct Vector4D : IEquatable<Vector4D>, WLI.Packable{
 	public Vector4D(double X, double Y, double Z) : this(X, Y, Z, 1){} /* <- Типо цвет */ 
  
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector2D To2D() => new Vector2D(X, Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector3D To3D() => new Vector3D(X, Y, Z); 
- 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector256<double> ToSIMD() => Unsafe.As<Vector4D, Vector256<double>>(ref Unsafe.AsRef(in this)); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4D(System.Numerics.Vector4 A) => new Vector4D(A.X, A.Y, A.Z, A.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator System.Numerics.Vector4(Vector4D A) => new System.Numerics.Vector4((float)A.X, (float)A.Y, (float)A.Z, (float)A.W); 
  
 
-	public static Vector4D Zero => new Vector4D(0, 0, 0, 0);
-	public static Vector4D One => new Vector4D(1, 1, 1, 1);
-	public static Vector4D MOne => new Vector4D(-1, -1, -1, -1);
-	public static Vector4D Half => new Vector4D(0.5, 0.5, 0.5, 0.5);
-	public static Vector4D MHalf => new Vector4D(-0.5, -0.5, -0.5, -0.5);
-	public static Vector4D Right => new Vector4D(1, 0, 0, 0);
-	public static Vector4D Left => new Vector4D(-1, 0, 0, 0);
-	public static Vector4D AxisX => new Vector4D(1, 0, 0, 0);
-	public static Vector4D AxisMX => new Vector4D(-1, 0, 0, 0);
-	public static Vector4D Up => new Vector4D(0, 1, 0, 0);
-	public static Vector4D Down => new Vector4D(0, -1, 0, 0);
-	public static Vector4D AxisY => new Vector4D(0, 1, 0, 0);
-	public static Vector4D AxisMY => new Vector4D(0, -1, 0, 0);
-	public static Vector4D Front => new Vector4D(0, 0, 1, 0);
-	public static Vector4D Back => new Vector4D(0, 0, -1, 0);
-	public static Vector4D FrontGL => new Vector4D(0, 0, -1, 0);
-	public static Vector4D AxisZ => new Vector4D(0, 0, 1, 0);
-	public static Vector4D AxisMZ => new Vector4D(0, 0, -1, 0);
-	public static Vector4D Ana => new Vector4D(0, 0, 0, 1);
-	public static Vector4D Kata => new Vector4D(0, 0, 0, -1);
-	public static Vector4D AxisW => new Vector4D(0, 0, 0, 1);
-	public static Vector4D AxisMW => new Vector4D(0, 0, 0, -1);
-	public static Vector4D MaxValue => new Vector4D(WL.Math.MaxValueD, WL.Math.MaxValueD, WL.Math.MaxValueD, WL.Math.MaxValueD);
-	public static Vector4D MinValue => new Vector4D(WL.Math.MinValueD, WL.Math.MinValueD, WL.Math.MinValueD, WL.Math.MinValueD);
-	public static Vector4D NAN => new Vector4D(WL.Math.NAND, WL.Math.NAND, WL.Math.NAND, WL.Math.NAND); 
+	public static Vector4D Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 0, 0); }
+	public static Vector4D One {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(1, 1, 1, 1); }
+	public static Vector4D MOne {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(-1, -1, -1, -1); }
+	public static Vector4D Half {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0.5, 0.5, 0.5, 0.5); }
+	public static Vector4D MHalf {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(-0.5, -0.5, -0.5, -0.5); }
+	public static Vector4D Right {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(1, 0, 0, 0); }
+	public static Vector4D Left {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(-1, 0, 0, 0); }
+	public static Vector4D AxisX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(1, 0, 0, 0); }
+	public static Vector4D AxisMX {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(-1, 0, 0, 0); }
+	public static Vector4D Up {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 1, 0, 0); }
+	public static Vector4D Down {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, -1, 0, 0); }
+	public static Vector4D AxisY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 1, 0, 0); }
+	public static Vector4D AxisMY {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, -1, 0, 0); }
+	public static Vector4D Front {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 1, 0); }
+	public static Vector4D Back {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, -1, 0); }
+	public static Vector4D FrontGL {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, -1, 0); }
+	public static Vector4D AxisZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 1, 0); }
+	public static Vector4D AxisMZ {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, -1, 0); }
+	public static Vector4D Ana {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 0, 1); }
+	public static Vector4D Kata {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 0, -1); }
+	public static Vector4D AxisW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 0, 1); }
+	public static Vector4D AxisMW {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(0, 0, 0, -1); }
+	public static Vector4D MaxValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(WL.Math.MaxValueD, WL.Math.MaxValueD, WL.Math.MaxValueD, WL.Math.MaxValueD); }
+	public static Vector4D MinValue {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(WL.Math.MinValueD, WL.Math.MinValueD, WL.Math.MinValueD, WL.Math.MinValueD); }
+	public static Vector4D NAN {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => new Vector4D(WL.Math.NAND, WL.Math.NAND, WL.Math.NAND, WL.Math.NAND); } 
 
 	// ----------------------------------------------------------------------
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Add(Vector4D B){{
-			this = this + B;
-			return this;
-		}
+	public static Vector4D operator +(Vector4D A, Vector4D B){
+		Vector256<double> Result = Vector256.Add(A.ToSIMD(), B.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Add(double B){{
-			this = this + B;
-			return this;
-		}
+	public static Vector4D operator +(Vector4D A, double B){
+		Vector256<double> Result = Vector256.Add(A.ToSIMD(), Vector256.Create(B));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator +(Vector4D A, Vector4D B) => new Vector4D(A.X + B.X, A.Y + B.Y, A.Z + B.Z, A.W + B.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator +(Vector4D A, double B) => new Vector4D(A.X + B, A.Y + B, A.Z + B, A.W + B);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Sub(Vector4D B){{
-			this = this - B;
-			return this;
-		}
+	public static Vector4D operator -(Vector4D A, Vector4D B){
+		Vector256<double> Result = Vector256.Subtract(A.ToSIMD(), B.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Sub(double B){{
-			this = this - B;
-			return this;
-		}
+	public static Vector4D operator -(Vector4D A, double B){
+		Vector256<double> Result = Vector256.Subtract(A.ToSIMD(), Vector256.Create(B));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator -(Vector4D A, Vector4D B) => new Vector4D(A.X - B.X, A.Y - B.Y, A.Z - B.Z, A.W - B.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator -(Vector4D A, double B) => new Vector4D(A.X - B, A.Y - B, A.Z - B, A.W - B);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Mul(Vector4D B){{
-			this = this * B;
-			return this;
-		}
+	public static Vector4D operator *(Vector4D A, Vector4D B){
+		Vector256<double> Result = Vector256.Multiply(A.ToSIMD(), B.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Mul(double B){{
-			this = this * B;
-			return this;
-		}
+	public static Vector4D operator *(Vector4D A, double B){
+		Vector256<double> Result = Vector256.Multiply(A.ToSIMD(), Vector256.Create(B));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator *(Vector4D A, Vector4D B) => new Vector4D(A.X * B.X, A.Y * B.Y, A.Z * B.Z, A.W * B.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator *(Vector4D A, double B) => new Vector4D(A.X * B, A.Y * B, A.Z * B, A.W * B);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Div(Vector4D B){{
-			this = this / B;
-			return this;
-		}
+	public static Vector4D operator /(Vector4D A, Vector4D B){
+		Vector256<double> Result = Vector256.Divide(A.ToSIMD(), B.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Div(double B){{
-			this = this / B;
-			return this;
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator /(Vector4D A, Vector4D B) => new Vector4D(A.X / B.X, A.Y / B.Y, A.Z / B.Z, A.W / B.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4D operator /(Vector4D A, double B) => new Vector4D(A.X / B, A.Y / B, A.Z / B, A.W / B); 
+	public static Vector4D operator /(Vector4D A, double B){
+		Vector256<double> Result = Vector256.Divide(A.ToSIMD(), Vector256.Create(B));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	} 
  
 
 	public double this[int Index]{
@@ -235,13 +292,7 @@ public struct Vector4D : IEquatable<Vector4D>, WLI.Packable{
 		get => WL.Math.Length4D(X, Y, Z, W); } 
  
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Normalize(){{
-			this = Normalized;
-			return this;
-		}
-	}
-	public Vector4D Normalized{
+	public Vector4D Normalize{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get{
 			double L = Length;
@@ -250,8 +301,17 @@ public struct Vector4D : IEquatable<Vector4D>, WLI.Packable{
 	} 
  
 
+	public Vector4D Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this * -1; }
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public double DistanceSquared(Vector4D B) => WL.Math.DistanceSquared4D(X, Y, Z, W, B.X, B.Y, B.Z, B.W);
+	public static Vector4D operator -(Vector4D A) => A.Negative; 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public double DistanceSquared(Vector4D B){
+		Vector256<double> Diff = Vector256.Subtract(this.ToSIMD(), B.ToSIMD());
+		return Vector256.Dot(Diff, Diff);
+	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public double Distance(Vector4D B) => WL.Math.Distance4D(X, Y, Z, W, B.X, B.Y, B.Z, B.W);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -261,13 +321,85 @@ public struct Vector4D : IEquatable<Vector4D>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D Lerp(Vector4D B, double T) => new Vector4D(WL.Math.LerpD(X, B.X, T), WL.Math.LerpD(Y, B.Y, T), WL.Math.LerpD(Z, B.Z, T), WL.Math.LerpD(W, B.W, T));
+	public double Dot(Vector4D B) => Vector256.Dot(this.ToSIMD(), B.ToSIMD());
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4D LerpSafe(Vector4D B, double T) => new Vector4D(WL.Math.LerpSafeD(X, B.X, T), WL.Math.LerpSafeD(Y, B.Y, T), WL.Math.LerpSafeD(Z, B.Z, T), WL.Math.LerpSafeD(W, B.W, T));
+	public static double Dot(Vector4D A, Vector4D B) => A.Dot(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Lerp(Vector4D B, double T){
+		Vector256<double> Result = Vector256.Add(this.ToSIMD(), Vector256.Multiply(Vector256.Subtract(B.ToSIMD(), this.ToSIMD()), Vector256.Create(T)));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D LerpSafe(Vector4D B, double T) => Lerp(B, WL.Math.Clamp01D(T));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector4D Lerp(Vector4D A, Vector4D B, double T) => A.Lerp(B, T);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Vector4D LerpSafe(Vector4D A, Vector4D B, double T) => A.LerpSafe(B, T); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Min(Vector4D B){
+		Vector256<double> Result = Vector256.Min(this.ToSIMD(), B.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Min(double B){
+		Vector256<double> Result = Vector256.Min(this.ToSIMD(), Vector256.Create(B));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector4D Min(Vector4D A, Vector4D B) => A.Min(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector4D Min(Vector4D A, double B) => A.Min(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Max(Vector4D B){
+		Vector256<double> Result = Vector256.Max(this.ToSIMD(), B.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Max(double B){
+		Vector256<double> Result = Vector256.Max(this.ToSIMD(), Vector256.Create(B));
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector4D Max(Vector4D A, Vector4D B) => A.Max(B);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector4D Max(Vector4D A, double B) => A.Max(B); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Clamp(Vector4D Min, Vector4D Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Clamp(double Min, double Max) => this.Min(Max).Max(Min);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector4D Clamp(Vector4D A, Vector4D Min, Vector4D Max) => A.Clamp(Min, Max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector4D Clamp(Vector4D A, double Min, double Max) => A.Clamp(Min, Max); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Floor(){
+		Vector256<double> Result = Vector256.Floor(this.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Round() => new Vector4D(WL.Math.RoundD(X), WL.Math.RoundD(Y), WL.Math.RoundD(Z), WL.Math.RoundD(W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Ceil(){
+		Vector256<double> Result = Vector256.Ceiling(this.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	} 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D Abs(){
+		Vector256<double> Result = Vector256.Abs(this.ToSIMD());
+		return Unsafe.As<Vector256<double>, Vector4D>(ref Result);
+	} 
 
 	// ----------------------------------------------------------------------
 
