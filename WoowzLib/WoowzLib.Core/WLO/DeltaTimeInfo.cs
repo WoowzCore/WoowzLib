@@ -5,6 +5,8 @@ public readonly struct DeltaTimeInfo{
     public readonly double FPS;
     public readonly long   LastTicks;
 
+    public float DTF => (float)DT;
+    
     public DeltaTimeInfo(long LastTicks){
         this.LastTicks = LastTicks;
     }

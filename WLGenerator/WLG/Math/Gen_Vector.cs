@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Numerics;
 using System.Runtime.Intrinsics;
+using Microsoft.CodeAnalysis.FlowAnalysis;
 using WLGenerator;
 using WLGO;
 using WLO;
@@ -166,16 +167,17 @@ public static class Gen_Vector{
                     Gen.Space(2);
                     
                     void GenerateTypeConverts(){
-                        void __Gen(int Count__){
-                            if(Count__ == Count){ return; }
-                            string __VectorName = VectorName(TypeRaw, Count__);
-                            string[] Axes__ = WL.String.PadRight(WL.String.Take(Axes, WL.Math.MinI(Count, Count__)), Count__, "0");
-                            Gen.AddAttributeAggressiveInlining();
-                            Gen.AddFunction(CSGenerator.E_AM.Public, __VectorName, $"To{Count__}{TypeSymbol(TypeRaw)}", [], $"=> new {__VectorName}({(WL.String.Join(Axes__))});");
+                        for(int TargetCount = 2; TargetCount <= 4; TargetCount++){
+                            foreach(Gen_Vector.Type TargetType in Enum.GetValues<Gen_Vector.Type>()){
+                                if(TargetCount == Count && TargetType == TypeRaw){ continue; }
+
+                                string TargetName = VectorName(TargetType, TargetCount);
+                                string TargetSymbol = TypeSymbol(TargetType);
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.Public, TargetName, $"To{TargetCount}{TargetSymbol}", [], $"=> ({TargetName})this;");
+                            }
                         }
-                        __Gen(2);
-                        __Gen(3);
-                        __Gen(4);
                         
                         Gen.Space();
                         
@@ -185,9 +187,40 @@ public static class Gen_Vector{
                         Gen.Space();
                         
                         Gen.AddAttributeAggressiveInlining();
-                        Gen.AddFunction(CSGenerator.E_AM.PublicStatic, "implicit", $"operator {Name}", [$"System.Numerics.Vector{Count}", "A"], $"=> new {Name}({WL.String.Join(WL.String.FormatAll(AvailableAxes, $"{(TypeRaw == Gen_Vector.Type.Int ? "(int)" : "")}A.{{0}}"))});");
+                        Gen.AddFunction(CSGenerator.E_AM.PublicStatic, TypeRaw == Gen_Vector.Type.Int ? "explicit" : "implicit", $"operator {Name}", [$"System.Numerics.Vector{Count}", "A"], $"=> new {Name}({WL.String.Join(WL.String.FormatAll(AvailableAxes, $"{(TypeRaw == Gen_Vector.Type.Int ? "(int)" : "")}A.{{0}}"))});");
                         Gen.AddAttributeAggressiveInlining();
-                        Gen.AddFunction(CSGenerator.E_AM.PublicStatic, "implicit", $"operator System.Numerics.Vector{Count}", [Name, "A"], $"=> new System.Numerics.Vector{Count}({WL.String.Join(WL.String.FormatAll(AvailableAxes, $"{(TypeRaw == Gen_Vector.Type.Double ? "(float)" : "")}A.{{0}}"))});");
+                        Gen.AddFunction(CSGenerator.E_AM.PublicStatic, TypeRaw == Gen_Vector.Type.Double ? "explicit" : "implicit", $"operator System.Numerics.Vector{Count}", [Name, "A"], $"=> new System.Numerics.Vector{Count}({WL.String.Join(WL.String.FormatAll(AvailableAxes, $"{(TypeRaw == Gen_Vector.Type.Double ? "(float)" : "")}A.{{0}}"))});");
+
+                        Gen.Space();
+
+                        for(int TargetCount = 2; TargetCount <= 4; TargetCount++){
+                            foreach(Gen_Vector.Type TargetType in Enum.GetValues<Gen_Vector.Type>()){
+                                if(TargetCount == Count && TargetType == TypeRaw){ continue; }
+
+                                string TargetName = VectorName(TargetType, TargetCount);
+                                string TargetTypeS = GetType(TargetType);
+
+                                bool IsImplicit = ((TargetType == TypeRaw || (TypeRaw == Gen_Vector.Type.Int) || (TypeRaw == Gen_Vector.Type.Float && TargetType == Gen_Vector.Type.Double)) && TargetCount >= Count);
+                                string OperationKeyword = IsImplicit ? "implicit": "explicit";
+                                
+                                Gen.AddAttributeAggressiveInlining();
+
+                                if(TargetCount != Count){
+                                    string[] AxesForCtor = new string[TargetCount];
+                                    for(int i = 0; i < TargetCount; i++){
+                                        if(i < Count){
+                                            string Axis = GetAxis(i + 1);
+                                            AxesForCtor[i] = (TargetType == TypeRaw) ? $"A.{Axis}" : $"({TargetTypeS})A.{Axis}";
+                                        }else{
+                                            AxesForCtor[i] = "0";
+                                        }
+                                    }
+                                    Gen.AddFunction(CSGenerator.E_AM.PublicStatic, OperationKeyword, $"operator {TargetName}", [Name, "A"], $"=> new {TargetName}({WL.String.Join(AxesForCtor)});");
+                                }else{
+                                    Gen.AddFunction(CSGenerator.E_AM.PublicStatic, OperationKeyword, $"operator {TargetName}", [Name, "A"], $"=> new {TargetName}({WL.String.Join(WL.String.FormatAll(AvailableAxes, $"({TargetTypeS})A.{{0}}"))});");
+                                }
+                            }
+                        }
                     }
                     GenerateTypeConverts();
 
@@ -307,13 +340,14 @@ public static class Gen_Vector{
                         __GenNormal();
 
                         void __GenNegative(){
-                            if(Count == 4 && TypeRaw != Gen_Vector.Type.Double){
-                                Gen.AddProperty(CSGenerator.E_AM.Public, Name, "Negative", $"{{ {Gen.GetAttributeAggressiveInlining()} get{{ {Vector128T} Result = {Vector128}.Negate(this.ToSIMD()); return {UnsafeAsFrom128}(ref Result); }} }}");
-                            }else{
-                                Gen.AddProperty(CSGenerator.E_AM.Public, Name, "Negative", $"{{ {Gen.GetAttributeAggressiveInlining()} get => this * -1; }}");
-                            }
+                            Gen.AddProperty(CSGenerator.E_AM.Public, Name, "Negative", $"{{ {Gen.GetAttributeAggressiveInlining()} get => -this; }}");
+                            
                             Gen.AddAttributeAggressiveInlining();
-                            Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "operator -", [Name, "A"], "=> A.Negative;");
+                            if(UseSIMD){
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "operator -", [Name, "A"], $"{{ {Vector128T} Result = {Vector128}.Negate(A.ToSIMD()); return {UnsafeAsFrom128}(ref Result); }}");
+                            }else{
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "operator -", [Name, "A"], $"=> new {Name}({WL.String.Join(WL.String.FormatAll(AvailableAxes, "-A.{0}"))});");
+                            }
                             
                             Gen.Space(2);
                         }
@@ -454,6 +488,83 @@ public static class Gen_Vector{
                             Gen.Space(2);
                         }
                         __GenFloorCeilRound();
+
+                        void __GenDirections(){
+                            if(Count == 4){ return; }
+
+                            string S = TypeSymbol(TypeRaw);
+                            string SF = TypeRaw == Gen_Vector.Type.Int ? "F" : S;
+                            string NameF = TypeRaw == Gen_Vector.Type.Int ? VectorName(Gen_Vector.Type.Float, Count) : Name;
+                            string TypeF = TypeRaw == Gen_Vector.Type.Int ? "float" : Type;
+                            string Normalize = TypeRaw == Gen_Vector.Type.Int ? "" : ".Normalize";
+                            
+                            if(Count == 3){
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, NameF, "GetFront", [Type, "Yaw", Type, "Pitch"], $"=> new {NameF}(WL.Math.Sin{S}(Yaw) * WL.Math.Cos{S}(Pitch), -WL.Math.Sin{S}(Pitch), WL.Math.Cos{S}(Yaw) * WL.Math.Cos{S}(Pitch)).Normalize;");
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, NameF, "GetFront", [Type, "Yaw"], $"=> new {NameF}(WL.Math.Sin{S}(Yaw), 0, WL.Math.Cos{S}(Yaw)).Normalize;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, NameF, "GetBack", [Type, "Yaw", Type, "Pitch"], $"=> {Name}.GetFront(Yaw, Pitch).Negative;");
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, NameF, "GetBack", [Type, "Yaw"], $"=> {Name}.GetFront(Yaw).Negative;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "GetRight", [Name, "Front"], $"{{ if(WL.Math.Abs{S}(Front.Y) > 0.999f){{ return {Name}.Cross({Name}.Front, Front){Normalize}; }} return {Name}.Cross({Name}.Up, Front){Normalize}; }}");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "GetLeft", [Name, "Front"], $"=> {Name}.GetRight(Front).Negative;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "GetUp", [Name, "Front", Name, "Right"], $"=> {Name}.Cross(Right, Front){Normalize};");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "GetDown", [Name, "Front", Name, "Right"], $"=> {Name}.GetUp(Front, Right).Negative;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.Public, $"({TypeF} Yaw, {TypeF} Pitch)", "GetAngle", [], $"{{ {TypeF} L = Length; if(L < 0.0001f){{ return (0, 0); }} {NameF} Direction = {(TypeRaw == Gen_Vector.Type.Int ? $"({NameF})" : "")}this / L; return (WL.Math.ATan2{SF}(Direction.X, Direction.Z), WL.Math.ASin{SF}(WL.Math.Clamp11{SF}(-Direction.Y))); }}");
+                            }else if(Count == 2){
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, NameF, "GetFront", [Type, "Angle"], $"=> new {NameF}(WL.Math.Cos{S}(Angle), WL.Math.Sin{S}(Angle)).Normalize;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, NameF, "GetBack", [Type, "Angle"], $"=> {Name}.GetFront(Angle).Negative;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "GetRight", [Name, "Front"], $"=> new {Name}(Front.Y, -Front.X){Normalize};");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, Name, "GetLeft", [Name, "Front"], $"=> {Name}.GetRight(Front).Negative;");
+                                
+                                Gen.Space();
+                                
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.Public, TypeF, "GetAngle", [], $"=> WL.Math.ATan2{S}(Y, X);");
+                                Gen.AddAttributeAggressiveInlining();
+                                Gen.AddFunction(CSGenerator.E_AM.PublicStatic, TypeF, "GetAngle", [Name, "A"], "=> A.GetAngle();");
+                            }
+                            
+                            Gen.Space(2);
+                        }
+                        __GenDirections();
                         
                         void __GenAbs(){
                             if(UseSIMD){

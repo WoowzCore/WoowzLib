@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector4I сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 03:04:37
+	Сгенерирован: 2026.09.14 00:26:16
  */ 
 
 namespace WLO.Math; 
@@ -128,17 +128,46 @@ public struct Vector4I : IEquatable<Vector4I>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2I To2I() => new Vector2I(X, Y);
+	public Vector2I To2I() => (Vector2I)this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3I To3I() => new Vector3I(X, Y, Z); 
+	public Vector2F To2F() => (Vector2F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D To2D() => (Vector2D)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3I To3I() => (Vector3I)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3F To3F() => (Vector3F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D To3D() => (Vector3D)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4F To4F() => (Vector4F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D To4D() => (Vector4D)this; 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector128<int> ToSIMD() => Unsafe.As<Vector4I, Vector128<int>>(ref Unsafe.AsRef(in this)); 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Vector4I(System.Numerics.Vector4 A) => new Vector4I((int)A.X, (int)A.Y, (int)A.Z, (int)A.W);
+	public static explicit operator Vector4I(System.Numerics.Vector4 A) => new Vector4I((int)A.X, (int)A.Y, (int)A.Z, (int)A.W);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator System.Numerics.Vector4(Vector4I A) => new System.Numerics.Vector4(A.X, A.Y, A.Z, A.W); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector2I(Vector4I A) => new Vector2I(A.X, A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector2F(Vector4I A) => new Vector2F((float)A.X, (float)A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector2D(Vector4I A) => new Vector2D((double)A.X, (double)A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector3I(Vector4I A) => new Vector3I(A.X, A.Y, A.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector3F(Vector4I A) => new Vector3F((float)A.X, (float)A.Y, (float)A.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector3D(Vector4I A) => new Vector3D((double)A.X, (double)A.Y, (double)A.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4F(Vector4I A) => new Vector4F((float)A.X, (float)A.Y, (float)A.Z, (float)A.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4D(Vector4I A) => new Vector4D((double)A.X, (double)A.Y, (double)A.Z, (double)A.W); 
  
 
 	public static Vector4I Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -285,15 +314,13 @@ public struct Vector4I : IEquatable<Vector4I>, WLI.Packable{
 		get => WL.Math.Length4I(X, Y, Z, W); } 
  
 
-	public Vector4I Negative{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get{
-			Vector128<int> Result = Vector128.Negate(this.ToSIMD());
-			return Unsafe.As<Vector128<int>, Vector4I>(ref Result);
-		}
-	}
+	public Vector4I Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => -this; }
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector4I operator -(Vector4I A) => A.Negative; 
+	public static Vector4I operator -(Vector4I A){
+		Vector128<int> Result = Vector128.Negate(A.ToSIMD());
+		return Unsafe.As<Vector128<int>, Vector4I>(ref Result);
+	} 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

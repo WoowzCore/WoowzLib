@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using WLO.Math;
 
 namespace WL;
 
@@ -176,6 +177,10 @@ public struct Byte{
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WLongArray(byte[] Data, ref int Position, long[] Value) => WArray<long>(Data, ref Position, Value);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long[] RLongArray(byte[] Data, ref int Position) => RArray<long>(Data, ref Position); 
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WVector3F(byte[] Data, ref int Position, Vector3F Value){ WFloat(Data, ref Position, Value.X); WFloat(Data, ref Position, Value.Y); WFloat(Data, ref Position, Value.Z); }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector3F RVector3F(byte[] Data, ref int Position) => new Vector3F(RFloat(Data, ref Position), RFloat(Data, ref Position), RFloat(Data, ref Position));
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

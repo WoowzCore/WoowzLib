@@ -45,6 +45,10 @@ public struct Math{
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    Clamp01I(int    A) => ClampI(A, 0, 1);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double Clamp01D(double A) => ClampD(A, 0, 1);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  Clamp11F(float  A) => ClampF(A, -1, 1);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    Clamp11I(int    A) => ClampI(A, -1, 1);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double Clamp11D(double A) => ClampD(A, -1, 1);
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  LerpF(float  A, float  B, float  T) => float .Lerp(A, B, T);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int    LerpI(int    A, int    B, float  T) => RoundI(float.Lerp(A, B, T));
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double LerpD(double A, double B, double T) => double.Lerp(A, B, T);
@@ -79,6 +83,34 @@ public struct Math{
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  AspectF(float  W, float  H) => H > 0 ? W/H : 1;
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  AspectI(int    W, int    H) => AspectF(W, H);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double AspectD(double W, double H) => H > 0 ? W/H : 1;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  SinF(float  A) => System.MathF.Sin(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  SinI(int    A) => System.MathF.Sin(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double SinD(double A) => System.Math .Sin(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  CosF(float  A) => System.MathF.Cos(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  CosI(int    A) => System.MathF.Cos(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double CosD(double A) => System.Math .Cos(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  TanF(float  A) => System.MathF.Tan(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  TanI(int    A) => System.MathF.Tan(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double TanD(double A) => System.Math .Tan(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ASinF(float  A) => System.MathF.Asin(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ASinI(int    A) => System.MathF.Asin(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double ASinD(double A) => System.Math .Asin(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ACosF(float  A) => System.MathF.Acos(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ACosI(int    A) => System.MathF.Acos(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double ACosD(double A) => System.Math .Acos(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ATanF(float  A) => System.MathF.Atan(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ATanI(int    A) => System.MathF.Atan(A);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double ATanD(double A) => System.Math .Atan(A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ATan2F(float  A, float  B) => System.MathF.Atan2(A, B);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float  ATan2I(int    A, int    B) => System.MathF.Atan2(A, B);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double ATan2D(double A, double B) => System.Math .Atan2(A, B);
     
     // ----------------------------------------------------------------------
     

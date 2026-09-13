@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector3F сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 03:04:37
+	Сгенерирован: 2026.09.14 00:26:16
  */ 
 
 namespace WLO.Math; 
@@ -86,9 +86,21 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector2F To2F() => new Vector2F(X, Y);
+	public Vector2I To2I() => (Vector2I)this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4F To4F() => new Vector4F(X, Y, Z, 0); 
+	public Vector2F To2F() => (Vector2F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector2D To2D() => (Vector2D)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3I To3I() => (Vector3I)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D To3D() => (Vector3D)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4I To4I() => (Vector4I)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4F To4F() => (Vector4F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D To4D() => (Vector4D)this; 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector128<float> ToSIMD() => Vector128.Create(X, Y, Z, 0); 
@@ -97,6 +109,23 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
 	public static implicit operator Vector3F(System.Numerics.Vector3 A) => new Vector3F(A.X, A.Y, A.Z);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator System.Numerics.Vector3(Vector3F A) => new System.Numerics.Vector3(A.X, A.Y, A.Z); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector2I(Vector3F A) => new Vector2I((int)A.X, (int)A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector2F(Vector3F A) => new Vector2F(A.X, A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector2D(Vector3F A) => new Vector2D((double)A.X, (double)A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector3I(Vector3F A) => new Vector3I((int)A.X, (int)A.Y, (int)A.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector3D(Vector3F A) => new Vector3D((double)A.X, (double)A.Y, (double)A.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static explicit operator Vector4I(Vector3F A) => new Vector4I((int)A.X, (int)A.Y, (int)A.Z, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4F(Vector3F A) => new Vector4F(A.X, A.Y, A.Z, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4D(Vector3F A) => new Vector4D((double)A.X, (double)A.Y, (double)A.Z, 0); 
  
 
 	public static Vector3F Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -216,9 +245,9 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
  
 
 	public Vector3F Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this * -1; }
+		get => -this; }
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector3F operator -(Vector3F A) => A.Negative; 
+	public static Vector3F operator -(Vector3F A) => new Vector3F(-A.X, -A.Y, -A.Z); 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -289,6 +318,44 @@ public struct Vector3F : IEquatable<Vector3F>, WLI.Packable{
 	public Vector3F Round() => new Vector3F(WL.Math.RoundF(X), WL.Math.RoundF(Y), WL.Math.RoundF(Z));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector3F Ceil() => new Vector3F(WL.Math.CeilF(X), WL.Math.CeilF(Y), WL.Math.CeilF(Z)); 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetFront(float Yaw, float Pitch) => new Vector3F(WL.Math.SinF(Yaw) * WL.Math.CosF(Pitch), -WL.Math.SinF(Pitch), WL.Math.CosF(Yaw) * WL.Math.CosF(Pitch)).Normalize;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetFront(float Yaw) => new Vector3F(WL.Math.SinF(Yaw), 0, WL.Math.CosF(Yaw)).Normalize; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetBack(float Yaw, float Pitch) => Vector3F.GetFront(Yaw, Pitch).Negative;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetBack(float Yaw) => Vector3F.GetFront(Yaw).Negative; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetRight(Vector3F Front){
+		if (WL.Math.AbsF(Front.Y) > 0.999f){
+			return Vector3F.Cross(Vector3F.Front, Front).Normalize;
+		}
+		return Vector3F.Cross(Vector3F.Up, Front).Normalize;
+	} 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetLeft(Vector3F Front) => Vector3F.GetRight(Front).Negative; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetUp(Vector3F Front, Vector3F Right) => Vector3F.Cross(Right, Front).Normalize; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector3F GetDown(Vector3F Front, Vector3F Right) => Vector3F.GetUp(Front, Right).Negative; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public (float Yaw, float Pitch) GetAngle(){
+		float L = Length;
+		if (L < 0.0001f){
+			return (0, 0);
+		}
+		Vector3F Direction = this / L;
+		return (WL.Math.ATan2F(Direction.X, Direction.Z), WL.Math.ASinF(WL.Math.Clamp11F(-Direction.Y)));
+	} 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
  
  /* 
 	Класс Vector2I сгенерирован с помощью WLGenerator
-	Сгенерирован: 2026.09.12 03:04:37
+	Сгенерирован: 2026.09.14 00:26:15
  */ 
 
 namespace WLO.Math; 
@@ -44,17 +44,46 @@ public struct Vector2I : IEquatable<Vector2I>, WLI.Packable{
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector3I To3I() => new Vector3I(X, Y, 0);
+	public Vector2F To2F() => (Vector2F)this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Vector4I To4I() => new Vector4I(X, Y, 0, 0); 
+	public Vector2D To2D() => (Vector2D)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3I To3I() => (Vector3I)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3F To3F() => (Vector3F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector3D To3D() => (Vector3D)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4I To4I() => (Vector4I)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4F To4F() => (Vector4F)this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Vector4D To4D() => (Vector4D)this; 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Vector128<int> ToSIMD() => Vector128.Create(X, Y, 0, 0); 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Vector2I(System.Numerics.Vector2 A) => new Vector2I((int)A.X, (int)A.Y);
+	public static explicit operator Vector2I(System.Numerics.Vector2 A) => new Vector2I((int)A.X, (int)A.Y);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator System.Numerics.Vector2(Vector2I A) => new System.Numerics.Vector2(A.X, A.Y); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector2F(Vector2I A) => new Vector2F((float)A.X, (float)A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector2D(Vector2I A) => new Vector2D((double)A.X, (double)A.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector3I(Vector2I A) => new Vector3I(A.X, A.Y, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector3F(Vector2I A) => new Vector3F((float)A.X, (float)A.Y, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector3D(Vector2I A) => new Vector3D((double)A.X, (double)A.Y, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4I(Vector2I A) => new Vector4I(A.X, A.Y, 0, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4F(Vector2I A) => new Vector4F((float)A.X, (float)A.Y, 0, 0);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Vector4D(Vector2I A) => new Vector4D((double)A.X, (double)A.Y, 0, 0); 
  
 
 	public static Vector2I Zero {[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,9 +168,9 @@ public struct Vector2I : IEquatable<Vector2I>, WLI.Packable{
  
 
 	public Vector2I Negative {[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this * -1; }
+		get => -this; }
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector2I operator -(Vector2I A) => A.Negative; 
+	public static Vector2I operator -(Vector2I A) => new Vector2I(-A.X, -A.Y); 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -208,6 +237,24 @@ public struct Vector2I : IEquatable<Vector2I>, WLI.Packable{
 
 	public float Aspect {[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get => WL.Math.AspectI(W, H); } 
+ 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F GetFront(int Angle) => new Vector2F(WL.Math.CosI(Angle), WL.Math.SinI(Angle)).Normalize; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2F GetBack(int Angle) => Vector2I.GetFront(Angle).Negative; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I GetRight(Vector2I Front) => new Vector2I(Front.Y, -Front.X); 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector2I GetLeft(Vector2I Front) => Vector2I.GetRight(Front).Negative; 
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public float GetAngle() => WL.Math.ATan2I(Y, X);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float GetAngle(Vector2I A) => A.GetAngle(); 
  
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

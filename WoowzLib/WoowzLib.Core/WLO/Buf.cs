@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using WLO.Math;
 
 namespace WLO;
 
@@ -41,13 +42,15 @@ public class Buf{
     
     // ----------------------------------------------------------------------
     
-    public void WByte  (byte   Value){ Ensure(1); WL.Byte.WByte  (Data, ref Position, Value); }
-    public void WInt   (int    Value){ Ensure(4); WL.Byte.WInt   (Data, ref Position, Value); }
-    public void WUInt  (uint   Value){ Ensure(4); WL.Byte.WUInt  (Data, ref Position, Value); }
-    public void WLong  (long   Value){ Ensure(8); WL.Byte.WLong  (Data, ref Position, Value); }
-    public void WULong (ulong  Value){ Ensure(8); WL.Byte.WULong (Data, ref Position, Value); }
-    public void WFloat (float  Value){ Ensure(4); WL.Byte.WFloat (Data, ref Position, Value); }
-    public void WDouble(double Value){ Ensure(8); WL.Byte.WDouble(Data, ref Position, Value); }
+    public void WByte    (byte     Value){ Ensure(1 ); WL.Byte.WByte    (Data, ref Position, Value); }
+    public void WBool    (bool     Value){ Ensure(1 ); WL.Byte.WBool    (Data, ref Position, Value); }
+    public void WInt     (int      Value){ Ensure(4 ); WL.Byte.WInt     (Data, ref Position, Value); }
+    public void WUInt    (uint     Value){ Ensure(4 ); WL.Byte.WUInt    (Data, ref Position, Value); }
+    public void WLong    (long     Value){ Ensure(8 ); WL.Byte.WLong    (Data, ref Position, Value); }
+    public void WULong   (ulong    Value){ Ensure(8 ); WL.Byte.WULong   (Data, ref Position, Value); }
+    public void WFloat   (float    Value){ Ensure(4 ); WL.Byte.WFloat   (Data, ref Position, Value); }
+    public void WDouble  (double   Value){ Ensure(8 ); WL.Byte.WDouble  (Data, ref Position, Value); }
+    public void WVector3F(Vector3F Value){ Ensure(12); WL.Byte.WVector3F(Data, ref Position, Value); }
 
     public void WString(string Value){
         if(string.IsNullOrEmpty(Value)){ WInt(0); return; }
