@@ -6,6 +6,8 @@ using WLO.Math;
 
 namespace WL;
 
+// todo, добавить half, quard для vector3f и всего такого, меньше точность но меньше размер
+
 public struct Byte{
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static byte BoolToByte(bool Value) => (byte)(Value ? 1 : 0);
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool ByteToBool(byte Value) => Value != 0;

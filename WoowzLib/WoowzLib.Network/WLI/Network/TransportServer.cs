@@ -12,7 +12,14 @@ public interface TransportServer{
     void Update();
 
     public delegate void DataReceivedHandler(ConnectionID Client, ReadOnlySpan<byte> Data);
-    DataReceivedHandler OnDataReceived{ get; set; }
-    Action<ConnectionID> OnClientConnected{ get; set; }
-    Action<ConnectionID> OnClientDisconnected{ get; set; }
+    DataReceivedHandler? OnDataReceived{ get; set; }
+    Action<ConnectionID>? OnClientConnected{ get; set; }
+    Action<ConnectionID>? OnClientDisconnected{ get; set; }
+    
+    public interface ConnectionRequest{
+        string RemoteEndPoint{ get; }
+        void Accept();
+        void Reject();
+    }
+    Action<ConnectionRequest>? OnConnectionRequest{ get; set; }
 }
