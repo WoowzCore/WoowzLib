@@ -4,7 +4,7 @@ using WLI.Network;
 namespace WLO.Network;
 
 // todo, off logs
-public class LiteNetLib : WLI.Network.Transport{
+public class LiteNetLib : WLI.Network.TransportClient{
     private NetManager? __S;
     private NetManager? __C;
 
@@ -102,15 +102,15 @@ public class LiteNetLib : WLI.Network.Transport{
         __ServerPeer = null;
     }
     
-    public void Send(byte[] Data, int TargetID = Transport.ServerID, bool Matter = false){
+    public void Send(byte[] Data, int TargetID = TransportClient.ServerID, bool Matter = false){
         PacketsSent++;
         BytesSent += (ulong)Data.Length;
         
         DeliveryMethod Method = Matter ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Sequenced;
 
-        if(TargetID == Transport.ServerID){
+        if(TargetID == TransportClient.ServerID){
             __ServerPeer?.Send(Data, Method);
-        }else if(TargetID == Transport.AllClientsID){
+        }else if(TargetID == TransportClient.AllClientsID){
             __S?.SendToAll(Data, Method);
         }else{
             NetPeer? Peer = __S?.GetPeerById(TargetID) as NetPeer;
