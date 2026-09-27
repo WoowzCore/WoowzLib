@@ -16,38 +16,39 @@ public struct Byte{
     public static byte Bool8ToByte(bool B1 = false, bool B2 = false, bool B3 = false, bool B4 = false, bool B5 = false, bool B6 = false, bool B7 = false, bool B8 = false){
         byte Mask = 0;
 
-        if(B1){ Mask |= 0B_0000_0001; }
-        if(B2){ Mask |= 0B_0000_0010; }
-        if(B3){ Mask |= 0B_0000_0100; }
-        if(B4){ Mask |= 0B_0000_1000; }
-        if(B5){ Mask |= 0B_0001_0000; }
-        if(B6){ Mask |= 0B_0010_0000; }
-        if(B7){ Mask |= 0B_0100_0000; }
-        if(B8){ Mask |= 0B_1000_0000; }
+        if(B1){ Mask |= 1 << 0; }
+        if(B2){ Mask |= 1 << 1; }
+        if(B3){ Mask |= 1 << 2; }
+        if(B4){ Mask |= 1 << 3; }
+        if(B5){ Mask |= 1 << 4; }
+        if(B6){ Mask |= 1 << 5; }
+        if(B7){ Mask |= 1 << 6; }
+        if(B8){ Mask |= 1 << 7; }
 
         return Mask;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (bool B1, bool B2, bool B3, bool B4, bool B5, bool B6, bool B7, bool B8) ByteToBool8(byte Value) => (
-        (Value & 0B_0000_0001) != 0,
-        (Value & 0B_0000_0010) != 0,
-        (Value & 0B_0000_0100) != 0,
-        (Value & 0B_0000_1000) != 0,
-        (Value & 0B_0001_0000) != 0,
-        (Value & 0B_0010_0000) != 0,
-        (Value & 0B_0100_0000) != 0,
-        (Value & 0B_1000_0000) != 0
+        (Value & (1 << 0)) != 0,
+        (Value & (1 << 1)) != 0,
+        (Value & (1 << 2)) != 0,
+        (Value & (1 << 3)) != 0,
+        (Value & (1 << 4)) != 0,
+        (Value & (1 << 5)) != 0,
+        (Value & (1 << 6)) != 0,
+        (Value & (1 << 7)) != 0
     );
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int SizeOf<T>() => Unsafe.SizeOf<T>();
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int SizeOfArray<T>(int Length) => Length * SizeOf<T>();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOf     <T>(          ) where T : unmanaged => Unsafe.SizeOf<T>();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfArray<T>(int Length) where T : unmanaged => Length * SizeOf<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Ensure(ref byte[] Data, int Position, int Required){
+    public static void Ensure(ref Span<byte> Data, int Position, int Required, bool SaveData = true){
         if(Position + Required > Data.Length){
-            Array.Resize(ref Data, System.Math.Max(Data.Length * 2, Position + Required));
+            int NewSize = WL.Math.MaxI(Data.Length * 2, Position + Required);
+            byte[] NewArray = new byte[NewSize];
+            if(SaveData){ Data.CopyTo(NewArray); }
+            Data = NewArray;
         }
     }
 
@@ -56,54 +57,42 @@ public struct Byte{
         if(string.IsNullOrEmpty(Value)){ return 4; /* todo, жду норм функции или пояснений, длина значения "0" */ }
         return 4 + Encoding.GetByteCount(Value);
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfString(string Value) => SizeOfStringUTF8(Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfStringUTF8(string Value) => SizeOfString(Value, Encoding.UTF8);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfStringASCII(string Value) => SizeOfString(Value, Encoding.ASCII);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfString     (string Value) => SizeOfStringUTF8(Value                );
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfStringUTF8 (string Value) => SizeOfString    (Value, Encoding.UTF8 );
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int SizeOfStringASCII(string Value) => SizeOfString    (Value, Encoding.ASCII);
 
-    public static byte[] CompressClear(byte[] Data, CompressionLevel CompressionLevel = CompressionLevel.Optimal){
+    public static byte[] CompressClear(ReadOnlySpan<byte> Data, CompressionLevel CompressionLevel = CompressionLevel.Optimal){
         using MemoryStream MS = new MemoryStream();
         using(DeflateStream DS = new DeflateStream(MS, CompressionLevel)){
-            DS.Write(Data, 0, Data.Length);
+            DS.Write(Data);
         }
         return MS.ToArray();
     }
-    public static void DecompressClear(byte[] Result, MemoryStream MS){
-        using(DeflateStream DS = new DeflateStream(MS, CompressionMode.Decompress, leaveOpen: true)){
-            DS.ReadExactly(Result, 0, Result.Length);
-        }
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte[] DecompressClear(byte[] Data, ref int Position, int L, int CL){
-        byte[] Result = new byte[L];
-        using(MemoryStream MS = new MemoryStream(Data, Position, CL)){
-            DecompressClear(Result, MS);
-        }
-        Position += CL;
+    public static byte[] DecompressClear(ReadOnlySpan<byte> Data, int OriginalLength){
+        byte[] Result = new byte[OriginalLength];
+        using MemoryStream  MS = new MemoryStream(Data.ToArray());
+        using DeflateStream DS = new DeflateStream(MS, CompressionMode.Decompress);
+        DS.ReadExactly(Result);
         return Result;
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte[] DecompressClear(byte[] Data, int L){
-        byte[] Result = new byte[L];
-        using(MemoryStream MS = new MemoryStream(Data)){
-            DecompressClear(Result, MS);
-        }
+    public static byte[] DecompressClear(ReadOnlySpan<byte> Data, ref int Position, int OriginalLength, int CompressedLength){
+        byte[] Result = DecompressClear(Data.Slice(Position, CompressedLength), OriginalLength);
+        Position += CompressedLength;
         return Result;
     }
 
-    public static byte[] Compress(byte[] Data, CompressionLevel CompressionLevel = CompressionLevel.Optimal){
+    public static byte[] Compress(ReadOnlySpan<byte> Data, CompressionLevel CompressionLevel = CompressionLevel.Optimal){
         byte[] Compressed = CompressClear(Data, CompressionLevel);
-        int L  = Data.Length;
-        int CL = Compressed.Length;
-        byte[] Result = new byte[8 + 8 + CL];
+        byte[] Result = new byte[8 + Compressed.Length];
 
         int Position = 0;
-        WInt(Result, ref Position, L);
-        WInt(Result, ref Position, CL);
+        WInt(Result, ref Position, Data.Length);
+        WInt(Result, ref Position, Compressed.Length);
         WBytes(Result, ref Position, Compressed);
         return Result;
     }
 
-    public static byte[] Decompress(byte[] Data){
+    public static byte[] Decompress(ReadOnlySpan<byte> Data){
         int Position = 0;
         int L  = RInt(Data, ref Position);
         int CL = RInt(Data, ref Position);
@@ -112,156 +101,168 @@ public struct Byte{
     
     // ----------------------------------------------------------------------
     
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WByte(byte[] Data, ref int Position, byte Value) => Data[Position++] = Value;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static byte RByte(byte[] Data, ref int Position) => Data[Position++];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WByte(        Span<byte> Data, ref int Position, byte Value) => Data[Position++] = Value;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static byte RByte(ReadOnlySpan<byte> Data, ref int Position            ) => Data[Position++];
 
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WBool(byte[] Data, ref int Position, bool Value) => WByte(Data, ref Position, BoolToByte(Value));
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool RBool(byte[] Data, ref int Position) => ByteToBool(RByte(Data, ref Position));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WBool(        Span<byte> Data, ref int Position, bool Value) => WByte(Data, ref Position, BoolToByte(Value));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool RBool(ReadOnlySpan<byte> Data, ref int Position            ) => ByteToBool(RByte(Data, ref Position));
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WBool8(byte[] Data, ref int Position, bool B1 = false, bool B2 = false, bool B3 = false, bool B4 = false, bool B5 = false, bool B6 = false, bool B7 = false, bool B8 = false) => WByte(Data, ref Position, Bool8ToByte(B1, B2, B3, B4, B5, B6, B7, B8));
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static (bool B1, bool B2, bool B3, bool B4, bool B5, bool B6, bool B7, bool B8) RBool8(byte[] Data, ref int Position) => ByteToBool8(RByte(Data, ref Position));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WBool8(Span<byte> Data, ref int Position, bool B1 = false, bool B2 = false, bool B3 = false, bool B4 = false, bool B5 = false, bool B6 = false, bool B7 = false, bool B8 = false) => WByte(Data, ref Position, Bool8ToByte(B1, B2, B3, B4, B5, B6, B7, B8));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static (bool B1, bool B2, bool B3, bool B4, bool B5, bool B6, bool B7, bool B8) RBool8(ReadOnlySpan<byte> Data, ref int Position) => ByteToBool8(RByte(Data, ref Position));
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WShort(byte[] Data, ref int Position, short Value) => W<short>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static short RShort(byte[] Data, ref int Position) => R<short>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void  WShort(        Span<byte> Data, ref int Position, short Value) => W<short>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static short RShort(ReadOnlySpan<byte> Data, ref int Position) => R<short>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WShortArray(byte[] Data, ref int Position, short[] Value) => WArray<short>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static short[] RShortArray(byte[] Data, ref int Position) => RArray<short>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void    WShortArray(        Span<byte> Data, ref int Position, ReadOnlySpan<short> Value) => WArray<short>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static short[] RShortArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<short>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WUInt(byte[] Data, ref int Position, uint Value) => W<uint>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint RUInt(byte[] Data, ref int Position) => R<uint>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WUInt(        Span<byte> Data, ref int Position, uint Value) => W<uint>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint RUInt(ReadOnlySpan<byte> Data, ref int Position) => R<uint>(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WUIntArray(byte[] Data, ref int Position, uint[] Value) => WArray<uint>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint[] RUIntArray(byte[] Data, ref int Position) => RArray<uint>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void   WUIntArray(        Span<byte> Data, ref int Position, ReadOnlySpan<uint> Value) => WArray<uint>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint[] RUIntArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<uint>(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WInt(byte[] Data, ref int Position, int Value) => W<int>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int RInt(byte[] Data, ref int Position) => R<int>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WInt(        Span<byte> Data, ref int Position, int Value) => W<int>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int  RInt(ReadOnlySpan<byte> Data, ref int Position) => R<int>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WIntArray(byte[] Data, ref int Position, int[] Value) => WArray<int>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int[] RIntArray(byte[] Data, ref int Position) => RArray<int>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void  WIntArray(        Span<byte> Data, ref int Position, ReadOnlySpan<int> Value) => WArray<int>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int[] RIntArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<int>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WFloat(byte[] Data, ref int Position, float Value) => W<float>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float RFloat(byte[] Data, ref int Position) => R<float>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void  WFloat(        Span<byte> Data, ref int Position, float Value) => W<float>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float RFloat(ReadOnlySpan<byte> Data, ref int Position) => R<float>(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WFloatArray(byte[] Data, ref int Position, float[] Value) => WArray<float>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float[] RFloatArray(byte[] Data, ref int Position) => RArray<float>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void    WFloatArray(        Span<byte> Data, ref int Position, ReadOnlySpan<float> Value) => WArray<float>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float[] RFloatArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<float>(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WDouble(byte[] Data, ref int Position, double Value) => W<double>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double RDouble(byte[] Data, ref int Position) => R<double>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void   WDouble(        Span<byte> Data, ref int Position, double Value) => W<double>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double RDouble(ReadOnlySpan<byte> Data, ref int Position) => R<double>(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WDoubleArray(byte[] Data, ref int Position, double[] Value) => WArray<double>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double[] RDoubleArray(byte[] Data, ref int Position) => RArray<double>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WDoubleArray(        Span<byte> Data, ref int Position, ReadOnlySpan<double> Value) => WArray<double>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static double[] RDoubleArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<double>(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WULong(byte[] Data, ref int Position, ulong Value) => W<ulong>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static ulong RULong(byte[] Data, ref int Position) => R<ulong>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void  WULong(        Span<byte> Data, ref int Position, ulong Value) => W<ulong>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static ulong RULong(ReadOnlySpan<byte> Data, ref int Position) => R<ulong>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WULongArray(byte[] Data, ref int Position, ulong[] Value) => WArray<ulong>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static ulong[] RULongArray(byte[] Data, ref int Position) => RArray<ulong>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void    WULongArray(        Span<byte> Data, ref int Position, ReadOnlySpan<ulong> Value) => WArray<ulong>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static ulong[] RULongArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<ulong>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WLong(byte[] Data, ref int Position, long Value) => W<long>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long RLong(byte[] Data, ref int Position) => R<long>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WLong(        Span<byte> Data, ref int Position, long Value) => W<long>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long RLong(ReadOnlySpan<byte> Data, ref int Position) => R<long>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WLongArray(byte[] Data, ref int Position, long[] Value) => WArray<long>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long[] RLongArray(byte[] Data, ref int Position) => RArray<long>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void   WLongArray(        Span<byte> Data, ref int Position, long[] Value) => WArray<long>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long[] RLongArray(ReadOnlySpan<byte> Data, ref int Position) => RArray<long>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WVector3F(byte[] Data, ref int Position, Vector3F Value){ WFloat(Data, ref Position, Value.X); WFloat(Data, ref Position, Value.Y); WFloat(Data, ref Position, Value.Z); }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector3F RVector3F(byte[] Data, ref int Position) => new Vector3F(RFloat(Data, ref Position), RFloat(Data, ref Position), RFloat(Data, ref Position));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector2F(        Span<byte> Data, ref int Position, Vector2F Value) => W<Vector2F>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector2F RVector2F(ReadOnlySpan<byte> Data, ref int Position) => R<Vector2F>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector2D(        Span<byte> Data, ref int Position, Vector2D Value) => W<Vector2D>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector2D RVector2D(ReadOnlySpan<byte> Data, ref int Position) => R<Vector2D>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector2I(        Span<byte> Data, ref int Position, Vector2I Value) => W<Vector2I>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector2I RVector2I(ReadOnlySpan<byte> Data, ref int Position) => R<Vector2I>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector3F(        Span<byte> Data, ref int Position, Vector3F Value) => W<Vector3F>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector3F RVector3F(ReadOnlySpan<byte> Data, ref int Position) => R<Vector3F>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector3D(        Span<byte> Data, ref int Position, Vector3D Value) => W<Vector3D>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector3D RVector3D(ReadOnlySpan<byte> Data, ref int Position) => R<Vector3D>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector3I(        Span<byte> Data, ref int Position, Vector3I Value) => W<Vector3I>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector3I RVector3I(ReadOnlySpan<byte> Data, ref int Position) => R<Vector3I>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector4F(        Span<byte> Data, ref int Position, Vector4F Value) => W<Vector4F>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector4F RVector4F(ReadOnlySpan<byte> Data, ref int Position) => R<Vector4F>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector4D(        Span<byte> Data, ref int Position, Vector4D Value) => W<Vector4D>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector4D RVector4D(ReadOnlySpan<byte> Data, ref int Position) => R<Vector4D>(Data, ref Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WVector4I(        Span<byte> Data, ref int Position, Vector4I Value) => W<Vector4I>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Vector4I RVector4I(ReadOnlySpan<byte> Data, ref int Position) => R<Vector4I>(Data, ref Position);
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void W<T>(byte[] Data, ref int Position, T Value) where T : unmanaged{
-        int Size = SizeOf<T>();
-        MemoryMarshal.Write(Data.AsSpan(Position), in Value);
-        Position += Size;
+    public static void W<T>(Span<byte> Data, ref int Position, T Value) where T : unmanaged{
+        MemoryMarshal.Write(Data[Position..], Value);
+        Position += SizeOf<T>();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T R<T>(byte[] Data, ref int Position) where T : unmanaged{
-        int Size = SizeOf<T>();
-        T Value = MemoryMarshal.Read<T>(Data.AsSpan(Position));
-        Position += Size;
+    public static T R<T>(ReadOnlySpan<byte> Data, ref int Position) where T : unmanaged{
+        T Value = MemoryMarshal.Read<T>(Data[Position..]);
+        Position += SizeOf<T>();
         return Value;
     }
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WAt<T>(byte[] Data, int Position, T Value) where T : unmanaged => MemoryMarshal.Write(Data.AsSpan(Position), in Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static T RAt<T>(byte[] Data, int Position) where T : unmanaged => MemoryMarshal.Read<T>(Data.AsSpan(Position));
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static T Peek<T>(byte[] Data, int Position) where T : unmanaged => RAt<T>(Data, Position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WAt<T>(Span<byte> Data, int Position, T Value) where T : unmanaged => MemoryMarshal.Write(Data[Position..], in Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static T RAt<T>(ReadOnlySpan<byte> Data, int Position) where T : unmanaged => MemoryMarshal.Read<T>(Data[Position..]);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static T Peek<T>(ReadOnlySpan<byte> Data, int Position) where T : unmanaged => RAt<T>(Data, Position);
     
     
-    public static byte[] WBytes(byte[] Data, ref int Position, byte[] Value){
-        System.Buffer.BlockCopy(Value, 0, Data, Position, Value.Length);
+    public static ReadOnlySpan<byte> WBytes(Span<byte> Data, ref int Position, ReadOnlySpan<byte> Value){
+        Value.CopyTo(Data[Position..]);
         Position += Value.Length;
         return Value;
     }
-    public static byte[] RBytes(byte[] Data, ref int Position, int Count){
-        byte[] Result = new byte[Count];
-        System.Buffer.BlockCopy(Data, Position, Result, 0, Count);
+    public static ReadOnlySpan<byte> RBytes(ReadOnlySpan<byte> Data, ref int Position, int Count){
+        ReadOnlySpan<byte> Result = Data.Slice(Position, Count);
         Position += Count;
         return Result;
     }
 
 
-    public static byte[] WBytesCompressed(byte[] Data, ref int Position, byte[] Value, CompressionLevel CompressionLevel = CompressionLevel.Optimal) => WBytes(Data, ref Position, Compress(Value, CompressionLevel));
-    public static byte[] RBytesCompressed(byte[] Data, ref int Position){
+    public static ReadOnlySpan<byte> WBytesCompressed(Span<byte> Data, ref int Position, ReadOnlySpan<byte> Value, CompressionLevel CompressionLevel = CompressionLevel.Optimal) => WBytes(Data, ref Position, Compress(Value, CompressionLevel));
+    public static byte[] RBytesCompressed(ReadOnlySpan<byte> Data, ref int Position){
         int L  = RInt(Data, ref Position);
         int CL = RInt(Data, ref Position);
         return DecompressClear(Data, ref Position, L, CL);
     }
     
     
-    public static void WString(byte[] Data, ref int Position, string Value, Encoding Encoding){
+    public static void WString(Span<byte> Data, ref int Position, string Value, Encoding Encoding){
         if(string.IsNullOrEmpty(Value)){ WInt(Data, ref Position, 0); return; }
         int ByteCount = Encoding.GetByteCount(Value);
         WInt(Data, ref Position, ByteCount);
-        Encoding.GetBytes(Value, 0, Value.Length, Data, Position);
+        Encoding.GetBytes(Value, Data[Position..]);
         Position += ByteCount;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void WString(byte[] Data, ref int Position, string Value) => WStringUTF8(Data, ref Position, Value);
-    public static string RString(byte[] Data, ref int Position, Encoding Encoding){
+    public static void WString(Span<byte> Data, ref int Position, string Value) => WStringUTF8(Data, ref Position, Value);
+    public static string RString(ReadOnlySpan<byte> Data, ref int Position, Encoding Encoding){
         int ByteCount = RInt(Data, ref Position);
         if(ByteCount <= 0){ return string.Empty; }
-        string Result = Encoding.GetString(Data, Position, ByteCount);
+        string Result = Encoding.GetString(Data.Slice(Position, ByteCount));
         Position += ByteCount;
         return Result;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string RString(byte[] Data, ref int Position) => RStringUTF8(Data, ref Position);
+    public static string RString(ReadOnlySpan<byte> Data, ref int Position) => RStringUTF8(Data, ref Position);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WStringUTF8(byte[] Data, ref int Position, string Value) => WString(Data, ref Position, Value, Encoding.UTF8);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static string RStringUTF8(byte[] Data, ref int Position) => RString(Data, ref Position, Encoding.UTF8);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void   WStringUTF8(        Span<byte> Data, ref int Position, string Value) => WString(Data, ref Position, Value, Encoding.UTF8);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static string RStringUTF8(ReadOnlySpan<byte> Data, ref int Position              ) => RString(Data, ref Position, Encoding.UTF8);
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WStringASCII(byte[] Data, ref int Position, string Value) => WString(Data, ref Position, Value, Encoding.ASCII);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static string RStringASCII(byte[] Data, ref int Position) => RString(Data, ref Position, Encoding.ASCII);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void   WStringASCII(        Span<byte> Data, ref int Position, string Value) => WString(Data, ref Position, Value, Encoding.ASCII);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static string RStringASCII(ReadOnlySpan<byte> Data, ref int Position              ) => RString(Data, ref Position, Encoding.ASCII);
     
     /// todo, отличается от WUInt тем, что записывает не строго в 4 байта, а как получится, динамически
-    public static void WUIntVar(byte[] Data, ref int Position, uint Value){
+    public static void WUIntVar(Span<byte> Data, ref int Position, uint Value){
         while(Value >= 0x80){
             Data[Position++] = (byte)(Value | 0x80);
             Value >>= 7;
         }
         Data[Position++] = (byte)Value;
     }
-    public static uint RUIntVar(byte[] Data, ref int Position){
+    public static uint RUIntVar(ReadOnlySpan<byte> Data, ref int Position){
         uint Result = 0;
         int Shift = 0;
         while(true){
@@ -275,21 +276,21 @@ public struct Byte{
 
 
     /// todo, это zigzag
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WIntVar(byte[] Data, ref int Position, int Value) => WUIntVar(Data, ref Position, (uint)((Value << 1) ^ (Value >> 31)));
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int RIntVar(byte[] Data, ref int Position){
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WIntVar(        Span<byte> Data, ref int Position, int Value) => WUIntVar(Data, ref Position, (uint)((Value << 1) ^ (Value >> 31)));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static int  RIntVar(ReadOnlySpan<byte> Data, ref int Position){
         uint V = RUIntVar(Data, ref Position);
         return (int)((V >> 1) ^ (uint)(-(int)(V & 1)));
     }
     
     
-    public static void WULongVar(byte[] Data, ref int Position, ulong Value){
+    public static void WULongVar(Span<byte> Data, ref int Position, ulong Value){
         while(Value >= 0x80){
             Data[Position++] = (byte)(Value | 0x80);
             Value >>= 7;
         }
         Data[Position++] = (byte)Value;
     }
-    public static ulong RULongVar(byte[] Data, ref int Position){
+    public static ulong RULongVar(ReadOnlySpan<byte> Data, ref int Position){
         ulong Result = 0;
         int Shift = 0;
         while(true){
@@ -302,54 +303,38 @@ public struct Byte{
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WLongVar(byte[] Data, ref int Position, long Value) => WULongVar(Data, ref Position, (ulong)((Value << 1) ^ (Value >> 31)));
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long RLongVar(byte[] Data, ref int Position){
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WLongVar(        Span<byte> Data, ref int Position, long Value) => WULongVar(Data, ref Position, (ulong)((Value << 1) ^ (Value >> 63)));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static long RLongVar(ReadOnlySpan<byte> Data, ref int Position){
         ulong V = RULongVar(Data, ref Position);
         return (long)((V >> 1) ^ (ulong)(-(long)(V & 1)));
     }
 
 
-    public static void WArray<T>(byte[] Data, ref int Position, T[] Array) where T : unmanaged{
-        if(Array == null!){ WInt(Data, ref Position, -1); return; }
-        int L = Array.Length;
-        WInt(Data, ref Position, L);
-        if(L <= 0){ return; }
+    public static void WArray<T>(Span<byte> Data, ref int Position, ReadOnlySpan<T> Array) where T : unmanaged{
+        WInt(Data, ref Position, Array.Length);
+        if(Array.Length <= 0){ return; }
 
-        int SizeInBytes = SizeOfArray<T>(L);
-        ReadOnlySpan<byte> Bytes = MemoryMarshal.Cast<T, byte>(Array.AsSpan());
-        Bytes.CopyTo(Data.AsSpan(Position));
-        Position += SizeInBytes;
+        ReadOnlySpan<byte> Bytes = MemoryMarshal.Cast<T, byte>(Array);
+        Bytes.CopyTo(Data[Position..]);
+        Position += Bytes.Length;
     }
-    public static T[] RArray<T>(byte[] Data, ref int Position) where T : unmanaged{
+    public static T[] RArray<T>(ReadOnlySpan<byte> Data, ref int Position) where T : unmanaged{
         int L = RInt(Data, ref Position);
-        if(L == -1){ return null!; }
         if(L == 0){ return []; }
 
         T[] Result = new T[L];
         int SizeInBytes = SizeOfArray<T>(L);
-        Span<byte> Bytes = MemoryMarshal.Cast<T, byte>(Result.AsSpan());
-        Data.AsSpan(Position, SizeInBytes).CopyTo(Bytes);
+        Span<byte> Bytes = MemoryMarshal.Cast<T, byte>(Result);
+        Data.Slice(Position, SizeInBytes).CopyTo(Bytes);
         Position += SizeInBytes;
         return Result;
     }
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WGUID(byte[] Data, ref int Position, Guid Value) => W<Guid>(Data, ref Position, Value);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Guid RGUID(byte[] Data, ref int Position) => R<Guid>(Data, ref Position); 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WGUID(        Span<byte> Data, ref int Position, Guid Value) => W<Guid>(Data, ref Position, Value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static Guid RGUID(ReadOnlySpan<byte> Data, ref int Position) => R<Guid>(Data, ref Position); 
     
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void WDateTime(byte[] Data, ref int Position, DateTime Value) => WLong(Data, ref Position, Value.Ticks);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static DateTime RDateTime(byte[] Data, ref int Position) => new DateTime(RLong(Data, ref Position));
-
-
-    public static void WSpan<T>(byte[] Data, ref int Position, ReadOnlySpan<T> Span) where T : unmanaged{
-        int L = Span.Length;
-        WInt(Data, ref Position, L);
-        if(L <= 0){ return; }
-
-        int SizeInBytes = SizeOfArray<T>(L);
-        ReadOnlySpan<byte> Bytes = MemoryMarshal.Cast<T, byte>(Span);
-        Bytes.CopyTo(Data.AsSpan(Position));
-        Position += SizeInBytes;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static void     WDateTime(        Span<byte> Data, ref int Position, DateTime Value) => WLong(Data, ref Position, Value.Ticks);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static DateTime RDateTime(ReadOnlySpan<byte> Data, ref int Position) => new DateTime(RLong(Data, ref Position));
 }

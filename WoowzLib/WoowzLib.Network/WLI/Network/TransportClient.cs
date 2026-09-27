@@ -3,8 +3,8 @@
 namespace WLI.Network;
 
 public interface TransportClient{
-    void Connect(string Address, int Port);
-    void Disconnect();
+    void Start(string Address, int Port);
+    void Stop();
 
     void SendServer(ReadOnlySpan<byte> Data, DeliveryMethod DeliveryMethod = DeliveryMethod.Unreliable);
     

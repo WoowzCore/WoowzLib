@@ -11,7 +11,7 @@ public class LNLClient : TransportClient{
     
     // ----------------------------------------------------------------------
     
-    public void Connect(string Address, int Port){
+    public void Start(string Address, int Port){
         __Listener = new EventBasedNetListener();
         __Manager = new NetManager(__Listener);
 
@@ -26,7 +26,7 @@ public class LNLClient : TransportClient{
         __Manager.Connect(Address, Port, "");
     }
     
-    public void Disconnect(){
+    public void Stop(){
         __Manager.Stop();
         __Manager = null!;
         __Listener = null!;
