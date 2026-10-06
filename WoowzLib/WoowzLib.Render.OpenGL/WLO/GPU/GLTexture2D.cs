@@ -103,6 +103,13 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
         }
     }
 
+    public void Fill<T>(T Pixel) where T : unmanaged{
+        unsafe{
+            T* Ptr = &Pixel;
+            Owner.API.ClearTexImage(ID, 0, CPUFormat, Type, Ptr);
+        }
+    }
+
     public void SetFilter(TextureMinFilter Min, TextureMagFilter Mag){
         GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
         Owner.Pool.SetTexture2D(this, 0, true);
@@ -115,7 +122,7 @@ public class GLTexture2D : WLI.GPU.GLResource, WLI.GPU.Texture{
 
     public void SetFilter(TextureMinFilter MinMag) => SetFilter(MinMag, (TextureMagFilter)MinMag);
     
-    public void SetWrap(TextureWrapMode Horizontal, TextureWrapMode Vertical) {
+    public void SetWrap(TextureWrapMode Horizontal, TextureWrapMode Vertical){
         GLTexture2D? OldTexture2D = Owner.Pool.GetTexture2D();
         Owner.Pool.SetTexture2D(this, 0, true);
 

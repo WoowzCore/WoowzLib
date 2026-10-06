@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Network.LiteNetLib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.CSGenerator", "WoowzLib.CSGenerator\WoowzLib.CSGenerator.csproj", "{0244D792-6C91-4721-A500-1005A40FEC0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Language", "WoowzLib.Language\WoowzLib.Language.csproj", "{D92E150C-8D61-4399-B85E-6CA66819950E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,5 +110,9 @@ Global
 		{0244D792-6C91-4721-A500-1005A40FEC0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0244D792-6C91-4721-A500-1005A40FEC0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0244D792-6C91-4721-A500-1005A40FEC0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D92E150C-8D61-4399-B85E-6CA66819950E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D92E150C-8D61-4399-B85E-6CA66819950E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D92E150C-8D61-4399-B85E-6CA66819950E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D92E150C-8D61-4399-B85E-6CA66819950E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

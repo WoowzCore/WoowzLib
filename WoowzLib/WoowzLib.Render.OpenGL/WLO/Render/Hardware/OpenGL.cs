@@ -128,6 +128,7 @@ public class OpenGL : WLI_Render.Hardware, IEquatable<OpenGL>{
     #region Остальное
 
         public void Log(uint Type, object Message, string Prefix = "GL"){
+            if(!API_HasDebugLogger){ return; }
             CurrentLogger?.PrefixPush(Prefix);
             CurrentLogger?.Log(Type, Message);
             CurrentLogger?.PrefixPop();
