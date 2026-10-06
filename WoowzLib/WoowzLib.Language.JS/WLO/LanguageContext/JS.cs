@@ -1,4 +1,5 @@
 ﻿using Jint;
+using Jint.Native;
 using WLI;
 
 namespace WLOLanguageContext;
@@ -22,10 +23,10 @@ public class JS : LanguageContext{
         try{
             return __Engine.Evaluate(Code).ToObject();
         }catch(Jint.Runtime.JavaScriptException e){
-            OnError?.Invoke($"[JS ({e.Location}) (Execute)]", e);
+            OnError?.Invoke($"[JS ({e.Location}) (Execute)]: {Code.Length}", e);
             return null;
         }catch(Exception e){
-            OnError?.Invoke("[JS System (Execute)]", e);
+            OnError?.Invoke($"[JS System (Execute)]: {Code.Length}", e);
             throw;
         }
     }
@@ -35,9 +36,12 @@ public class JS : LanguageContext{
 
     public object? Call(string Name, params object?[] Args){
         try{
-            return __Engine.Invoke(Name, Args).ToObject();
+            JsValue Value = __Engine.Evaluate(Name);
+            if(Value.IsUndefined() || Value.IsNull()){ return Value; }
+            
+            return __Engine.Invoke(Value, Args).ToObject();
         }catch(Jint.Runtime.JavaScriptException e){
-            OnError?.Invoke($"[JS ({e.Location}) (Call)]", e);
+            OnError?.Invoke($"[JS ({e.Location}) (Call)]: {Name}({WL.String.Join(Args)})", e);
             return null;
         }
     }
