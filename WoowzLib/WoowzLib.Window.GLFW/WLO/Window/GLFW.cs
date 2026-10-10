@@ -201,6 +201,27 @@ public unsafe class GLFW : WLI.Window{
         WL.GLFW.API.HideWindow(__Handle);
         WL.GLFW.API.ShowWindow(__Handle); // todo 😇
     }
+
+    private CursorModeValue __GetCursorMode() => __IsLocked ? CursorModeValue.CursorDisabled : (__CursorHided ? CursorModeValue.CursorHidden : CursorModeValue.CursorNormal);
+    
+    private bool __IsLocked = false;
+    public bool IsLocked{
+        get => __IsLocked;
+        set{
+            __IsLocked = value;
+            WL.GLFW.API.SetInputMode(__Handle, CursorStateAttribute.Cursor, __GetCursorMode());
+        }
+    }
+
+    private bool __CursorHided = false;
+
+    public bool CursorHided{
+        get => __CursorHided;
+        set{
+            __CursorHided = value;
+            WL.GLFW.API.SetInputMode(__Handle, CursorStateAttribute.Cursor, __GetCursorMode());
+        }
+    }
     
     // ----------------------------------------------------------------------
     
@@ -414,18 +435,6 @@ public unsafe class GLFW : WLI.Window{
         public Vector2I Position{ get; private set; }
         public Vector2I Delta => Position - __PrevPosition;
         public Vector2F ScrollDelta{ get; private set; }
-
-        private bool __IsLocked = false;
-
-        public bool IsLocked{
-            get => __IsLocked;
-            set{
-                __IsLocked = value;
-                unsafe{
-                    WL.GLFW.API.SetInputMode(__Owner.__Handle, CursorStateAttribute.Cursor, value ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
-                }
-            }
-        }
         
         public WLI_Input.Mouse.Button GLFWButtonToWLButton(MouseButton Key) => Key switch{
             MouseButton.Left    => WLI_Input.Mouse.Button.Left,
