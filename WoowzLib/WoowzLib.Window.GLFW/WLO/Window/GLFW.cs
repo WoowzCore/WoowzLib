@@ -415,6 +415,18 @@ public unsafe class GLFW : WLI.Window{
         public Vector2I Delta => Position - __PrevPosition;
         public Vector2F ScrollDelta{ get; private set; }
 
+        private bool __IsLocked = false;
+
+        public bool IsLocked{
+            get => __IsLocked;
+            set{
+                __IsLocked = value;
+                unsafe{
+                    WL.GLFW.API.SetInputMode(__Owner.__Handle, CursorStateAttribute.Cursor, value ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
+                }
+            }
+        }
+        
         public WLI_Input.Mouse.Button GLFWButtonToWLButton(MouseButton Key) => Key switch{
             MouseButton.Left    => WLI_Input.Mouse.Button.Left,
             MouseButton.Right   => WLI_Input.Mouse.Button.Right,

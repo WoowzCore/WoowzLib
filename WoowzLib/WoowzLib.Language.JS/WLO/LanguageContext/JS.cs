@@ -1,5 +1,7 @@
-﻿using Jint;
+﻿using System.Text;
+using Jint;
 using Jint.Native;
+using Jint.Runtime;
 using WLI;
 
 namespace WLOLanguageContext;
@@ -10,6 +12,26 @@ public class JS : LanguageContext{
 
     public event Action<string, Exception>? OnError;
 
+    private void LogError(string ActionType, string Target, JavaScriptException e){
+        if(OnError == null){ return; }
+        
+        StringBuilder SB = new StringBuilder();
+        string Head = $" JS ERROR ({ActionType}) ";
+        SB.AppendLine($"[{Head}]");
+        SB.AppendLine($"Message: {e.Message}");
+        SB.AppendLine($"Location: {e.Location}");
+        SB.AppendLine($"Function: {Target}");
+
+        if(!string.IsNullOrEmpty(e.JavaScriptStackTrace)){
+            SB.AppendLine("JS StackTrace:");
+            SB.AppendLine(e.JavaScriptStackTrace);
+        }
+
+        SB.AppendLine($"[{WL.String.Repeat("-", Head.Length)}]");
+        
+        OnError?.Invoke(SB.ToString(), e);
+    }
+    
     public JS(WLOLanguage.JS Owner){
         __Owner = Owner;
 
@@ -22,8 +44,8 @@ public class JS : LanguageContext{
     public object? Execute(string Code){
         try{
             return __Engine.Evaluate(Code).ToObject();
-        }catch(Jint.Runtime.JavaScriptException e){
-            OnError?.Invoke($"[JS ({e.Location}) (Execute)]: {Code.Length}", e);
+        }catch(JavaScriptException e){
+            LogError("Execute", $"RawCode ({Code.Length})", e);
             return null;
         }catch(Exception e){
             OnError?.Invoke($"[JS System (Execute)]: {Code.Length}", e);
@@ -40,8 +62,11 @@ public class JS : LanguageContext{
             if(Value.IsUndefined() || Value.IsNull()){ return Value; }
             
             return __Engine.Invoke(Value, Args).ToObject();
-        }catch(Jint.Runtime.JavaScriptException e){
-            OnError?.Invoke($"[JS ({e.Location}) (Call)]: {Name}({WL.String.Join(Args)})", e);
+        }catch(JavaScriptException e){
+            LogError("Call", Name, e);
+            return null;
+        }catch(Exception e){
+            OnError?.Invoke($"[JS System (Call)]: {Name}", e);
             return null;
         }
     }
