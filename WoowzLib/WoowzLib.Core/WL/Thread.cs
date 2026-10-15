@@ -15,6 +15,14 @@ public struct Thread{
         double ElapsedSeconds = (double)(CurrentTicks - DTI.Value.LastTicks) / Stopwatch.Frequency;
 
         if(ElapsedSeconds < TargetDeltaTime){
+            double Remaining = TargetDeltaTime - ElapsedSeconds;
+
+            if(Remaining > 0.002){
+                System.Threading.Thread.Sleep((int)((Remaining - 0.001) * 1000));
+            }else{
+                System.Threading.Thread.SpinWait(50);
+            }
+            
             return false;
         }
 

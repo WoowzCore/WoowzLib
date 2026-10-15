@@ -141,7 +141,7 @@ public unsafe class GLFW : WLI.Window{
         set{
             if(__Handle != null){
                 __Title = value;
-                WL.GLFW.API.SetWindowTitle(__Handle, value);
+                WL.GLFW.API.SetWindowTitle(__Handle, value ?? "NULL STRING WINDOW TITLE");
             }
         }
     }

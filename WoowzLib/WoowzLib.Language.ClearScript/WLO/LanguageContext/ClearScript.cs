@@ -89,6 +89,29 @@ public class ClearScript : LanguageContext{
         }
     }
 
+    private readonly Dictionary<string, ScriptObject?> __CacheCallCache = [];
+    public object? CacheCall(string Name, params object?[] Args){
+        try{
+            if(!__CacheCallCache.TryGetValue(Name, out ScriptObject? Function)){
+                Function = __Engine.Evaluate(Name) as ScriptObject;
+                __CacheCallCache[Name] = Function;
+            }
+
+            if(Function == null){ return null; }
+
+            return Function.Invoke(false, Args);
+        }catch(ScriptEngineException e){
+            LogError("CacheCall", Name, e);
+            return null;
+        }catch(Exception e){
+            OnError?.Invoke($"[JS System (CacheCall)]: {Name}", e);
+            return null;
+        }
+    }
+    
+    public void InvalidateCache(string Name) => __CacheCallCache.Remove(Name);
+    public void InvalidateCache() => __CacheCallCache.Clear();
+
     // ----------------------------------------------------------------------
 
     public readonly V8ScriptEngine __Engine;
