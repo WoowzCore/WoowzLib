@@ -5,7 +5,7 @@ using WLO.Math;
 
 namespace WLO.Web;
 
-public class WebView2 : WLI.Web{
+public class WebView2 : WLI.Web, IDisposable{
     #region МУСОР
         [StructLayout(LayoutKind.Sequential)]
         private struct MSG{
@@ -71,7 +71,7 @@ public class WebView2 : WLI.Web{
             __Controller.IsVisible = __Visible;
 
             __Controller.CoreWebView2.WebMessageReceived += (Sender, Args) => {
-                OnMessage?.Invoke(Args.WebMessageAsJson);
+                OnMessage?.Invoke(Args.TryGetWebMessageAsString());
             };
         }catch(Exception e){
             throw new ExceptionWL($"Произошла ошибка при присоединении WebView2 [{this}] к [{ParentHWND}]!", e);
@@ -91,6 +91,8 @@ public class WebView2 : WLI.Web{
         __InternalPollEvents();
     }
     
+    public void Dispose() => __InternalDetach();
+    
     public void __InternalPollEvents(){
         while(PeekMessage(out MSG Msg, IntPtr.Zero, 0, 0, PM_REMOVE)){
             TranslateMessage(ref Msg);
@@ -102,11 +104,7 @@ public class WebView2 : WLI.Web{
 
     public void Navigate(string URL) => __Controller?.CoreWebView2.Navigate(URL);
 
-    public void NavigateToString(string HTML) => __Controller?.CoreWebView2.NavigateToString(HTML);
-
-    public void ExecuteScript(string Script){
-        throw new NotImplementedException();
-    }
+    public void NavigateCustom(string HTML) => __Controller?.CoreWebView2.NavigateToString(HTML);
 
     public void PostMessage(string JSON) => __Controller?.CoreWebView2.PostWebMessageAsJson(JSON);
 }
