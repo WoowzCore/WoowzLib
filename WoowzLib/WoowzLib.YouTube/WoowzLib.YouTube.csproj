@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>0.0.4</Version>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Platforms>AnyCPU</Platforms>
+
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\WoowzLib.Core\WoowzLib.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Google.Apis.YouTube.v3" Version="1.77.0.4302" />
+    </ItemGroup>
+
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <Exec Command="&quot;$(ProjectDir)..\..\CSVersionUpdater\bin\Debug\net8.0\CSVersionUpdater.exe&quot; &quot;$(MSBuildProjectFullPath)&quot;" />
+    </Target>
+
+</Project>
