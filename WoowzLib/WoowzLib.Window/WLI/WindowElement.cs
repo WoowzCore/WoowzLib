@@ -11,4 +11,5 @@ public interface WindowElement{
     void __InternalAttach(IntPtr ParentHWND);
     void __InternalDetach();
     void __InternalResize(Vector2I Size);
+    void __InternalPollEvents();
 }

@@ -42,7 +42,10 @@ public unsafe class GLFW : WLI.Window{
     public GLFW_Keyboard Keyboard{ get; private set; }
     public GLFW_Mouse    Mouse{ get; private set; }
 
-    private WLI.WindowElement? __AttachedElement;
+    private WindowElement? __AttachedElement;
+    public WindowElement? AttachedElement => __AttachedElement;
+
+    public event Action? OnClose;
     
     // ----------------------------------------------------------------------
 
@@ -67,6 +70,11 @@ public unsafe class GLFW : WLI.Window{
             
             __Native = new GlfwNativeWindow(WL.GLFW.API, __Handle);
 
+            WL.GLFW.API.SetWindowCloseCallback(__Handle, Self => {
+                __CloseRequested = true;
+                WL.GLFW.API.SetWindowShouldClose(Self, false);
+            });
+            
             WL.GLFW.API.SetWindowSizeCallback(__Handle, (Self, W, H) => {
                 __AttachedElement?.__InternalResize(new Vector2I(W, H));
             });
@@ -89,6 +97,10 @@ public unsafe class GLFW : WLI.Window{
         }
     }
 
+    public GLFW(Vector2I Size, string Title, WindowElement Element) : this(Size, Title, false){
+        Attach(Element);
+    }
+
     public GLFW(Vector2I Size, string Title) : this(Size, Title, true){}
 
     public static WLI.Window Create(Vector2I Size, string Title) => new GLFW(Size, Title);
@@ -100,7 +112,12 @@ public unsafe class GLFW : WLI.Window{
     }
     
     public bool Close(){
+        __CloseRequested = false;
+        
         if(__Handle != null){
+            __AttachedElement?.__InternalDetach();
+            __AttachedElement = null;
+            
             WL.GLFW.API.SetWindowShouldClose(__Handle, true);
             WL.GLFW.API.DestroyWindow(__Handle);
             __Handle = null;
@@ -112,7 +129,7 @@ public unsafe class GLFW : WLI.Window{
         return false;
     }
 
-    public bool IsClosed => __Handle == null || WL.GLFW.API.WindowShouldClose(__Handle);
+    public bool IsClosed => __Handle == null;
 
     public Vector2I Size{
         get{
@@ -154,10 +171,17 @@ public unsafe class GLFW : WLI.Window{
         }
     }
 
+    private bool __CloseRequested = false;
+        
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PollEvents(){ // todo, переделать, вынести в WL.GLFW
         Keyboard.__UpdateStates();
         WL.GLFW.API.PollEvents();
+        __AttachedElement?.__InternalPollEvents();
+
+        if(__CloseRequested){
+            Close();
+        }
     }
 
     // todo, это если что типо медленный pollevents

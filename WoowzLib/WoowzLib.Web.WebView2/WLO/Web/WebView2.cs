@@ -1,10 +1,30 @@
 ﻿using System.Drawing;
+using System.Runtime.InteropServices;
 using Microsoft.Web.WebView2.Core;
 using WLO.Math;
 
 namespace WLO.Web;
 
 public class WebView2 : WLI.Web{
+    #region МУСОР
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MSG{
+            public IntPtr Hwnd;
+            public uint   Message;
+            public IntPtr WParam;
+            public IntPtr LParam;
+            public uint   Time;
+            public int    PtX;
+            public int    PtY;
+        }
+
+        private const uint PM_REMOVE = 0x0001;
+
+        [DllImport("user32.dll")] private static extern bool PeekMessage(out MSG Msg, IntPtr Hwnd, uint FilterMin, uint FilterMax, uint RemoveMsg);
+        [DllImport("user32.dll")] private static extern bool TranslateMessage(ref MSG Msg);
+        [DllImport("user32.dll")] private static extern IntPtr DispatchMessage(ref MSG Msg);
+    #endregion
+    
     private CoreWebView2Environment? __Environment;
     private CoreWebView2Controller?  __Controller;
 
@@ -39,8 +59,13 @@ public class WebView2 : WLI.Web{
 
     public void __InternalAttach(IntPtr ParentHWND){
         try{
-            __Environment = CoreWebView2Environment.CreateAsync().GetAwaiter().GetResult();
-            __Controller = __Environment.CreateCoreWebView2CompositionControllerAsync(ParentHWND).GetAwaiter().GetResult();
+            Task<CoreWebView2Environment>? EnvironmentTask = CoreWebView2Environment.CreateAsync();
+            __PumpUntilCompleted(EnvironmentTask);
+            __Environment = EnvironmentTask.Result;
+
+            Task<CoreWebView2Controller>? ControllerTask = __Environment.CreateCoreWebView2ControllerAsync(ParentHWND);
+            __PumpUntilCompleted(ControllerTask);
+            __Controller = ControllerTask.Result;
 
             __Controller.Bounds = new Rectangle(0, 0, __Size.W, __Size.H);
             __Controller.IsVisible = __Visible;
@@ -53,9 +78,24 @@ public class WebView2 : WLI.Web{
         }
     }
 
+    private void __PumpUntilCompleted(Task Task){
+        while(!Task.IsCompleted){
+            __InternalPollEvents();
+        }
+    }
+    
     public void __InternalDetach(){
         __Controller?.Close();
         __Controller = null;
+        
+        __InternalPollEvents();
+    }
+    
+    public void __InternalPollEvents(){
+        while(PeekMessage(out MSG Msg, IntPtr.Zero, 0, 0, PM_REMOVE)){
+            TranslateMessage(ref Msg);
+            DispatchMessage (ref Msg);
+        }
     }
 
     public void __InternalResize(Vector2I Size) => this.Size = Size;

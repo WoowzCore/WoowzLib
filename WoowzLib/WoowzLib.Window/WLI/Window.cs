@@ -1,4 +1,5 @@
-﻿using WLO.Math;
+﻿using System.Xml;
+using WLO.Math;
 
 namespace WLI;
 
@@ -18,4 +19,6 @@ public interface Window{
     void PollEvents();
 
     void Attach(WindowElement Element);
+
+    event Action? OnClose;
 }
