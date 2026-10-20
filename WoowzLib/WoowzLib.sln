@@ -40,6 +40,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Language.JS", "Woo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Language.ClearScript", "WoowzLib.Language.ClearScript\WoowzLib.Language.ClearScript.csproj", "{CC094141-A2D3-4CDC-A6C7-A71150CA01B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Web", "WoowzLib.Web\WoowzLib.Web.csproj", "{BC64DD13-BAF2-47DA-8BCA-2C359B924538}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoowzLib.Web.WebView2", "WoowzLib.Web.WebView2\WoowzLib.Web.WebView2.csproj", "{B2D83DCB-1E47-4504-9C9B-833ADB149CA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,5 +130,13 @@ Global
 		{CC094141-A2D3-4CDC-A6C7-A71150CA01B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC094141-A2D3-4CDC-A6C7-A71150CA01B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC094141-A2D3-4CDC-A6C7-A71150CA01B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC64DD13-BAF2-47DA-8BCA-2C359B924538}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC64DD13-BAF2-47DA-8BCA-2C359B924538}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC64DD13-BAF2-47DA-8BCA-2C359B924538}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC64DD13-BAF2-47DA-8BCA-2C359B924538}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2D83DCB-1E47-4504-9C9B-833ADB149CA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2D83DCB-1E47-4504-9C9B-833ADB149CA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2D83DCB-1E47-4504-9C9B-833ADB149CA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2D83DCB-1E47-4504-9C9B-833ADB149CA3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

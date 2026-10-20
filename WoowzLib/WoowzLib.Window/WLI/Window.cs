@@ -1,21 +1,21 @@
-﻿using WLO;
-using WLO.Math;
+﻿using WLO.Math;
 
 namespace WLI;
 
 public interface Window{
     static abstract Window Create(Vector2I Size, string Title);
+    
     bool Close();
-
     bool IsClosed{ get; }
-
-    void PollEvents();
-
-    void Present(Image Buffer);
+    
+    Vector2I Position{ get; set; }
     
     Vector2I Size{ get; set; }
-    Vector2I Position{ get; set; }
+    float Aspect{ get; }
+    
     string Title{ get; set; }
     
-    float Aspect{ get; }
+    void PollEvents();
+
+    void Attach(WindowElement Element);
 }

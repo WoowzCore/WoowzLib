@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Silk.NET.GLFW;
 using WLI_Input;
+using WLI;
 using WLO.Math;
 
 namespace WLO.Window;
@@ -40,6 +41,8 @@ public unsafe class GLFW : WLI.Window{
 
     public GLFW_Keyboard Keyboard{ get; private set; }
     public GLFW_Mouse    Mouse{ get; private set; }
+
+    private WLI.WindowElement? __AttachedElement;
     
     // ----------------------------------------------------------------------
 
@@ -64,6 +67,10 @@ public unsafe class GLFW : WLI.Window{
             
             __Native = new GlfwNativeWindow(WL.GLFW.API, __Handle);
 
+            WL.GLFW.API.SetWindowSizeCallback(__Handle, (Self, W, H) => {
+                __AttachedElement?.__InternalResize(new Vector2I(W, H));
+            });
+            
             Keyboard = new GLFW_Keyboard(this);
 
             WL.GLFW.API.SetKeyCallback(__Handle, (Self, Key, Code, Action, Mods) => Keyboard.__InternalKeyCallback(Key, Action));
@@ -116,6 +123,7 @@ public unsafe class GLFW : WLI.Window{
         set{
             if(__Handle != null){
                 WL.GLFW.API.SetWindowSize(__Handle, value.W, value.H);
+                __AttachedElement?.__InternalResize(value);
             }
         }
     }
@@ -155,6 +163,21 @@ public unsafe class GLFW : WLI.Window{
     // todo, это если что типо медленный pollevents
     public void PollEvents2(){
         Mouse.__UpdateStates();
+    }
+
+    public void Attach(WindowElement Element){
+        try{
+            if(__Handle == null){ throw new ExceptionWL("Окно уже закрыто!"); }
+            if(!__Native.Win32.HasValue){ throw new ExceptionWL("HWND окна недоступно!"); }
+            
+            __AttachedElement?.__InternalDetach();
+
+            __AttachedElement = Element;
+            Element.__InternalAttach(__Native.Win32.Value.Hwnd);
+            Element.Size = Size;
+        }catch(Exception e){
+            throw new ExceptionWL("Произошла ошибка при присоединении элемента [" + Element + "] окну GLFW [" + this + "]!", e);
+        }
     }
 
     public void Present(Image Buffer){
@@ -252,7 +275,7 @@ public unsafe class GLFW : WLI.Window{
             OnChar?.Invoke(Char);
         }
 
-        public bool IsKeyDown(Keyboard.Key Key) => __Current[(int)Key];
+        public bool IsKeyDown   (Keyboard.Key Key) => __Current[(int)Key];
         public bool IsKeyPressed(Keyboard.Key Key) => __Current[(int)Key] && !__Previous[(int)Key];
 
         public WLI_Input.Keyboard.Key GLFWKeyToWLKey(Keys Key) => Key switch{
