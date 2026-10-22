@@ -34,11 +34,13 @@ public struct Core{
         TimeBeginPeriod(1);
     }
 
-    public static void Stop(){
+    public static int Stop(int ExitCode = 0){
         if(!Started){ throw new ExceptionWL("WoowzLib Core уже был остановлен!"); }
 
         TimeEndPeriod(1);
         
         Started = false;
+
+        return ExitCode;
     }
 }
