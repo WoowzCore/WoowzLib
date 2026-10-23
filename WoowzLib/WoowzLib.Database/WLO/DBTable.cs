@@ -44,8 +44,8 @@ public sealed class DBTable<T> where T : class, new(){
     public DTTableQuery<T> All() => new DTTableQuery<T>(__Owner, __TableName);
 
     public void DeleteWhere(Expression<Func<T, bool>> Predicate){
-        (string WhereSql, Dictionary<string, object?> Parameters) = WL.SQL.Translate(Predicate, __Owner);
-        __Owner.Execute($"DELETE FROM {__Owner.QuoteIdentifier(__TableName)} WHERE {WhereSql}", Parameters);
+        (string WhereSQL, Dictionary<string, object?> Parameters) = WL.SQL.Translate(Predicate, __Owner);
+        __Owner.Execute($"DELETE FROM {__Owner.QuoteIdentifier(__TableName)} WHERE {WhereSQL}", Parameters);
     }
 
     public void DeleteAll(){
@@ -53,8 +53,7 @@ public sealed class DBTable<T> where T : class, new(){
     }
 
     public void Update(Expression<Func<T, bool>> Predicate, object PatchValues){
-        (string WhereSql, Dictionary<string, object?> Parameters) = WL.SQL.Translate(Predicate, __Owner);
-
+        (string WhereSQL, Dictionary<string, object?> Parameters) = WL.SQL.Translate(Predicate, __Owner);
         List<string> SetClauses = [];
         foreach(PropertyInfo Property in PatchValues.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)){
             string ParamName = "set_" + Property.Name;
@@ -62,7 +61,7 @@ public sealed class DBTable<T> where T : class, new(){
             Parameters[ParamName] = Property.GetValue(PatchValues);
         }
 
-        string Sql = $"UPDATE {__Owner.QuoteIdentifier(__TableName)} SET {string.Join(", ", SetClauses)} WHERE {WhereSql}";
-        __Owner.Execute(Sql, Parameters);
+        string SQL = $"UPDATE {__Owner.QuoteIdentifier(__TableName)} SET {string.Join(", ", SetClauses)} WHERE {WhereSQL}";
+        __Owner.Execute(SQL, Parameters);
     }
 }

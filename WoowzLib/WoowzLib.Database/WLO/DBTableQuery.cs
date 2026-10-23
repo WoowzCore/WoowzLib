@@ -7,7 +7,7 @@ public sealed class DTTableQuery<T> where T : new(){
     private readonly Database __Owner;
     private readonly string   __TableName;
 
-    private string?                      __WhereSql;
+    private string?                      __WhereSQL;
     private Dictionary<string, object?>? __WhereParameters;
     private string?                      __OrderColumn;
     private bool                         __OrderDescending;
@@ -20,7 +20,7 @@ public sealed class DTTableQuery<T> where T : new(){
     }
 
     public DTTableQuery<T> Where(Expression<Func<T, bool>> Predicate){
-        (__WhereSql, __WhereParameters) = WL.SQL.Translate(Predicate, __Owner);
+        (__WhereSQL, __WhereParameters) = WL.SQL.Translate(Predicate, __Owner);
         return this;
     }
 
@@ -39,32 +39,31 @@ public sealed class DTTableQuery<T> where T : new(){
     public DTTableQuery<T> Skip(int Count){ __SkipCount = Count; return this; }
     public DTTableQuery<T> Take(int Count){ __TakeCount = Count; return this; }
 
-    public List<T> ToList() => __Owner.Query<T>(__BuildSql(), __WhereParameters);
+    public List<T> ToList() => __Owner.Query<T>(__BuildSQL(), __WhereParameters);
 
     public T? FirstOrDefault(){
         __TakeCount = 1;
-        return __Owner.QuerySingle<T>(__BuildSql(), __WhereParameters);
+        return __Owner.QuerySingle<T>(__BuildSQL(), __WhereParameters);
     }
 
     public int Count(){
-        string Sql = $"SELECT COUNT(*) FROM {__Owner.QuoteIdentifier(__TableName)}"
-                     + (__WhereSql != null ? $" WHERE {__WhereSql}" : "");
+        string SQL = $"SELECT COUNT(*) FROM {__Owner.QuoteIdentifier(__TableName)}" + (__WhereSQL != null ? $" WHERE {__WhereSQL}" : "");
 
-        object? Result = __Owner.QueryScalar(Sql, __WhereParameters);
+        object? Result = __Owner.QueryScalar(SQL, __WhereParameters);
         return Result == null ? 0 : Convert.ToInt32(Result);
     }
 
-    private string __BuildSql(){
-        string Sql = $"SELECT * FROM {__Owner.QuoteIdentifier(__TableName)}";
+    private string __BuildSQL(){
+        string SQL = $"SELECT * FROM {__Owner.QuoteIdentifier(__TableName)}";
 
-        if(__WhereSql != null){ Sql += $" WHERE {__WhereSql}"; }
-        if(__OrderColumn != null){ Sql += $" ORDER BY {__OrderColumn}" + (__OrderDescending ? " DESC" : " ASC"); }
+        if(__WhereSQL != null){ SQL += $" WHERE {__WhereSQL}"; }
+        if(__OrderColumn != null){ SQL += $" ORDER BY {__OrderColumn}" + (__OrderDescending ? " DESC" : " ASC"); }
 
-        if(__TakeCount.HasValue){ Sql += $" LIMIT {__TakeCount.Value}"; }
-        else if(__SkipCount.HasValue){ Sql += " LIMIT -1"; }
+        if(__TakeCount.HasValue){ SQL += $" LIMIT {__TakeCount.Value}"; }
+        else if(__SkipCount.HasValue){ SQL += " LIMIT -1"; }
 
-        if(__SkipCount.HasValue){ Sql += $" OFFSET {__SkipCount.Value}"; }
+        if(__SkipCount.HasValue){ SQL += $" OFFSET {__SkipCount.Value}"; }
 
-        return Sql;
+        return SQL;
     }
 }

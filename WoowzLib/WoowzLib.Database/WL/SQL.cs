@@ -5,10 +5,10 @@ using WLO;
 namespace WL;
 
 public static class SQL{
-        public static (string Sql, Dictionary<string, object?> Parameters) Translate<T>(Expression<Func<T, bool>> Predicate, Database Owner){
+    public static (string SQL, Dictionary<string, object?> Parameters) Translate<T>(Expression<Func<T, bool>> Predicate, Database Owner){
         Dictionary<string, object?> Parameters = [];
-        string Sql = __Visit(Predicate.Body, Owner, Parameters);
-        return (Sql, Parameters);
+        string SQL = __Visit(Predicate.Body, Owner, Parameters);
+        return (SQL, Parameters);
     }
 
     public static string GetColumnName<T>(Expression<Func<T, object>> Selector, Database Owner){
