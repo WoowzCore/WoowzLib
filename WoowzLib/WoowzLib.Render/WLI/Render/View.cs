@@ -1,5 +1,4 @@
-﻿using WLO;
-using WLO.Math;
+﻿using WLO.Math;
 
 namespace WLI_Render;
 

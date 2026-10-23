@@ -1,5 +1,3 @@
 ﻿namespace WLI;
 
-public interface Input{
-    
-}
+public interface Input{}

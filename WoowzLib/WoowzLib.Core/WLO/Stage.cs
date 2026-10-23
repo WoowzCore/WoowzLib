@@ -1,6 +1,4 @@
-﻿using WLO;
-
-namespace WEO;
+﻿namespace WEO;
 
 public class Stage<T> where T : Delegate{
     private readonly List<(string Key, T Action)> __Actions = [];

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Silk.NET.OpenGL;
-using WLO.Math;
+﻿using Silk.NET.OpenGL;
 
 namespace WLO.Render;
 

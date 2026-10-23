@@ -1,6 +1,4 @@
-﻿using Microsoft.ClearScript;
-using Microsoft.ClearScript.V8;
-using WLI;
+﻿using WLI;
 
 namespace WLOLanguage;
 
