@@ -45,6 +45,8 @@ public unsafe class GLFW : WLI.Window{
     private WindowElement? __AttachedElement;
     public WindowElement? AttachedElement => __AttachedElement;
 
+    public IntPtr HWND => __Native.Win32?.Hwnd ?? IntPtr.Zero;
+    
     public event Action? OnClose;
     
     // ----------------------------------------------------------------------
@@ -91,8 +93,7 @@ public unsafe class GLFW : WLI.Window{
             WL.GLFW.API.SetScrollCallback(__Handle, (Self, X, Y) => Mouse.__InternalScrollCallback(X, Y));
             
             WL.GLFW.API.SwapInterval(0); // todo, off vsync
-        }
-        catch(Exception e){
+        }catch(Exception e){
             throw new ExceptionWL($"Произошла ошибка при создании GLFW окна!\nnew WLO.Window.GLFW({Size}, \"{Title}\")\nРазмер: {Size}\nНазвание окна: \"{Title}\"", e);
         }
     }

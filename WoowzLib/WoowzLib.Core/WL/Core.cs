@@ -5,39 +5,40 @@ using WLO;
 namespace WL;
 
 public struct Core{
+    public static bool Started{ get; private set; }
+    
+    public static string[]? Arguments{ get; private set; }
+    
     public static ProjectInfo ProjectInfo = new ProjectInfo(null);
     public static ProjectInfo EngineInfo  = new ProjectInfo(null);
-
-    public static string[]? Arguments;
     
-    public static string PathToEXE => Environment.ProcessPath!;
-    public static string PathToFolderEXE => Path.GetDirectoryName(PathToEXE)!;
+    public static string PathToEXE           => Environment.ProcessPath!;
+    public static string PathToFolderEXE     => Path.GetDirectoryName(PathToEXE)!;
     public static string PathToTempFolderEXE => AppContext.BaseDirectory;
-
-    // ---------------------------------------------------------------------- 
-
-    [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
-    private static extern uint TimeBeginPeriod(uint Milliseconds);
-    [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
-    private static extern uint TimeEndPeriod(uint Milliseconds);
-
-    private static bool Started = false;
+    
+    // ----------------------------------------------------------------------
     
     public static void Start(string[] Arguments){
-        if(Started){ throw new ExceptionWL("WoowzLib Core уже был запущен!"); } Started = true;
+        if(Started){ throw new ExceptionWL("WoowzLib.Core уже был запущен!"); }
 
         WL.Core.Arguments = Arguments;
         
-        CultureInfo.DefaultThreadCurrentCulture   = CultureInfo.InvariantCulture;
-        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+        CultureInfo Culture = CultureInfo.InvariantCulture;
+        
+        CultureInfo.DefaultThreadCurrentCulture   = Culture;
+        CultureInfo.DefaultThreadCurrentUICulture = Culture;
+        CultureInfo.CurrentCulture                = Culture;
+        CultureInfo.CurrentUICulture              = Culture;
 
-        TimeBeginPeriod(1);
+        WLN.WinMM.TimeBeginPeriod(1);
+        
+        Started = true;
     }
 
     public static int Stop(int ExitCode = 0){
-        if(!Started){ throw new ExceptionWL("WoowzLib Core уже был остановлен!"); }
+        if(!Started){ throw new ExceptionWL("WoowzLib.Core уже был остановлен!"); }
 
-        TimeEndPeriod(1);
+        WLN.WinMM.TimeEndPeriod(1);
         
         Started = false;
 
